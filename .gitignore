@@ -19,3 +19,6 @@ $RECYCLE.BIN/
 # OneDrive sync artifacts
 *.tmp
 ~$*
+
+# Claude Code local settings (machine-specific, not for version control)
+.claude/settings.local.json
