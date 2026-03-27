@@ -20,5 +20,8 @@ $RECYCLE.BIN/
 *.tmp
 ~$*
 
+# Claude Code local settings (machine-specific, not for version control)
+.claude/settings.local.json
+
 # Claude Code — ephemeral pre-PR review sentinel (created by workflow, not committed)
 .claude/pr-review-done.flag
