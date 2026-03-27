@@ -1,0 +1,28 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "INPUT=$(cat); echo \"$INPUT\" | grep -q '\"gh pr create' && [ ! -f .claude/pr-review-done.flag ] && echo '{\"continue\":false,\"stopReason\":\"Pre-PR checklist required: (1) run /review and fix all findings, (2) run /tech-debt and fix all issues, (3) touch .claude/pr-review-done.flag, (4) retry.\"}'; exit 0",
+            "statusMessage": "Checking pre-PR checklist..."
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "INPUT=$(cat); echo \"$INPUT\" | grep -q '\"gh pr create' && rm -f .claude/pr-review-done.flag 2>/dev/null; exit 0",
+            "statusMessage": "Cleaning up PR flag..."
+          }
+        ]
+      }
+    ]
+  }
+}

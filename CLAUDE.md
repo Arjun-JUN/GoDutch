@@ -123,6 +123,19 @@ Every test file should include cases for:
 
 ---
 
+## Mandatory Pre-PR Workflow
+
+**Every PR must go through this checklist in order. The `gh pr create` command is hook-blocked until step 3 is complete.**
+
+1. **Run `/review`** — review all changes for correctness, security, and code quality. Fix every finding before moving on.
+2. **Run `/tech-debt`** — audit for technical debt introduced by the change. Address all issues found.
+3. **Unlock the PR gate** — run `touch .claude/pr-review-done.flag` to signal the checklist is done.
+4. **Raise the PR** — run `gh pr create`. The hook checks for the flag and allows it. The flag is auto-deleted after the PR is created.
+
+> The gate is enforced by a `PreToolUse` hook in `.claude/settings.json`. Skipping steps 1–3 will result in a blocked `gh pr create`.
+
+---
+
 ## What Claude Should Always Do
 - Update `FEATURE_LOG.md` when creating or changing a spec
 - Update `COMPETITIVE_LOG.md` when creating or changing a competitive brief
@@ -132,3 +145,4 @@ Every test file should include cases for:
 - Name competitive briefs with the `YYYY-MM-DD_` date prefix
 - Keep decisions in the Key Decisions Log above
 - Write tests at all three tiers (happy / failure / edge) for every code change
+- Follow the Mandatory Pre-PR Workflow above before every `gh pr create`
