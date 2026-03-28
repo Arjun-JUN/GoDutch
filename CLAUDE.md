@@ -9,8 +9,8 @@
 An expense-splitting app that uses OCR, voice input, and other smart capabilities to make splitting bills effortless. Users can scan receipts, speak expenses aloud, and settle up with friends — no manual entry required.
 
 ## Project Status
-- **Phase:** Pre-development — architecture defined, awaiting tech stack decision
-- **Last updated:** 2026-03-27
+- **Phase:** In development — monorepo bootstrapped, `packages/slate` built, expense splitting in progress
+- **Last updated:** 2026-03-28
 
 ---
 
@@ -31,14 +31,15 @@ GoDutch/
         └── [feature specs]    ← one file per feature, named NNN_feature-name.md
 ```
 
-**Once the tech stack is decided, the code structure will be:**
+**Code structure (active):**
 ```
 GoDutch/
 ├── apps/
-│   ├── mobile/                ← App shell: navigation + screen composition only
-│   └── api/                   ← HTTP server: thin routing layer only
+│   ├── mobile/                ← Expo bare app: navigation + screen composition only
+│   └── api/                   ← HTTP server: thin routing layer only (future)
 ├── packages/
 │   ├── commons/               ← Shared types, errors, utilities (zero dependencies)
+│   ├── slate/                 ← Shared UI component library (design system)
 │   ├── optic/                 ← OCR and receipt scanning ("sight/vision")
 │   ├── herald/                ← Voice input and NLP ("the messenger who listens")
 │   ├── ledger/                ← Expense management ("the financial record book")
@@ -49,6 +50,22 @@ GoDutch/
 ```
 
 > See `architecture/component-map.md` for full detail on what each package owns.
+
+## Tech Stack
+
+| Layer | Choice | Rationale |
+|---|---|---|
+| Mobile app | React Native (bare Expo) | TypeScript-native; same language as API; vast ecosystem for OCR/voice native modules; bare allows AVCaptureSession, ML Kit, SFSpeechRecognizer |
+| Package manager | pnpm workspaces | Strict package isolation; deduplication; workspace:* protocol; npm/Yarn Berry have Metro bundler compatibility issues |
+| Routing | Expo Router v3 | File-based routing; auto-handles tabs, modals, deep links; sits on React Navigation |
+| Icons | Ionicons (`@expo/vector-icons`) | Ships with Expo; zero native linking; 1300+ icons; outline+filled for tab states |
+| UI library | `packages/slate` (internal) | All visual components in one place; design tokens, theming (light/dark), primitives through overlays |
+
+### Critical dev notes
+- **Metro watchFolders**: `apps/mobile/metro.config.js` must declare `watchFolders: [workspaceRoot]` and `resolver.extraNodeModules` for every `@godutch/*` package. Without this, editing a package won't hot-reload.
+- **react-native must not be hoisted**: Keep it as a direct dep of `apps/mobile` only. pnpm's phantom dependency protection is strict.
+- **Reanimated plugin order**: `react-native-reanimated/plugin` must be the last plugin in `babel.config.js`. Getting this wrong breaks animations silently.
+- **Money is always cents**: `amountCents: number` internally. `formatCurrency` only at display time. No `balance` column in the DB — computed from transaction log at read time.
 
 ---
 
@@ -89,6 +106,12 @@ GoDutch/
 | 2026-03-27 | Add `competitive-briefs/` folder with `COMPETITIVE_LOG.md` | Track market positioning and competitor research alongside feature specs |
 | 2026-03-27 | Domain-first monorepo topology (`apps/`, `packages/`, `db/`, `workers/`) | Feature code lives in one place — one feature story = one package. PRs are coherent, ownership is clear, domains can be extracted later if needed |
 | 2026-03-27 | Balances computed from transaction log, never stored as mutable counter | Ensures correctness when expenses are edited or deleted. No `balance` column anywhere in the schema |
+| 2026-03-28 | React Native + Expo bare workflow (not managed) | OCR/voice need native modules (AVCaptureSession, ML Kit, SFSpeechRecognizer); bare still gets EAS Build/Updates |
+| 2026-03-28 | pnpm workspaces (not npm/Yarn) | Metro bundler resolves packages correctly; strict phantom-dep protection; workspace:* protocol |
+| 2026-03-28 | Expo Router v3 for navigation | File-based routing, auto deep links, tab+modal layouts match the 9-screen expense spec |
+| 2026-03-28 | `packages/slate` as the internal UI design system | All visual components abstracted here; zero business logic; named "slate" |
+| 2026-03-28 | Money stored as integer cents (no floats) | $10 / 3 = [334, 333, 333] cents — correct; floats accumulate errors across splits |
+| 2026-03-28 | TypeScript strict mode + branded ID types | Prevents UserId/GroupId/ExpenseId mix-ups at compile time |
 
 ---
 

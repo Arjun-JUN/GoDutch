@@ -1,0 +1,16 @@
+{
+  "name": "godutch",
+  "private": true,
+  "scripts": {
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "mobile": "pnpm --filter @godutch/mobile start",
+    "api": "pnpm --filter @godutch/api dev"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "GoDutch",
+    "slug": "godutch",
+    "version": "1.0.0",
+    "scheme": "godutch",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "platforms": ["ios", "android"],
+    "icon": "./assets/icon.png",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#3B82F6"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.godutch.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "GoDutch uses your camera to scan receipts",
+        "NSMicrophoneUsageDescription": "GoDutch uses your microphone to log expenses by voice",
+        "NSPhotoLibraryUsageDescription": "GoDutch can import receipt photos from your library"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#3B82F6"
+      },
+      "package": "com.godutch.app",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
+    "experiments": {
+      "typedRoutes": true
+    },
+    "plugins": [
+      "expo-router"
+    ]
+  }
+}

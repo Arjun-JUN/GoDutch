@@ -1,0 +1,13 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "@godutch/commons": ["../../packages/commons/src/index.ts"],
+      "@godutch/slate": ["../../packages/slate/src/index.ts"],
+      "@godutch/dutch": ["../../packages/dutch/src/index.ts"],
+      "@godutch/crew": ["../../packages/crew/src/index.ts"],
+      "@godutch/ledger": ["../../packages/ledger/src/index.ts"]
+    }
+  }
+}
