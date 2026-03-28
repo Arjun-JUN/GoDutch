@@ -43,15 +43,15 @@ function Dashboard({ onLogout }) {
   };
 
   return (
-    <div className="min-h-screen" style={{ background: '#FFFDF2' }}>
+    <div className="min-h-screen mobile-safe-padding" style={{ background: '#FFFDF2' }}>
       <Header onLogout={onLogout} />
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl tracking-tight font-bold mb-4" style={{ fontFamily: 'Cabinet Grotesk, sans-serif' }}>
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
+        <div className="mb-6 md:mb-8">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl tracking-tight font-bold mb-2 md:mb-4" style={{ fontFamily: 'Cabinet Grotesk, sans-serif' }}>
             Welcome back, {user?.name}!
           </h1>
-          <p className="text-base text-gray-600 leading-relaxed">
+          <p className="text-sm md:text-base leading-relaxed" style={{ color: '#4A4A4A', letterSpacing: '-0.01em', lineHeight: '1.6' }}>
             Manage your expenses, groups, and settlements all in one place.
           </p>
         </div>

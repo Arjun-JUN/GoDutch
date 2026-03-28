@@ -7,6 +7,7 @@ import AuthPage from './pages/AuthPage';
 import Dashboard from './pages/Dashboard';
 import NewExpense from './pages/NewExpense';
 import GroupsPage from './pages/GroupsPage';
+import GroupDetail from './pages/GroupDetail';
 import SettlementsPage from './pages/SettlementsPage';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -76,6 +77,16 @@ function App() {
             element={
               isAuthenticated ? (
                 <GroupsPage onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/auth" />
+              )
+            }
+          />
+          <Route
+            path="/groups/:groupId"
+            element={
+              isAuthenticated ? (
+                <GroupDetail onLogout={handleLogout} />
               ) : (
                 <Navigate to="/auth" />
               )

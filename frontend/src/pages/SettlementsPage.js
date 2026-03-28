@@ -53,23 +53,23 @@ function SettlementsPage({ onLogout }) {
   };
 
   return (
-    <div className="min-h-screen" style={{ background: '#FFFDF2' }}>
+    <div className="min-h-screen mobile-safe-padding" style={{ background: '#FFFDF2' }}>
       <Header onLogout={onLogout} />
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl tracking-tight font-bold mb-8" style={{ fontFamily: 'Cabinet Grotesk, sans-serif' }}>
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl tracking-tight font-bold mb-6 md:mb-8" style={{ fontFamily: 'Cabinet Grotesk, sans-serif' }}>
           Settlements
         </h1>
 
-        <div className="mb-6">
-          <label className="block text-sm font-bold uppercase tracking-wider mb-2">
+        <div className="mb-4 md:mb-6">
+          <label className="block text-xs md:text-sm font-bold uppercase tracking-wider mb-2">
             Select Group
           </label>
           <select
             data-testid="group-select"
             value={selectedGroup}
             onChange={(e) => setSelectedGroup(e.target.value)}
-            className="neo-input max-w-md"
+            className="neo-input w-full md:max-w-md text-sm md:text-base"
           >
             {groups.map((group) => (
               <option key={group.id} value={group.id}>
@@ -79,8 +79,8 @@ function SettlementsPage({ onLogout }) {
           </select>
         </div>
 
-        <div className="neo-card p-6">
-          <h2 className="text-xl sm:text-2xl tracking-tight font-bold mb-6" style={{ fontFamily: 'Cabinet Grotesk, sans-serif' }}>
+        <div className="neo-card p-4 md:p-6">
+          <h2 className="text-lg md:text-xl sm:text-2xl tracking-tight font-bold mb-4 md:mb-6" style={{ fontFamily: 'Cabinet Grotesk, sans-serif' }}>
             Who Owes Whom
           </h2>
 

@@ -221,7 +221,16 @@ async def scan_receipt(request: OCRRequest, current_user: dict = Depends(verify_
 async def create_group(group_data: GroupCreate, current_user: dict = Depends(verify_token)):
     member_users = await db.users.find({"email": {"$in": group_data.member_emails}}, {"_id": 0}).to_list(100)
     
-    if len(member_users) != len(group_data.member_emails):
+    current_user_doc = await db.users.find_one({"id": current_user['user_id']}, {"_id": 0})
+    if not current_user_doc:
+        raise HTTPException(status_code=404, detail="Current user not found")
+    
+    current_user_in_list = any(u['email'] == current_user_doc['email'] for u in member_users)
+    
+    if not current_user_in_list:
+        member_users.append(current_user_doc)
+    
+    if len(member_users) < len(group_data.member_emails) + (0 if current_user_in_list else 1):
         raise HTTPException(status_code=400, detail="Some member emails not found")
     
     members = [{"id": u['id'], "email": u['email'], "name": u['name']} for u in member_users]
