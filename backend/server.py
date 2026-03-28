@@ -114,6 +114,75 @@ class UPIPaymentRequest(BaseModel):
     settlement_id: str
     note: Optional[str] = None
 
+class BankAccount(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    user_id: str
+    bank_name: str
+    account_number: str
+    ifsc_code: str
+    account_holder: str
+    upi_id: str
+    balance: float
+    is_primary: bool
+    created_at: str
+
+class BankAccountCreate(BaseModel):
+    bank_name: str
+    account_number: str
+    ifsc_code: str
+    account_holder: str
+    upi_id: str
+
+class Transaction(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    from_user_id: str
+    from_upi_id: str
+    to_user_id: Optional[str] = None
+    to_upi_id: str
+    amount: float
+    transaction_type: str
+    status: str
+    note: Optional[str] = None
+    reference_id: str
+    created_at: str
+
+class TransactionCreate(BaseModel):
+    to_upi_id: str
+    amount: float
+    transaction_type: str = "payment"
+    note: Optional[str] = None
+
+class MoneyRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    from_user_id: str
+    from_upi_id: str
+    to_user_id: str
+    to_upi_id: str
+    amount: float
+    note: Optional[str] = None
+    status: str
+    created_at: str
+
+class MoneyRequestCreate(BaseModel):
+    to_upi_id: str
+    amount: float
+    note: Optional[str] = None
+
+class BillPayment(BaseModel):
+    biller_name: str
+    bill_number: str
+    amount: float
+    category: str
+
+class RechargeRequest(BaseModel):
+    mobile_number: str
+    operator: str
+    amount: float
+    recharge_type: str
+
 class OCRRequest(BaseModel):
     image_base64: str
 
@@ -429,6 +498,290 @@ async def initiate_upi_payment(payment: UPIPaymentRequest, current_user: dict = 
     except Exception as e:
         logging.error(f"UPI payment error: {str(e)}")
         raise HTTPException(status_code=500, detail="Payment initiation failed")
+
+@api_router.post("/upi/accounts", response_model=BankAccount)
+async def add_bank_account(account: BankAccountCreate, current_user: dict = Depends(verify_token)):
+    try:
+        existing = await db.bank_accounts.find_one({"user_id": current_user['user_id'], "upi_id": account.upi_id}, {"_id": 0})
+        if existing:
+            raise HTTPException(status_code=400, detail="UPI ID already linked")
+        
+        account_id = str(uuid.uuid4())
+        
+        is_primary = await db.bank_accounts.count_documents({"user_id": current_user['user_id']}) == 0
+        
+        account_doc = {
+            "id": account_id,
+            "user_id": current_user['user_id'],
+            "bank_name": account.bank_name,
+            "account_number": account.account_number,
+            "ifsc_code": account.ifsc_code,
+            "account_holder": account.account_holder,
+            "upi_id": account.upi_id,
+            "balance": 10000.00,
+            "is_primary": is_primary,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.bank_accounts.insert_one(account_doc)
+        
+        return BankAccount(**account_doc)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Add account error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to add account")
+
+@api_router.get("/upi/accounts", response_model=List[BankAccount])
+async def get_bank_accounts(current_user: dict = Depends(verify_token)):
+    accounts = await db.bank_accounts.find({"user_id": current_user['user_id']}, {"_id": 0}).to_list(100)
+    return accounts
+
+@api_router.post("/upi/send-money", response_model=Transaction)
+async def send_money(transaction: TransactionCreate, current_user: dict = Depends(verify_token)):
+    try:
+        account = await db.bank_accounts.find_one({"user_id": current_user['user_id'], "is_primary": True}, {"_id": 0})
+        if not account:
+            raise HTTPException(status_code=400, detail="No bank account linked")
+        
+        if account['balance'] < transaction.amount:
+            raise HTTPException(status_code=400, detail="Insufficient balance")
+        
+        recipient_account = await db.bank_accounts.find_one({"upi_id": transaction.to_upi_id}, {"_id": 0})
+        
+        transaction_id = str(uuid.uuid4())
+        reference_id = f"UPI{uuid.uuid4().hex[:12].upper()}"
+        
+        transaction_doc = {
+            "id": transaction_id,
+            "from_user_id": current_user['user_id'],
+            "from_upi_id": account['upi_id'],
+            "to_user_id": recipient_account['user_id'] if recipient_account else None,
+            "to_upi_id": transaction.to_upi_id,
+            "amount": transaction.amount,
+            "transaction_type": transaction.transaction_type,
+            "status": "success",
+            "note": transaction.note,
+            "reference_id": reference_id,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.transactions.insert_one(transaction_doc)
+        
+        await db.bank_accounts.update_one(
+            {"id": account['id']},
+            {"$inc": {"balance": -transaction.amount}}
+        )
+        
+        if recipient_account:
+            await db.bank_accounts.update_one(
+                {"id": recipient_account['id']},
+                {"$inc": {"balance": transaction.amount}}
+            )
+        
+        return Transaction(**transaction_doc)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Send money error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Transaction failed")
+
+@api_router.post("/upi/request-money", response_model=MoneyRequest)
+async def request_money(request: MoneyRequestCreate, current_user: dict = Depends(verify_token)):
+    try:
+        account = await db.bank_accounts.find_one({"user_id": current_user['user_id'], "is_primary": True}, {"_id": 0})
+        if not account:
+            raise HTTPException(status_code=400, detail="No bank account linked")
+        
+        recipient_account = await db.bank_accounts.find_one({"upi_id": request.to_upi_id}, {"_id": 0})
+        if not recipient_account:
+            raise HTTPException(status_code=404, detail="UPI ID not found")
+        
+        request_id = str(uuid.uuid4())
+        
+        request_doc = {
+            "id": request_id,
+            "from_user_id": current_user['user_id'],
+            "from_upi_id": account['upi_id'],
+            "to_user_id": recipient_account['user_id'],
+            "to_upi_id": request.to_upi_id,
+            "amount": request.amount,
+            "note": request.note,
+            "status": "pending",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.money_requests.insert_one(request_doc)
+        
+        return MoneyRequest(**request_doc)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Request money error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Request failed")
+
+@api_router.get("/upi/requests", response_model=List[MoneyRequest])
+async def get_money_requests(current_user: dict = Depends(verify_token)):
+    account = await db.bank_accounts.find_one({"user_id": current_user['user_id'], "is_primary": True}, {"_id": 0})
+    if not account:
+        return []
+    
+    requests = await db.money_requests.find(
+        {"$or": [{"from_user_id": current_user['user_id']}, {"to_user_id": current_user['user_id']}]},
+        {"_id": 0}
+    ).to_list(100)
+    
+    return requests
+
+@api_router.post("/upi/requests/{request_id}/accept")
+async def accept_money_request(request_id: str, current_user: dict = Depends(verify_token)):
+    try:
+        money_request = await db.money_requests.find_one({"id": request_id, "to_user_id": current_user['user_id']}, {"_id": 0})
+        if not money_request:
+            raise HTTPException(status_code=404, detail="Request not found")
+        
+        if money_request['status'] != 'pending':
+            raise HTTPException(status_code=400, detail="Request already processed")
+        
+        account = await db.bank_accounts.find_one({"user_id": current_user['user_id'], "is_primary": True}, {"_id": 0})
+        if account['balance'] < money_request['amount']:
+            raise HTTPException(status_code=400, detail="Insufficient balance")
+        
+        transaction_id = str(uuid.uuid4())
+        reference_id = f"UPI{uuid.uuid4().hex[:12].upper()}"
+        
+        transaction_doc = {
+            "id": transaction_id,
+            "from_user_id": current_user['user_id'],
+            "from_upi_id": account['upi_id'],
+            "to_user_id": money_request['from_user_id'],
+            "to_upi_id": money_request['from_upi_id'],
+            "amount": money_request['amount'],
+            "transaction_type": "payment",
+            "status": "success",
+            "note": f"Payment for request: {money_request.get('note', '')}",
+            "reference_id": reference_id,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.transactions.insert_one(transaction_doc)
+        
+        await db.bank_accounts.update_one(
+            {"user_id": current_user['user_id'], "is_primary": True},
+            {"$inc": {"balance": -money_request['amount']}}
+        )
+        
+        await db.bank_accounts.update_one(
+            {"user_id": money_request['from_user_id'], "is_primary": True},
+            {"$inc": {"balance": money_request['amount']}}
+        )
+        
+        await db.money_requests.update_one(
+            {"id": request_id},
+            {"$set": {"status": "accepted"}}
+        )
+        
+        return {"status": "success", "transaction_id": transaction_id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Accept request error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to accept request")
+
+@api_router.get("/upi/transactions", response_model=List[Transaction])
+async def get_transactions(current_user: dict = Depends(verify_token), limit: int = 50):
+    account = await db.bank_accounts.find_one({"user_id": current_user['user_id'], "is_primary": True}, {"_id": 0})
+    if not account:
+        return []
+    
+    transactions = await db.transactions.find(
+        {"$or": [{"from_user_id": current_user['user_id']}, {"to_user_id": current_user['user_id']}]},
+        {"_id": 0}
+    ).sort("created_at", -1).limit(limit).to_list(limit)
+    
+    return transactions
+
+@api_router.post("/upi/bill-payment")
+async def pay_bill(bill: BillPayment, current_user: dict = Depends(verify_token)):
+    try:
+        account = await db.bank_accounts.find_one({"user_id": current_user['user_id'], "is_primary": True}, {"_id": 0})
+        if not account:
+            raise HTTPException(status_code=400, detail="No bank account linked")
+        
+        if account['balance'] < bill.amount:
+            raise HTTPException(status_code=400, detail="Insufficient balance")
+        
+        transaction_id = str(uuid.uuid4())
+        reference_id = f"BILL{uuid.uuid4().hex[:12].upper()}"
+        
+        transaction_doc = {
+            "id": transaction_id,
+            "from_user_id": current_user['user_id'],
+            "from_upi_id": account['upi_id'],
+            "to_user_id": None,
+            "to_upi_id": f"{bill.biller_name}@bills",
+            "amount": bill.amount,
+            "transaction_type": "bill_payment",
+            "status": "success",
+            "note": f"{bill.category} - {bill.biller_name} - {bill.bill_number}",
+            "reference_id": reference_id,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.transactions.insert_one(transaction_doc)
+        
+        await db.bank_accounts.update_one(
+            {"id": account['id']},
+            {"$inc": {"balance": -bill.amount}}
+        )
+        
+        return {"status": "success", "transaction_id": transaction_id, "reference_id": reference_id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Bill payment error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Bill payment failed")
+
+@api_router.post("/upi/recharge")
+async def mobile_recharge(recharge: RechargeRequest, current_user: dict = Depends(verify_token)):
+    try:
+        account = await db.bank_accounts.find_one({"user_id": current_user['user_id'], "is_primary": True}, {"_id": 0})
+        if not account:
+            raise HTTPException(status_code=400, detail="No bank account linked")
+        
+        if account['balance'] < recharge.amount:
+            raise HTTPException(status_code=400, detail="Insufficient balance")
+        
+        transaction_id = str(uuid.uuid4())
+        reference_id = f"RECH{uuid.uuid4().hex[:12].upper()}"
+        
+        transaction_doc = {
+            "id": transaction_id,
+            "from_user_id": current_user['user_id'],
+            "from_upi_id": account['upi_id'],
+            "to_user_id": None,
+            "to_upi_id": f"{recharge.operator}@recharge",
+            "amount": recharge.amount,
+            "transaction_type": "recharge",
+            "status": "success",
+            "note": f"{recharge.recharge_type} - {recharge.mobile_number} - {recharge.operator}",
+            "reference_id": reference_id,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.transactions.insert_one(transaction_doc)
+        
+        await db.bank_accounts.update_one(
+            {"id": account['id']},
+            {"$inc": {"balance": -recharge.amount}}
+        )
+        
+        return {"status": "success", "transaction_id": transaction_id, "reference_id": reference_id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Recharge error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Recharge failed")
 
 @api_router.get("/expenses/categories")
 async def get_expense_categories(current_user: dict = Depends(verify_token)):

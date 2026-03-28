@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Receipt, House, Users, ArrowsLeftRight, SignOut, Plus } from '@phosphor-icons/react';
+import { Receipt, House, Users, ArrowsLeftRight, SignOut, Plus, CurrencyInr } from '@phosphor-icons/react';
 import { getCurrentUser } from '../App';
 
 function Header({ onLogout }) {
@@ -119,46 +119,56 @@ function Header({ onLogout }) {
         style={{ background: '#FFFDF2' }}
         data-testid="mobile-nav"
       >
-        <div className="grid grid-cols-4 gap-1 p-2">
+        <div className="grid grid-cols-5 gap-1 p-2">
           <button
             data-testid="mobile-nav-dashboard"
             onClick={() => navigate('/dashboard')}
-            className={`flex flex-col items-center gap-1 py-2 px-3 border-2 border-[#0F0F0F] rounded-lg transition-all ${
+            className={`flex flex-col items-center gap-1 py-2 px-2 border-2 border-[#0F0F0F] rounded-lg transition-all ${
               isActive('/dashboard') ? 'bg-[#C4F1F9]' : 'bg-white'
             }`}
           >
-            <House size={20} weight="bold" />
-            <span className="text-xs font-bold">Home</span>
+            <House size={20} weight=\"bold\" />
+            <span className=\"text-xs font-bold\">Home</span>
+          </button>
+          <button
+            data-testid="mobile-nav-upi"
+            onClick={() => navigate('/upi')}
+            className={`flex flex-col items-center gap-1 py-2 px-2 border-2 border-[#0F0F0F] rounded-lg transition-all ${
+              isActive('/upi') || location.pathname.startsWith('/upi') ? 'bg-[#C4F1F9]' : 'bg-white'
+            }`}
+          >
+            <CurrencyInr size={20} weight=\"bold\" />
+            <span className=\"text-xs font-bold\">UPI</span>
           </button>
           <button
             data-testid="mobile-nav-new-expense"
             onClick={() => navigate('/new-expense')}
-            className={`flex flex-col items-center gap-1 py-2 px-3 border-2 border-[#0F0F0F] rounded-lg transition-all ${
+            className={`flex flex-col items-center gap-1 py-2 px-2 border-2 border-[#0F0F0F] rounded-lg transition-all ${
               isActive('/new-expense') ? 'bg-[#C4F1F9]' : 'bg-white'
             }`}
           >
-            <Plus size={20} weight="bold" />
-            <span className="text-xs font-bold">Add</span>
+            <Plus size={20} weight=\"bold\" />
+            <span className=\"text-xs font-bold\">Add</span>
           </button>
           <button
             data-testid="mobile-nav-groups"
             onClick={() => navigate('/groups')}
-            className={`flex flex-col items-center gap-1 py-2 px-3 border-2 border-[#0F0F0F] rounded-lg transition-all ${
-              isActive('/groups') ? 'bg-[#C4F1F9]' : 'bg-white'
+            className={`flex flex-col items-center gap-1 py-2 px-2 border-2 border-[#0F0F0F] rounded-lg transition-all ${
+              isActive('/groups') || location.pathname.startsWith('/groups') ? 'bg-[#C4F1F9]' : 'bg-white'
             }`}
           >
-            <Users size={20} weight="bold" />
-            <span className="text-xs font-bold">Groups</span>
+            <Users size={20} weight=\"bold\" />
+            <span className=\"text-xs font-bold\">Groups</span>
           </button>
           <button
             data-testid="mobile-nav-settlements"
             onClick={() => navigate('/settlements')}
-            className={`flex flex-col items-center gap-1 py-2 px-3 border-2 border-[#0F0F0F] rounded-lg transition-all ${
+            className={`flex flex-col items-center gap-1 py-2 px-2 border-2 border-[#0F0F0F] rounded-lg transition-all ${
               isActive('/settlements') ? 'bg-[#C4F1F9]' : 'bg-white'
             }`}
           >
-            <ArrowsLeftRight size={20} weight="bold" />
-            <span className="text-xs font-bold">Settle</span>
+            <ArrowsLeftRight size={20} weight=\"bold\" />
+            <span className=\"text-xs font-bold\">Settle</span>
           </button>
         </div>
       </nav>
