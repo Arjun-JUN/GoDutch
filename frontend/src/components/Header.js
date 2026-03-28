@@ -28,7 +28,7 @@ function Header({ onLogout }) {
                 style={{ fontFamily: 'Cabinet Grotesk, sans-serif' }}
                 data-testid="app-title"
               >
-                SplitScan
+                goDutch
               </h1>
             </div>
 
@@ -99,7 +99,7 @@ function Header({ onLogout }) {
                 className="text-lg font-black tracking-tight"
                 style={{ fontFamily: 'Cabinet Grotesk, sans-serif' }}
               >
-                SplitScan
+                goDutch
               </h1>
             </div>
             <button
