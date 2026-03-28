@@ -1,10 +1,10 @@
 import type { Settlement } from '@godutch/commons';
-import type { UserId } from '@godutch/commons';
+import type { UserId, GroupId, GuestId } from '@godutch/commons';
 
 export type CreateSettlementInput = {
-  groupId: string;
+  groupId: GroupId;
   payerId: UserId;
-  receiverId: string;
+  receiverId: UserId | GuestId;
   amountCents: number;
   currency: string;
   date: string;

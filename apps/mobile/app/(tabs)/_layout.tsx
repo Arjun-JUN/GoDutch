@@ -21,7 +21,7 @@ export default function TabsLayout() {
         options={{
           title: 'Balance',
           tabBarIcon: ({ focused, color }) => (
-            <Icon name={focused ? 'wallet' : 'wallet'} rawColor={color} size="md" />
+            <Icon name={focused ? 'wallet-active' : 'wallet'} rawColor={color} size="md" />
           ),
         }}
       />
@@ -30,7 +30,7 @@ export default function TabsLayout() {
         options={{
           title: 'Groups',
           tabBarIcon: ({ focused, color }) => (
-            <Icon name={focused ? 'people' : 'people'} rawColor={color} size="md" />
+            <Icon name={focused ? 'people-active' : 'people'} rawColor={color} size="md" />
           ),
         }}
       />

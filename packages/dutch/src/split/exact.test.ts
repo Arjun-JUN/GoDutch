@@ -1,8 +1,8 @@
 import { splitByExact } from './exact';
-import { SplitMode } from '@godutch/commons';
+import { SplitMode, asUserId } from '@godutch/commons';
 import type { SplitParticipant } from '@godutch/commons';
 
-const user = (id: string): SplitParticipant => ({ type: 'user', userId: id as any });
+const user = (id: string): SplitParticipant => ({ type: 'user', userId: asUserId(id) });
 
 describe('splitByExact', () => {
   // ── Happy path ──────────────────────────────────────────────────────────

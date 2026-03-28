@@ -1,8 +1,8 @@
 import { splitByPercentage } from './percentage';
-import { SplitMode, ValidationError } from '@godutch/commons';
+import { SplitMode, ValidationError, asUserId } from '@godutch/commons';
 import type { SplitParticipant } from '@godutch/commons';
 
-const user = (id: string): SplitParticipant => ({ type: 'user', userId: id as any });
+const user = (id: string): SplitParticipant => ({ type: 'user', userId: asUserId(id) });
 
 describe('splitByPercentage', () => {
   // ── Happy path ──────────────────────────────────────────────────────────

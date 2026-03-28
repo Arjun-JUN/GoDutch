@@ -1,5 +1,5 @@
-import type { Group, GroupMembership, Member } from '@godutch/commons';
-import type { GroupId, UserId } from '@godutch/commons';
+import type { GroupMembership, Member } from '@godutch/commons';
+import type { UserId } from '@godutch/commons';
 
 export type CreateGroupInput = {
   name: string;

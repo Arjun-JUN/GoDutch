@@ -5,7 +5,8 @@ import type {
   BalanceSummary,
   PersonBalance,
 } from '@godutch/commons';
-import type { GroupId } from '@godutch/commons';
+import type { GroupId, BalanceParty } from '@godutch/commons';
+import { asUserId, asGuestId } from '@godutch/commons';
 
 type ParticipantKey = string; // userId or guestId
 
@@ -82,9 +83,11 @@ export function computeBalances(
 
   const perPerson: PersonBalance[] = [];
   for (const [key, netCents] of ledger.entries()) {
-    const rawId = key.split(':')[1] ?? key;
+    const [prefix, rawId] = key.split(':') as [string, string];
+    const party: BalanceParty =
+      prefix === 'guest' ? asGuestId(rawId) : asUserId(rawId);
     perPerson.push({
-      party: rawId as any,
+      party,
       displayName: displayNames.get(rawId) ?? rawId,
       netAmountCents: netCents,
       currency,

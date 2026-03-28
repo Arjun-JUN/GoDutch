@@ -1,9 +1,9 @@
 import { validateSplits, unassignedCents } from './validate';
-import { SplitMode } from '@godutch/commons';
+import { SplitMode, asUserId } from '@godutch/commons';
 import type { SplitResult } from './equal';
 import type { SplitParticipant } from '@godutch/commons';
 
-const user = (id: string): SplitParticipant => ({ type: 'user', userId: id as any });
+const user = (id: string): SplitParticipant => ({ type: 'user', userId: asUserId(id) });
 
 const makeResult = (cents: number): SplitResult => ({
   participant: user('p'),

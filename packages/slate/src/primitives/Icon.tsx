@@ -31,7 +31,9 @@ const ICON_MAP = {
   // Domain
   'receipt': 'receipt-outline',
   'wallet': 'wallet-outline',
+  'wallet-active': 'wallet',
   'people': 'people-outline',
+  'people-active': 'people',
   'person': 'person-outline',
   'person-add': 'person-add-outline',
   'mic': 'mic-outline',
