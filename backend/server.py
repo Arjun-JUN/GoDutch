@@ -206,8 +206,16 @@ async def scan_receipt(request: OCRRequest, current_user: dict = Depends(verify_
         
         return OCRResult(**result)
     except Exception as e:
-        logging.error(f"OCR error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"OCR failed: {str(e)}")
+        error_msg = str(e)
+        logging.error(f"OCR error: {error_msg}")
+        
+        if "budget" in error_msg.lower() or "exceeded" in error_msg.lower():
+            raise HTTPException(
+                status_code=402,
+                detail="OCR budget limit reached. Please top up your Universal Key balance in Profile → Universal Key → Add Balance."
+            )
+        
+        raise HTTPException(status_code=500, detail=f"OCR scanning failed. Please try again or enter details manually.")
 
 @api_router.post("/groups", response_model=Group)
 async def create_group(group_data: GroupCreate, current_user: dict = Depends(verify_token)):

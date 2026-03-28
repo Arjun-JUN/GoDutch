@@ -59,7 +59,13 @@ function GroupsPage({ onLogout }) {
       setMemberEmails(['']);
       loadGroups();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to create group');
+      const errorMessage = error.response?.data?.detail || 'Failed to create group';
+      
+      if (errorMessage.includes('not found')) {
+        toast.error('Some member emails are not registered. Please ask them to sign up first!', { duration: 5000 });
+      } else {
+        toast.error(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
