@@ -66,7 +66,15 @@ function NewExpense({ onLogout }) {
         );
         toast.success('Receipt scanned successfully!');
       } catch (error) {
-        toast.error('Failed to scan receipt');
+        const errorMessage = error.response?.data?.detail || 'Failed to scan receipt';
+        
+        if (error.response?.status === 402) {
+          toast.error(errorMessage, { duration: 6000 });
+        } else {
+          toast.error(errorMessage);
+        }
+        
+        console.error('OCR Error:', error);
       } finally {
         setScanning(false);
       }
