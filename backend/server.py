@@ -62,6 +62,7 @@ class Group(BaseModel):
 class ExpenseItem(BaseModel):
     name: str
     price: float
+    category: str = "Other"
     assigned_to: List[str] = []
 
 class SplitDetail(BaseModel):
@@ -78,6 +79,8 @@ class ExpenseCreate(BaseModel):
     split_type: str
     split_details: List[SplitDetail]
     receipt_image: Optional[str] = None
+    category: str = "Food & Dining"
+    notes: Optional[str] = None
 
 class Expense(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -91,7 +94,25 @@ class Expense(BaseModel):
     split_type: str
     split_details: List[SplitDetail]
     receipt_image: Optional[str] = None
+    category: str = "Food & Dining"
+    notes: Optional[str] = None
     created_at: str
+
+class SmartSplitRequest(BaseModel):
+    group_id: str
+    instruction: str
+    expense_context: Optional[Dict] = None
+
+class SmartSplitResponse(BaseModel):
+    split_plan: Dict
+    clarification_needed: bool = False
+    clarification_question: Optional[str] = None
+
+class UPIPaymentRequest(BaseModel):
+    upi_id: str
+    amount: float
+    settlement_id: str
+    note: Optional[str] = None
 
 class OCRRequest(BaseModel):
     image_base64: str
@@ -327,6 +348,145 @@ async def get_settlements(group_id: str, current_user: dict = Depends(verify_tok
             creditor_data['balance'] -= amount
     
     return settlements
+
+@api_router.post("/ai/smart-split", response_model=SmartSplitResponse)
+async def smart_split(request: SmartSplitRequest, current_user: dict = Depends(verify_token)):
+    try:
+        group = await db.groups.find_one({"id": request.group_id}, {"_id": 0})
+        if not group:
+            raise HTTPException(status_code=404, detail="Group not found")
+        
+        members_info = ", ".join([f"{m['name']} (id: {m['id']})" for m in group['members']])
+        
+        chat = LlmChat(
+            api_key=EMERGENT_LLM_KEY,
+            session_id=f"smart_split_{uuid.uuid4()}",
+            system_message=f"""You are an intelligent expense splitting assistant. 
+Group members: {members_info}
+
+Parse natural language instructions and create precise split plans.
+Return ONLY valid JSON with this structure:
+{{
+  "split_plan": {{
+    "items": [
+      {{
+        "name": "item name",
+        "price": amount,
+        "category": "category",
+        "assigned_to": ["member_id1", "member_id2"]
+      }}
+    ],
+    "split_type": "custom|equal|item-based"
+  }},
+  "clarification_needed": false,
+  "clarification_question": null
+}}
+
+If unclear, set clarification_needed=true and ask a specific question."""
+        ).with_model("openai", "gpt-5.2")
+        
+        context = f"Expense context: {request.expense_context}" if request.expense_context else ""
+        prompt = f"{request.instruction}\n{context}"
+        
+        user_message = UserMessage(text=prompt)
+        response = await chat.send_message(user_message)
+        
+        import json
+        result = json.loads(response.strip())
+        
+        return SmartSplitResponse(**result)
+    except Exception as e:
+        logging.error(f"Smart split error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Smart split failed: {str(e)}")
+
+@api_router.post("/upi/initiate-payment")
+async def initiate_upi_payment(payment: UPIPaymentRequest, current_user: dict = Depends(verify_token)):
+    try:
+        payment_id = str(uuid.uuid4())
+        
+        upi_url = f"upi://pay?pa={payment.upi_id}&pn=goDutch&am={payment.amount}&cu=INR&tn={payment.note or 'Settlement'}"
+        
+        payment_doc = {
+            "id": payment_id,
+            "from_user": current_user['user_id'],
+            "upi_id": payment.upi_id,
+            "amount": payment.amount,
+            "settlement_id": payment.settlement_id,
+            "note": payment.note,
+            "status": "initiated",
+            "upi_url": upi_url,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.payments.insert_one(payment_doc)
+        
+        return {
+            "payment_id": payment_id,
+            "upi_url": upi_url,
+            "status": "initiated",
+            "qr_data": upi_url
+        }
+    except Exception as e:
+        logging.error(f"UPI payment error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Payment initiation failed")
+
+@api_router.get("/expenses/categories")
+async def get_expense_categories(current_user: dict = Depends(verify_token)):
+    return {
+        "categories": [
+            "Food & Dining",
+            "Transportation",
+            "Entertainment",
+            "Shopping",
+            "Groceries",
+            "Utilities",
+            "Healthcare",
+            "Travel",
+            "Other"
+        ]
+    }
+
+@api_router.get("/groups/{group_id}/reports")
+async def get_expense_reports(group_id: str, current_user: dict = Depends(verify_token)):
+    try:
+        group = await db.groups.find_one({"id": group_id, "members.id": current_user['user_id']}, {"_id": 0})
+        if not group:
+            raise HTTPException(status_code=404, detail="Group not found")
+        
+        expenses = await db.expenses.find({"group_id": group_id}, {"_id": 0}).to_list(1000)
+        
+        total_spent = sum(e['total_amount'] for e in expenses)
+        
+        category_breakdown = {}
+        for expense in expenses:
+            category = expense.get('category', 'Other')
+            category_breakdown[category] = category_breakdown.get(category, 0) + expense['total_amount']
+        
+        user_spending = {}
+        for expense in expenses:
+            for split in expense['split_details']:
+                uid = split['user_id']
+                uname = split['user_name']
+                if uid not in user_spending:
+                    user_spending[uid] = {"name": uname, "amount": 0}
+                user_spending[uid]['amount'] += split['amount']
+        
+        monthly_trend = {}
+        for expense in expenses:
+            month = expense['date'][:7]
+            monthly_trend[month] = monthly_trend.get(month, 0) + expense['total_amount']
+        
+        return {
+            "total_expenses": len(expenses),
+            "total_amount": round(total_spent, 2),
+            "average_expense": round(total_spent / len(expenses), 2) if expenses else 0,
+            "category_breakdown": category_breakdown,
+            "user_spending": list(user_spending.values()),
+            "monthly_trend": monthly_trend
+        }
+    except Exception as e:
+        logging.error(f"Reports error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to generate reports")
 
 app.include_router(api_router)
 

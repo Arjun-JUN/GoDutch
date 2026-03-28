@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { API, getAuthHeader } from '../App';
-import { ArrowsLeftRight, Check } from '@phosphor-icons/react';
+import { ArrowsLeftRight, Check, CurrencyInr, QrCode } from '@phosphor-icons/react';
 import Header from '../components/Header';
 
 function SettlementsPage({ onLogout }) {
@@ -10,6 +11,10 @@ function SettlementsPage({ onLogout }) {
   const [selectedGroup, setSelectedGroup] = useState('');
   const [settlements, setSettlements] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedSettlement, setSelectedSettlement] = useState(null);
+  const [upiId, setUpiId] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadGroups();
@@ -52,14 +57,55 @@ function SettlementsPage({ onLogout }) {
     }
   };
 
+  const handlePayNow = (settlement) => {
+    setSelectedSettlement(settlement);
+    setShowPaymentModal(true);
+  };
+
+  const initiateUPIPayment = async () => {
+    if (!upiId.trim()) {
+      toast.error('Please enter UPI ID');
+      return;
+    }
+
+    try {
+      const res = await axios.post(
+        `${API}/upi/initiate-payment`,
+        {
+          upi_id: upiId,
+          amount: selectedSettlement.amount,
+          settlement_id: `${selectedGroup}-${selectedSettlement.from_user_id}-${selectedSettlement.to_user_id}`,
+          note: `goDutch settlement`
+        },
+        { headers: getAuthHeader() }
+      );
+
+      window.location.href = res.data.upi_url;
+      
+      toast.success('Opening UPI app...');
+      setShowPaymentModal(false);
+    } catch (error) {
+      toast.error('Payment initiation failed');
+    }
+  };
+
   return (
     <div className="min-h-screen mobile-safe-padding" style={{ background: '#FFFDF2' }}>
       <Header onLogout={onLogout} />
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl tracking-tight font-bold mb-6 md:mb-8" style={{ fontFamily: 'Cabinet Grotesk, sans-serif' }}>
-          Settlements
-        </h1>
+        <div className="flex justify-between items-center mb-6 md:mb-8">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl tracking-tight font-bold" style={{ fontFamily: 'Cabinet Grotesk, sans-serif' }}>
+            Settlements
+          </h1>
+          <button
+            data-testid="view-reports-btn"
+            onClick={() => navigate(`/reports/${selectedGroup}`)}
+            className="neo-btn-secondary text-xs md:text-sm"
+          >
+            View Reports
+          </button>
+        </div>
 
         <div className="mb-4 md:mb-6">
           <label className="block text-xs md:text-sm font-bold uppercase tracking-wider mb-2">
@@ -93,46 +139,41 @@ function SettlementsPage({ onLogout }) {
               <p className="text-sm text-gray-500 mt-2">No outstanding payments in this group</p>
             </div>
           ) : (
-            <div className="space-y-4" data-testid="settlements-list">
+            <div className="space-y-3 md:space-y-4" data-testid="settlements-list">
               {settlements.map((settlement, index) => (
                 <div
                   key={index}
                   data-testid={`settlement-${index}`}
-                  className="flex items-center justify-between p-4 border-2 border-[#0F0F0F] rounded-lg bg-white"
+                  className="flex flex-col gap-3 p-3 md:p-4 border-2 border-[#0F0F0F] rounded-lg bg-white"
                 >
-                  <div className="flex items-center gap-4 flex-1">
-                    <div className="w-10 h-10 bg-[#FFC4D9] border-2 border-[#0F0F0F] rounded-full flex items-center justify-center font-bold text-sm">
-                      {settlement.from_user_name.charAt(0).toUpperCase()}
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className="w-10 h-10 bg-[#FFC4D9] border-2 border-[#0F0F0F] rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">
+                        {settlement.from_user_name.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-sm truncate" data-testid={`settlement-from-${index}`}>
+                          {settlement.from_user_name}
+                        </p>
+                        <p className="text-xs text-gray-600">owes {settlement.to_user_name}</p>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <p className="font-bold" data-testid={`settlement-from-${index}`}>
-                        {settlement.from_user_name}
+
+                    <div className="text-right">
+                      <p className="font-mono text-lg md:text-2xl font-bold tracking-tighter" data-testid={`settlement-amount-${index}`}>
+                        ₹{settlement.amount.toFixed(2)}
                       </p>
-                      <p className="text-sm text-gray-600">owes</p>
                     </div>
                   </div>
-
-                  <div className="mx-4">
-                    <ArrowsLeftRight size={24} weight="bold" className="text-gray-400" />
-                  </div>
-
-                  <div className="flex items-center gap-4 flex-1">
-                    <div className="flex-1 text-right">
-                      <p className="font-bold" data-testid={`settlement-to-${index}`}>
-                        {settlement.to_user_name}
-                      </p>
-                      <p className="text-sm text-gray-600">receives</p>
-                    </div>
-                    <div className="w-10 h-10 bg-[#BDE6A3] border-2 border-[#0F0F0F] rounded-full flex items-center justify-center font-bold text-sm">
-                      {settlement.to_user_name.charAt(0).toUpperCase()}
-                    </div>
-                  </div>
-
-                  <div className="ml-6 text-right">
-                    <p className="font-mono text-2xl font-bold tracking-tighter" data-testid={`settlement-amount-${index}`}>
-                      ${settlement.amount.toFixed(2)}
-                    </p>
-                  </div>
+                  
+                  <button
+                    data-testid={`pay-now-${index}`}
+                    onClick={() => handlePayNow(settlement)}
+                    className="neo-btn-primary w-full text-sm flex items-center justify-center gap-2"
+                  >
+                    <CurrencyInr size={18} weight="bold" />
+                    Pay via UPI
+                  </button>
                 </div>
               ))}
             </div>
@@ -140,13 +181,66 @@ function SettlementsPage({ onLogout }) {
         </div>
 
         {settlements.length > 0 && (
-          <div className="mt-6 p-4 bg-white border-2 border-[#0F0F0F] rounded-lg">
-            <p className="text-sm text-gray-600">
-              <strong>Tip:</strong> Use your preferred payment method (Venmo, Cash App, etc.) to settle up, then ask the group creator to mark as paid.
+          <div className="mt-4 md:mt-6 p-3 md:p-4 bg-white border-2 border-[#0F0F0F] rounded-lg">
+            <p className="text-xs md:text-sm text-gray-600">
+              <strong>Tip:</strong> Click "Pay via UPI" to settle directly using any UPI app (Google Pay, PhonePe, Paytm, etc.)
             </p>
           </div>
         )}
       </div>
+
+      {showPaymentModal && selectedSettlement && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" data-testid="upi-payment-modal">
+          <div className="neo-card p-6 md:p-8 max-w-md w-full">
+            <h2 className="text-xl md:text-2xl font-bold mb-4" style={{ fontFamily: 'Cabinet Grotesk, sans-serif' }}>
+              Pay via UPI
+            </h2>
+            
+            <div className="mb-6">
+              <div className="p-4 bg-[#C4F1F9] border-2 border-[#0F0F0F] rounded-lg mb-4">
+                <p className="text-sm mb-2">You are paying:</p>
+                <p className="font-mono text-2xl font-bold">₹{selectedSettlement.amount.toFixed(2)}</p>
+                <p className="text-xs mt-2 text-gray-600">To: {selectedSettlement.to_user_name}</p>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-bold uppercase tracking-wider mb-2">
+                  Recipient's UPI ID
+                </label>
+                <input
+                  data-testid="upi-id-input"
+                  type="text"
+                  value={upiId}
+                  onChange={(e) => setUpiId(e.target.value)}
+                  className="neo-input w-full"
+                  placeholder="username@upi"
+                />
+                <p className="text-xs text-gray-600 mt-2">
+                  Ask {selectedSettlement.to_user_name} for their UPI ID
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex gap-3">
+              <button
+                data-testid="cancel-payment-btn"
+                onClick={() => setShowPaymentModal(false)}
+                className="neo-btn-secondary flex-1"
+              >
+                Cancel
+              </button>
+              <button
+                data-testid="proceed-payment-btn"
+                onClick={initiateUPIPayment}
+                className="neo-btn-primary flex-1 flex items-center justify-center gap-2"
+              >
+                <CurrencyInr size={18} weight="bold" />
+                Pay Now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

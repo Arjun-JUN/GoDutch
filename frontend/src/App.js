@@ -9,6 +9,7 @@ import NewExpense from './pages/NewExpense';
 import GroupsPage from './pages/GroupsPage';
 import GroupDetail from './pages/GroupDetail';
 import SettlementsPage from './pages/SettlementsPage';
+import ReportsPage from './pages/ReportsPage';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;
@@ -97,6 +98,16 @@ function App() {
             element={
               isAuthenticated ? (
                 <SettlementsPage onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/auth" />
+              )
+            }
+          />
+          <Route
+            path="/reports/:groupId"
+            element={
+              isAuthenticated ? (
+                <ReportsPage onLogout={handleLogout} />
               ) : (
                 <Navigate to="/auth" />
               )
