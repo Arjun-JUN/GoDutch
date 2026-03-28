@@ -10,6 +10,9 @@ import GroupsPage from './pages/GroupsPage';
 import GroupDetail from './pages/GroupDetail';
 import SettlementsPage from './pages/SettlementsPage';
 import ReportsPage from './pages/ReportsPage';
+import UPIHome from './pages/UPIHome';
+import SendMoney from './pages/SendMoney';
+import AddBankAccount from './pages/AddBankAccount';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;
@@ -108,6 +111,36 @@ function App() {
             element={
               isAuthenticated ? (
                 <ReportsPage onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/auth" />
+              )
+            }
+          />
+          <Route
+            path="/upi"
+            element={
+              isAuthenticated ? (
+                <UPIHome onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/auth" />
+              )
+            }
+          />
+          <Route
+            path="/upi/send"
+            element={
+              isAuthenticated ? (
+                <SendMoney onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/auth" />
+              )
+            }
+          />
+          <Route
+            path="/upi/accounts/add"
+            element={
+              isAuthenticated ? (
+                <AddBankAccount onLogout={handleLogout} />
               ) : (
                 <Navigate to="/auth" />
               )
