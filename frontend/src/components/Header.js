@@ -127,8 +127,8 @@ function Header({ onLogout }) {
               isActive('/dashboard') ? 'bg-[#C4F1F9]' : 'bg-white'
             }`}
           >
-            <House size={20} weight=\"bold\" />
-            <span className=\"text-xs font-bold\">Home</span>
+            <House size={20} weight="bold" />
+            <span className="text-xs font-bold">Home</span>
           </button>
           <button
             data-testid="mobile-nav-upi"
@@ -137,8 +137,8 @@ function Header({ onLogout }) {
               isActive('/upi') || location.pathname.startsWith('/upi') ? 'bg-[#C4F1F9]' : 'bg-white'
             }`}
           >
-            <CurrencyInr size={20} weight=\"bold\" />
-            <span className=\"text-xs font-bold\">UPI</span>
+            <CurrencyInr size={20} weight="bold" />
+            <span className="text-xs font-bold">UPI</span>
           </button>
           <button
             data-testid="mobile-nav-new-expense"
@@ -147,8 +147,8 @@ function Header({ onLogout }) {
               isActive('/new-expense') ? 'bg-[#C4F1F9]' : 'bg-white'
             }`}
           >
-            <Plus size={20} weight=\"bold\" />
-            <span className=\"text-xs font-bold\">Add</span>
+            <Plus size={20} weight="bold" />
+            <span className="text-xs font-bold">Add</span>
           </button>
           <button
             data-testid="mobile-nav-groups"
@@ -157,8 +157,8 @@ function Header({ onLogout }) {
               isActive('/groups') || location.pathname.startsWith('/groups') ? 'bg-[#C4F1F9]' : 'bg-white'
             }`}
           >
-            <Users size={20} weight=\"bold\" />
-            <span className=\"text-xs font-bold\">Groups</span>
+            <Users size={20} weight="bold" />
+            <span className="text-xs font-bold">Groups</span>
           </button>
           <button
             data-testid="mobile-nav-settlements"
@@ -167,8 +167,8 @@ function Header({ onLogout }) {
               isActive('/settlements') ? 'bg-[#C4F1F9]' : 'bg-white'
             }`}
           >
-            <ArrowsLeftRight size={20} weight=\"bold\" />
-            <span className=\"text-xs font-bold\">Settle</span>
+            <ArrowsLeftRight size={20} weight="bold" />
+            <span className="text-xs font-bold">Settle</span>
           </button>
         </div>
       </nav>
