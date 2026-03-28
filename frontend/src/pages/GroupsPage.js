@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { API, getAuthHeader } from '../App';
@@ -6,6 +7,7 @@ import { Users, Plus, X } from '@phosphor-icons/react';
 import Header from '../components/Header';
 
 function GroupsPage({ onLogout }) {
+  const navigate = useNavigate();
   const [groups, setGroups] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [groupName, setGroupName] = useState('');
@@ -72,52 +74,63 @@ function GroupsPage({ onLogout }) {
   };
 
   return (
-    <div className="min-h-screen" style={{ background: '#FFFDF2' }}>
+    <div className="min-h-screen mobile-safe-padding" style={{ background: '#FFFDF2' }}>
       <Header onLogout={onLogout} />
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex justify-between items-center mb-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
+        <div className="flex justify-between items-center mb-6 md:mb-8">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl tracking-tight font-bold" style={{ fontFamily: 'Cabinet Grotesk, sans-serif' }}>
             Groups
           </h1>
           <button
             data-testid="create-group-btn"
             onClick={() => setShowCreateModal(true)}
-            className="neo-btn-primary"
+            className="neo-btn-primary text-sm md:text-base"
           >
             <Plus size={20} weight="bold" className="inline mr-2" />
-            New Group
+            <span className="hidden sm:inline">New Group</span>
+            <span className="sm:hidden">New</span>
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6" data-testid="groups-list">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6" data-testid="groups-list">
           {groups.map((group) => (
-            <div key={group.id} className="neo-card p-6" data-testid={`group-${group.id}`}>
+            <button
+              key={group.id}
+              onClick={() => navigate(`/groups/${group.id}`)}
+              className="neo-card-interactive p-4 md:p-6 text-left w-full"
+              data-testid={`group-${group.id}`}
+            >
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 bg-[#BDE6A3] border-2 border-[#0F0F0F] rounded-lg flex items-center justify-center flex-shrink-0">
                   <Users size={24} weight="bold" />
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold mb-2" style={{ fontFamily: 'Cabinet Grotesk, sans-serif' }} data-testid={`group-name-${group.id}`}>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-lg md:text-xl font-bold mb-2 truncate" style={{ fontFamily: 'Cabinet Grotesk, sans-serif' }} data-testid={`group-name-${group.id}`}>
                     {group.name}
                   </h3>
                   <p className="text-sm text-gray-600 mb-3">
                     {group.members.length} members
                   </p>
-                  <div className="space-y-1">
-                    {group.members.map((member) => (
+                  <div className="flex flex-wrap gap-1">
+                    {group.members.slice(0, 3).map((member) => (
                       <div
                         key={member.id}
-                        className="text-sm bg-white border-2 border-[#0F0F0F] rounded px-3 py-1 inline-block mr-2 mb-1"
+                        className="text-xs bg-white border-2 border-[#0F0F0F] rounded px-2 py-1"
                         data-testid={`member-${member.id}`}
                       >
                         {member.name}
                       </div>
                     ))}
+                    {group.members.length > 3 && (
+                      <div className="text-xs bg-white border-2 border-[#0F0F0F] rounded px-2 py-1">
+                        +{group.members.length - 3}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
-            </div>
+            </button>
           ))}
 
           {groups.length === 0 && (
