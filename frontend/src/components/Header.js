@@ -1,175 +1,130 @@
-import { useNavigate, useLocation } from 'react-router-dom';
-import { Receipt, House, Users, ArrowsLeftRight, SignOut, Plus, CurrencyInr } from '@phosphor-icons/react';
-import { getCurrentUser } from '../App';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { ArrowsLeftRight, CurrencyInr, House, Plus, Receipt, SignOut, Users } from '@phosphor-icons/react';
+import { motion, useReducedMotion } from 'framer-motion';
+import { AppButton, IconBadge } from './app';
 
 function Header({ onLogout }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const user = getCurrentUser();
+  const prefersReducedMotion = useReducedMotion();
 
-  const isActive = (path) => location.pathname === path;
+  const navItems = [
+    { key: 'dashboard', label: 'Home', path: '/dashboard', icon: House },
+    { key: 'upi', label: 'UPI', path: '/upi', icon: CurrencyInr, match: (pathname) => pathname.startsWith('/upi') },
+    { key: 'new-expense', label: 'Split', path: '/new-expense', icon: Plus },
+    { key: 'groups', label: 'Groups', path: '/groups', icon: Users, match: (pathname) => pathname.startsWith('/groups') },
+    { key: 'settlements', label: 'Settle', path: '/settlements', icon: ArrowsLeftRight },
+  ];
+  const actionItems = [
+    ...navItems,
+    { key: 'logout', label: 'Logout', icon: SignOut, onClick: onLogout },
+  ];
+
+  const isActive = (item) => {
+    if (item.key === 'logout') {
+      return false;
+    }
+
+    return item.match ? item.match(location.pathname) : location.pathname === item.path;
+  };
+
+  const handleItemClick = (item) => {
+    if (item.onClick) {
+      item.onClick();
+      return;
+    }
+
+    navigate(item.path);
+  };
 
   return (
     <>
-      {/* Desktop Header */}
       <header
-        className="border-b-2 border-[#0F0F0F] sticky top-0 z-50 hidden md:block"
-        style={{ background: '#FFFDF2' }}
+        className="sticky top-0 z-50 border-b border-[rgba(169,180,179,0.14)] bg-[rgba(249,251,250,0.82)] backdrop-blur-xl"
         data-testid="header"
       >
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-4">
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-[#C4F1F9] border-2 border-[#0F0F0F] rounded-lg flex items-center justify-center">
-                <Receipt size={20} weight="bold" />
-              </div>
-              <h1
-                className="text-xl font-black tracking-tight"
-                style={{ fontFamily: 'Cabinet Grotesk, sans-serif' }}
-                data-testid="app-title"
-              >
-                goDutch
-              </h1>
-            </div>
-
-            <nav className="flex items-center gap-2">
-              <button
-                data-testid="nav-dashboard"
-                onClick={() => navigate('/dashboard')}
-                className={`flex items-center gap-2 px-4 py-2 font-bold text-sm border-2 border-[#0F0F0F] rounded-full transition-all ${
-                  isActive('/dashboard')
-                    ? 'bg-[#C4F1F9]'
-                    : 'bg-white hover:bg-gray-50'
-                }`}
-              >
-                <House size={16} weight="bold" />
-                Dashboard
-              </button>
-              <button
-                data-testid="nav-groups"
-                onClick={() => navigate('/groups')}
-                className={`flex items-center gap-2 px-4 py-2 font-bold text-sm border-2 border-[#0F0F0F] rounded-full transition-all ${
-                  isActive('/groups')
-                    ? 'bg-[#C4F1F9]'
-                    : 'bg-white hover:bg-gray-50'
-                }`}
-              >
-                <Users size={16} weight="bold" />
-                Groups
-              </button>
-              <button
-                data-testid="nav-settlements"
-                onClick={() => navigate('/settlements')}
-                className={`flex items-center gap-2 px-4 py-2 font-bold text-sm border-2 border-[#0F0F0F] rounded-full transition-all ${
-                  isActive('/settlements')
-                    ? 'bg-[#C4F1F9]'
-                    : 'bg-white hover:bg-gray-50'
-                }`}
-              >
-                <ArrowsLeftRight size={16} weight="bold" />
-                Settlements
-              </button>
-            </nav>
-
-            <button
-              data-testid="logout-btn"
-              onClick={onLogout}
-              className="neo-btn-secondary flex items-center gap-2 text-sm"
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 md:px-6">
+          <div className="flex items-center gap-3">
+            <motion.button
+              type="button"
+              onClick={() => navigate('/dashboard')}
+              whileHover={prefersReducedMotion ? undefined : { y: -1 }}
+              whileTap={prefersReducedMotion ? undefined : { scale: 0.99 }}
+              transition={{ duration: 0.14, ease: 'easeOut' }}
             >
-              <SignOut size={16} weight="bold" />
-              <span className="hidden sm:inline">Logout</span>
-            </button>
+              <IconBadge icon={Receipt} tone="soft" className="h-11 w-11 bg-[rgba(209,232,221,0.75)]" />
+            </motion.button>
+            <motion.button
+              type="button"
+              onClick={() => navigate('/dashboard')}
+              className="text-left"
+              data-testid="app-title"
+              whileHover={prefersReducedMotion ? undefined : { opacity: 0.92 }}
+              transition={{ duration: 0.14, ease: 'easeOut' }}
+            >
+              <div className="text-lg font-extrabold tracking-[-0.04em] text-[var(--app-primary)] md:text-xl">GoDutch</div>
+              <div className="hidden text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--app-muted)] md:block">
+                Alpine Ledger
+              </div>
+            </motion.button>
           </div>
+
+          <nav className="hidden items-center gap-2 md:flex">
+            {actionItems.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item);
+              return (
+                <motion.div key={item.key}>
+                  <AppButton
+                    data-testid={`nav-${item.key}`}
+                    onClick={() => handleItemClick(item)}
+                    variant={active ? 'secondary' : 'ghost'}
+                    size="sm"
+                    className={`${
+                      active
+                        ? 'bg-[var(--app-soft-strong)] text-[var(--app-primary-strong)]'
+                        : 'text-[var(--app-muted)]'
+                    }`}
+                  >
+                    <Icon size={16} weight={active ? 'fill' : 'bold'} />
+                    {item.label}
+                  </AppButton>
+                </motion.div>
+              );
+            })}
+          </nav>
         </div>
       </header>
 
-      {/* Mobile Header */}
-      <header
-        className="border-b-2 border-[#0F0F0F] sticky top-0 z-50 md:hidden"
-        style={{ background: '#FFFDF2' }}
-        data-testid="mobile-header"
-      >
-        <div className="px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-[#C4F1F9] border-2 border-[#0F0F0F] rounded-lg flex items-center justify-center">
-                <Receipt size={16} weight="bold" />
-              </div>
-              <h1
-                className="text-lg font-black tracking-tight"
-                style={{ fontFamily: 'Cabinet Grotesk, sans-serif' }}
-              >
-                goDutch
-              </h1>
-            </div>
-            <button
-              data-testid="mobile-logout-btn"
-              onClick={onLogout}
-              className="p-2 border-2 border-[#0F0F0F] rounded-lg bg-white"
-            >
-              <SignOut size={20} weight="bold" />
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* Mobile Bottom Navigation */}
       <nav
-        className="fixed bottom-0 left-0 right-0 border-t-2 border-[#0F0F0F] z-50 md:hidden"
-        style={{ background: '#FFFDF2' }}
+        className="fixed bottom-0 left-0 right-0 z-50 border-t border-[rgba(169,180,179,0.16)] bg-[rgba(249,251,250,0.9)] px-3 pb-5 pt-3 backdrop-blur-xl md:hidden"
         data-testid="mobile-nav"
       >
-        <div className="grid grid-cols-5 gap-1 p-2">
-          <button
-            data-testid="mobile-nav-dashboard"
-            onClick={() => navigate('/dashboard')}
-            className={`flex flex-col items-center gap-1 py-2 px-2 border-2 border-[#0F0F0F] rounded-lg transition-all ${
-              isActive('/dashboard') ? 'bg-[#C4F1F9]' : 'bg-white'
-            }`}
-          >
-            <House size={20} weight="bold" />
-            <span className="text-xs font-bold">Home</span>
-          </button>
-          <button
-            data-testid="mobile-nav-upi"
-            onClick={() => navigate('/upi')}
-            className={`flex flex-col items-center gap-1 py-2 px-2 border-2 border-[#0F0F0F] rounded-lg transition-all ${
-              isActive('/upi') || location.pathname.startsWith('/upi') ? 'bg-[#C4F1F9]' : 'bg-white'
-            }`}
-          >
-            <CurrencyInr size={20} weight="bold" />
-            <span className="text-xs font-bold">UPI</span>
-          </button>
-          <button
-            data-testid="mobile-nav-new-expense"
-            onClick={() => navigate('/new-expense')}
-            className={`flex flex-col items-center gap-1 py-2 px-2 border-2 border-[#0F0F0F] rounded-lg transition-all ${
-              isActive('/new-expense') ? 'bg-[#C4F1F9]' : 'bg-white'
-            }`}
-          >
-            <Plus size={20} weight="bold" />
-            <span className="text-xs font-bold">Add</span>
-          </button>
-          <button
-            data-testid="mobile-nav-groups"
-            onClick={() => navigate('/groups')}
-            className={`flex flex-col items-center gap-1 py-2 px-2 border-2 border-[#0F0F0F] rounded-lg transition-all ${
-              isActive('/groups') || location.pathname.startsWith('/groups') ? 'bg-[#C4F1F9]' : 'bg-white'
-            }`}
-          >
-            <Users size={20} weight="bold" />
-            <span className="text-xs font-bold">Groups</span>
-          </button>
-          <button
-            data-testid="mobile-nav-settlements"
-            onClick={() => navigate('/settlements')}
-            className={`flex flex-col items-center gap-1 py-2 px-2 border-2 border-[#0F0F0F] rounded-lg transition-all ${
-              isActive('/settlements') ? 'bg-[#C4F1F9]' : 'bg-white'
-            }`}
-          >
-            <ArrowsLeftRight size={20} weight="bold" />
-            <span className="text-xs font-bold">Settle</span>
-          </button>
+        <div className="grid grid-cols-6 gap-2">
+          {actionItems.map((item) => {
+            const Icon = item.icon;
+            const active = isActive(item);
+            const testId = item.key === 'new-expense' ? 'mobile-nav-new-expense' : `mobile-nav-${item.key}`;
+            return (
+              <motion.button
+                key={item.key}
+                type="button"
+                data-testid={testId}
+                onClick={() => handleItemClick(item)}
+                className={`flex flex-col items-center gap-1 rounded-[1.25rem] px-2 py-2.5 text-[11px] font-bold transition-all ${
+                  active
+                    ? 'bg-[var(--app-soft-strong)] text-[var(--app-primary-strong)]'
+                    : 'bg-[rgba(255,255,255,0.66)] text-[var(--app-muted)]'
+                }`}
+                whileHover={prefersReducedMotion ? undefined : { y: -1 }}
+                whileTap={prefersReducedMotion ? undefined : { scale: 0.99 }}
+                transition={{ duration: 0.14, ease: 'easeOut' }}
+              >
+                <Icon size={20} weight={active ? 'fill' : 'bold'} />
+                <span>{item.label}</span>
+              </motion.button>
+            );
+          })}
         </div>
       </nav>
     </>

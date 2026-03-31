@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { API, getAuthHeader } from '../App';
 import { Users, Plus, X } from '@phosphor-icons/react';
 import Header from '../components/Header';
+import { AppButton, AppInput, AppModal, AppShell, EmptyState, Field, MemberBadge, ModalHeader, PageContent, PageHero } from '../components/app';
 
 function GroupsPage({ onLogout }) {
   const navigate = useNavigate();
@@ -48,7 +49,7 @@ function GroupsPage({ onLogout }) {
     setLoading(true);
 
     try {
-      const emails = memberEmails.filter((e) => e.trim());
+      const emails = memberEmails.filter((email) => email.trim());
       await axios.post(
         `${API}/groups`,
         { name: groupName, member_emails: emails },
@@ -62,7 +63,7 @@ function GroupsPage({ onLogout }) {
       loadGroups();
     } catch (error) {
       const errorMessage = error.response?.data?.detail || 'Failed to create group';
-      
+
       if (errorMessage.includes('not found')) {
         toast.error('Some member emails are not registered. Please ask them to sign up first!', { duration: 5000 });
       } else {
@@ -74,58 +75,59 @@ function GroupsPage({ onLogout }) {
   };
 
   return (
-    <div className="min-h-screen mobile-safe-padding" style={{ background: '#FFFDF2' }}>
+    <AppShell>
       <Header onLogout={onLogout} />
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
-        <div className="flex justify-between items-center mb-6 md:mb-8">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl tracking-tight font-bold" style={{ fontFamily: 'Cabinet Grotesk, sans-serif' }}>
-            Groups
-          </h1>
-          <button
-            data-testid="create-group-btn"
-            onClick={() => setShowCreateModal(true)}
-            className="neo-btn-primary text-sm md:text-base"
-          >
-            <Plus size={20} weight="bold" className="inline mr-2" />
-            <span className="hidden sm:inline">New Group</span>
-            <span className="sm:hidden">New</span>
-          </button>
-        </div>
+      <PageContent className="max-w-5xl">
+        <PageHero
+          eyebrow="Shared Circles"
+          title="Groups"
+          description="Create reusable spaces for roommates, trips, teams, and any other shared tab you want to keep consistent."
+          actions={(
+            <AppButton
+              data-testid="create-group-btn"
+              onClick={() => setShowCreateModal(true)}
+            >
+              <Plus size={20} weight="bold" />
+              <span className="hidden sm:inline">New Group</span>
+              <span className="sm:hidden">New</span>
+            </AppButton>
+          )}
+        />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6" data-testid="groups-list">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6" data-testid="groups-list">
           {groups.map((group) => (
             <button
               key={group.id}
               onClick={() => navigate(`/groups/${group.id}`)}
-              className="neo-card-interactive p-4 md:p-6 text-left w-full"
+              className="app-surface-interactive w-full p-4 text-left md:p-6"
               data-testid={`group-${group.id}`}
             >
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-[#BDE6A3] border-2 border-[#0F0F0F] rounded-lg flex items-center justify-center flex-shrink-0">
+                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-[1.15rem] bg-[var(--app-soft-strong)] text-[var(--app-primary-strong)]">
                   <Users size={24} weight="bold" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-lg md:text-xl font-bold mb-2 truncate" style={{ fontFamily: 'Cabinet Grotesk, sans-serif' }} data-testid={`group-name-${group.id}`}>
+                <div className="min-w-0 flex-1">
+                  <h3 className="mb-2 truncate text-lg font-extrabold tracking-[-0.03em] text-[var(--app-foreground)] md:text-xl" data-testid={`group-name-${group.id}`}>
                     {group.name}
                   </h3>
-                  <p className="text-sm text-gray-600 mb-3">
+                  <p className="mb-3 text-sm text-[var(--app-muted)]">
                     {group.members.length} members
                   </p>
                   <div className="flex flex-wrap gap-1">
                     {group.members.slice(0, 3).map((member) => (
-                      <div
+                      <MemberBadge
                         key={member.id}
-                        className="text-xs bg-white border-2 border-[#0F0F0F] rounded px-2 py-1"
+                        className="px-3 py-1.5 text-xs"
                         data-testid={`member-${member.id}`}
                       >
                         {member.name}
-                      </div>
+                      </MemberBadge>
                     ))}
                     {group.members.length > 3 && (
-                      <div className="text-xs bg-white border-2 border-[#0F0F0F] rounded px-2 py-1">
+                      <MemberBadge className="px-3 py-1.5 text-xs">
                         +{group.members.length - 3}
-                      </div>
+                      </MemberBadge>
                     )}
                   </div>
                 </div>
@@ -134,112 +136,95 @@ function GroupsPage({ onLogout }) {
           ))}
 
           {groups.length === 0 && (
-            <div className="col-span-2 text-center py-12">
-              <Users size={64} weight="bold" className="mx-auto mb-4 text-gray-400" />
-              <p className="text-gray-600 mb-4">No groups yet</p>
-              <button
-                data-testid="create-first-group-btn"
-                onClick={() => setShowCreateModal(true)}
-                className="neo-btn-primary"
-              >
-                Create Your First Group
-              </button>
+            <div className="col-span-2">
+              <EmptyState
+                icon={Users}
+                title="No groups yet"
+                action={(
+                  <AppButton
+                    data-testid="create-first-group-btn"
+                    onClick={() => setShowCreateModal(true)}
+                  >
+                    Create Your First Group
+                  </AppButton>
+                )}
+              />
             </div>
           )}
         </div>
-      </div>
+      </PageContent>
 
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" data-testid="create-group-modal">
-          <div className="neo-card p-8 max-w-md w-full">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold" style={{ fontFamily: 'Cabinet Grotesk, sans-serif' }}>
-                Create Group
-              </h2>
-              <button
-                data-testid="close-modal-btn"
-                onClick={() => setShowCreateModal(false)}
-                className="text-gray-600 hover:text-black"
-              >
-                <X size={24} weight="bold" />
-              </button>
-            </div>
+      <AppModal open={showCreateModal} data-testid="create-group-modal">
+        <ModalHeader title="Create Group" onClose={() => setShowCreateModal(false)} />
 
-            <form onSubmit={handleCreateGroup} className="space-y-4">
-              <div>
-                <label className="block text-sm font-bold uppercase tracking-wider mb-2">
-                  Group Name
-                </label>
-                <input
-                  data-testid="group-name-input"
-                  type="text"
-                  value={groupName}
-                  onChange={(e) => setGroupName(e.target.value)}
-                  className="neo-input w-full"
-                  placeholder="Roommates, Trip to Paris, etc."
-                  required
-                />
-              </div>
+        <form onSubmit={handleCreateGroup} className="space-y-4">
+          <Field label="Group Name">
+            <AppInput
+              data-testid="group-name-input"
+              type="text"
+              value={groupName}
+              onChange={(e) => setGroupName(e.target.value)}
+              placeholder="Roommates, Trip to Paris, etc."
+              required
+            />
+          </Field>
 
-              <div>
-                <label className="block text-sm font-bold uppercase tracking-wider mb-2">
-                  Member Emails
-                </label>
-                <div className="space-y-2">
-                  {memberEmails.map((email, index) => (
-                    <div key={index} className="flex gap-2">
-                      <input
-                        data-testid={`member-email-${index}`}
-                        type="email"
-                        value={email}
-                        onChange={(e) => updateEmail(index, e.target.value)}
-                        className="neo-input flex-1"
-                        placeholder="friend@example.com"
-                        required
-                      />
-                      {memberEmails.length > 1 && (
-                        <button
-                          data-testid={`remove-email-${index}`}
-                          type="button"
-                          onClick={() => removeEmailField(index)}
-                          className="neo-btn-secondary px-4"
-                        >
-                          ×
-                        </button>
-                      )}
-                    </div>
-                  ))}
+          <Field label="Member Emails">
+            <div className="space-y-2">
+              {memberEmails.map((email, index) => (
+                <div key={index} className="flex gap-2">
+                  <AppInput
+                    data-testid={`member-email-${index}`}
+                    type="email"
+                    value={email}
+                    onChange={(e) => updateEmail(index, e.target.value)}
+                    className="flex-1"
+                    placeholder="friend@example.com"
+                    required
+                  />
+                  {memberEmails.length > 1 && (
+                    <AppButton
+                      data-testid={`remove-email-${index}`}
+                      onClick={() => removeEmailField(index)}
+                      variant="secondary"
+                      size="sm"
+                      className="px-4"
+                    >
+                      <X size={16} weight="bold" />
+                    </AppButton>
+                  )}
                 </div>
-                <button
-                  data-testid="add-email-btn"
-                  type="button"
-                  onClick={addEmailField}
-                  className="neo-btn-secondary mt-2 text-sm"
-                >
-                  + Add Member
-                </button>
-              </div>
+              ))}
+            </div>
+            <AppButton
+              data-testid="add-email-btn"
+              onClick={addEmailField}
+              variant="secondary"
+              size="sm"
+              className="mt-2"
+            >
+              + Add Member
+            </AppButton>
+          </Field>
 
-              <button
-                data-testid="submit-group-btn"
-                type="submit"
-                disabled={loading}
-                className="neo-btn-primary w-full flex items-center justify-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <span className="spinner"></span>
-                    <span>Creating...</span>
-                  </>
-                ) : (
-                  'Create Group'
-                )}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-    </div>
+          <AppButton
+            data-testid="submit-group-btn"
+            type="submit"
+            disabled={loading}
+            className="flex w-full items-center justify-center gap-2"
+          >
+            {loading ? (
+              <>
+                <span className="spinner"></span>
+                <span>Creating...</span>
+              </>
+            ) : (
+              'Create Group'
+            )}
+          </AppButton>
+        </form>
+      </AppModal>
+    </AppShell>
   );
 }
 

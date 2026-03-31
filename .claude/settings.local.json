@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(winget install:*)",
+      "Bash(export PATH=\"$PATH:/c/Program Files/GitHub CLI\")",
+      "Bash(gh auth:*)",
+      "Bash(gh repo:*)",
+      "Bash(gh api:*)",
+      "WebSearch",
+      "WebFetch(domain:docs.expo.dev)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:github.com)",
+      "Bash(pnpm why:*)",
+      "Bash(find C:UsersarjunOneDriveDesktopProjectsGoDutch -name package.json -path */node_modules/@expo/metro-runtime/package.json)",
+      "Bash(find C:UsersarjunOneDriveDesktopProjectsGoDutch -name package.json -path */node_modules/expo/package.json)",
+      "Bash(xargs -I {} grep -A2 metro-runtime {})",
+      "Bash(ls:*)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(''''peerDeps:'''', json.dumps\\(d.get\\(''''peerDependencies'''', {}\\), indent=2\\)\\)\")",
+      "Bash(pnpm info:*)",
+      "Bash(python3 -c \"import json,sys; versions=json.load\\(sys.stdin\\); print\\([v for v in versions if v.startswith\\(''''6''''\\) or v.startswith\\(''''5''''\\)][-5:]\\)\")",
+      "Bash(pnpm install:*)"
+    ]
+  }
+}

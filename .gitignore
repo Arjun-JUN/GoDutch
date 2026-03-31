@@ -3,6 +3,7 @@
 # IDE and editors
 .idea/
 .vscode/
+.codex/
 
 # Dependencies
 node_modules/
@@ -41,6 +42,12 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 dump.rdb
+npm.log
+uvicorn*.log
+
+# Build artifact variants
+frontend/build-codex*/
+frontend/build-verify/
 
 # System files
 .DS_Store
@@ -75,6 +82,9 @@ agenthub/agents/youtube/db
 
 # Build caches
 .cache/
+
+# Claude Code worktrees (embedded git repos)
+.claude/worktrees/
 
 memory/test_credentials.md
 

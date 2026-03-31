@@ -18,6 +18,38 @@ const CATEGORIES = [
   'Other'
 ];
 
+const EMPTY_ITEM = { name: '', price: '', category: 'Other', assigned_to: [] };
+
+const normalizeExpenseItems = (rawItems) => {
+  if (!Array.isArray(rawItems)) {
+    return [EMPTY_ITEM];
+  }
+
+  const normalized = rawItems
+    .map((item) => {
+      const name = String(
+        item?.name ??
+        item?.item ??
+        item?.description ??
+        item?.title ??
+        ''
+      ).trim();
+
+      const rawPrice = item?.price ?? item?.amount ?? item?.total ?? item?.value ?? '';
+      const price = rawPrice === '' || rawPrice == null ? '' : String(rawPrice).trim();
+
+      return {
+        name,
+        price,
+        category: item?.category || 'Other',
+        assigned_to: Array.isArray(item?.assigned_to) ? item.assigned_to : []
+      };
+    })
+    .filter((item) => item.name || item.price);
+
+  return normalized.length > 0 ? normalized : [EMPTY_ITEM];
+};
+
 function NewExpense({ onLogout }) {
   const [groups, setGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState('');
@@ -26,7 +58,7 @@ function NewExpense({ onLogout }) {
   const [totalAmount, setTotalAmount] = useState('');
   const [category, setCategory] = useState('Food & Dining');
   const [notes, setNotes] = useState('');
-  const [items, setItems] = useState([{ name: '', price: '', category: 'Other', assigned_to: [] }]);
+  const [items, setItems] = useState([EMPTY_ITEM]);
   const [splitType, setSplitType] = useState('equal');
   const [receiptImage, setReceiptImage] = useState('');
   const [scanning, setScanning] = useState(false);
@@ -119,7 +151,7 @@ function NewExpense({ onLogout }) {
       } else {
         const plan = res.data.split_plan;
         if (plan.items) {
-          setItems(plan.items);
+          setItems(normalizeExpenseItems(plan.items));
         }
         setSplitType(plan.split_type || 'custom');
         toast.success('Split plan created!');
@@ -150,21 +182,17 @@ function NewExpense({ onLogout }) {
       try {
         const res = await axios.post(
           `${API}/ocr/scan`,
-          { image_base64: base64 },
+          {
+            image_base64: base64,
+            mime_type: file.type || 'image/jpeg',
+          },
           { headers: getAuthHeader() }
         );
 
         setMerchant(res.data.merchant);
         setDate(res.data.date);
         setTotalAmount(res.data.total_amount.toString());
-        setItems(
-          res.data.items.map((item) => ({
-            name: item.name,
-            price: item.price.toString(),
-            category: 'Other',
-            assigned_to: []
-          }))
-        );
+        setItems(normalizeExpenseItems(res.data.items ?? res.data.line_items ?? res.data.bill_items));
         toast.success('Receipt scanned successfully!');
       } catch (error) {
         const errorMessage = error.response?.data?.detail || 'Failed to scan receipt';
@@ -182,7 +210,7 @@ function NewExpense({ onLogout }) {
   };
 
   const addItem = () => {
-    setItems([...items, { name: '', price: '', category: 'Other', assigned_to: [] }]);
+    setItems([...items, { ...EMPTY_ITEM }]);
   };
 
   const removeItem = (index) => {

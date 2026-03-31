@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { API, getAuthHeader } from '../App';
-import { ArrowLeft, Receipt } from '@phosphor-icons/react';
+import { ArrowsLeftRight, Receipt, Users } from '@phosphor-icons/react';
 import Header from '../components/Header';
+import { AppShell, AppSurface, MemberBadge, PageBackButton, PageContent, StatCard } from '../components/app';
 
 function GroupDetail({ onLogout }) {
   const { groupId } = useParams();
@@ -14,23 +15,19 @@ function GroupDetail({ onLogout }) {
   const [settlements, setSettlements] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadGroupData();
-  }, [groupId]);
-
-  const loadGroupData = async () => {
+  const loadGroupData = useCallback(async () => {
     try {
       const groupsRes = await axios.get(`${API}/groups`, {
         headers: getAuthHeader(),
       });
       const foundGroup = groupsRes.data.find((g) => g.id === groupId);
-      
+
       if (!foundGroup) {
         toast.error('Group not found');
         navigate('/groups');
         return;
       }
-      
+
       setGroup(foundGroup);
 
       const [expensesRes, settlementsRes] = await Promise.all([
@@ -49,121 +46,132 @@ function GroupDetail({ onLogout }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [groupId, navigate]);
+
+  useEffect(() => {
+    loadGroupData();
+  }, [loadGroupData]);
 
   if (loading) {
     return (
-      <div className="min-h-screen mobile-safe-padding" style={{ background: '#FFFDF2' }}>
+      <AppShell>
         <Header onLogout={onLogout} />
-        <div className="max-w-5xl mx-auto px-4 py-8 text-center">
+        <PageContent className="text-center">
           <p>Loading...</p>
-        </div>
-      </div>
+        </PageContent>
+      </AppShell>
     );
   }
 
   if (!group) return null;
 
+  const totalExpenses = expenses.reduce((sum, expense) => sum + Number(expense.total_amount || 0), 0);
+
   return (
-    <div className="min-h-screen mobile-safe-padding" style={{ background: '#FFFDF2' }}>
+    <AppShell>
       <Header onLogout={onLogout} />
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
-        <button
-          data-testid="back-button"
-          onClick={() => navigate('/groups')}
-          className="flex items-center gap-2 mb-4 md:mb-6 font-bold text-sm"
-        >
-          <ArrowLeft size={20} weight="bold" />
+      <PageContent>
+        <PageBackButton data-testid="back-button" onClick={() => navigate('/groups')}>
           Back to Groups
-        </button>
+        </PageBackButton>
 
-        <div className="neo-card p-4 md:p-6 mb-6">
-          <h1 className="text-2xl sm:text-3xl tracking-tight font-bold mb-4" style={{ fontFamily: 'Cabinet Grotesk, sans-serif' }}>
-            {group.name}
-          </h1>
-          
-          <div className="mb-4">
-            <h3 className="text-sm font-bold uppercase tracking-wider mb-2">Members</h3>
-            <div className="flex flex-wrap gap-2">
+        <section className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-[1.4fr,0.9fr]">
+          <AppSurface className="p-5 md:p-6">
+            <p className="app-eyebrow mb-2">Group Detail</p>
+            <h1 className="mb-3 text-4xl font-extrabold tracking-[-0.05em] text-[var(--app-foreground)]">{group.name}</h1>
+            <p className="max-w-2xl text-sm leading-6 text-[var(--app-muted)]">
+              A calmer ledger for shared moments. Review who is involved, what was spent, and how the remaining balances should settle.
+            </p>
+
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              <StatCard label="Members" value={group.members.length} description="Friends participating in this shared tab." icon={Users} />
+              <StatCard label="Total Expenses" value={`Rs ${totalExpenses.toFixed(2)}`} description={`Across ${expenses.length} expense entries in this group.`} icon={Receipt} />
+            </div>
+          </AppSurface>
+
+          <AppSurface variant="soft" className="p-5 md:p-6">
+            <p className="app-eyebrow mb-4">Members</p>
+            <div className="flex flex-wrap gap-2.5">
               {group.members.map((member) => (
-                <div
-                  key={member.id}
-                  className="text-sm bg-white border-2 border-[#0F0F0F] rounded-lg px-3 py-2"
-                  data-testid={`member-badge-${member.id}`}
-                >
+                <MemberBadge key={member.id} data-testid={`member-badge-${member.id}`}>
                   {member.name}
-                </div>
+                </MemberBadge>
               ))}
             </div>
-          </div>
-        </div>
+          </AppSurface>
+        </section>
 
-        <div className="neo-card p-4 md:p-6 mb-6">
-          <h2 className="text-xl sm:text-2xl tracking-tight font-bold mb-4" style={{ fontFamily: 'Cabinet Grotesk, sans-serif' }}>
+        <AppSurface className="mb-6 p-5 md:p-6">
+          <h2 className="mb-4 text-2xl font-extrabold tracking-[-0.04em] text-[var(--app-foreground)]">
             Expenses
           </h2>
 
           {expenses.length === 0 ? (
-            <p className="text-gray-600 text-center py-8">No expenses yet</p>
+            <p className="py-8 text-center text-[var(--app-muted)]">No expenses yet</p>
           ) : (
             <div className="space-y-3" data-testid="group-expenses-list">
               {expenses.map((expense) => (
                 <div
                   key={expense.id}
-                  className="flex items-center justify-between p-3 md:p-4 border-2 border-[#0F0F0F] rounded-lg bg-white"
+                  className="app-list-row flex items-center justify-between gap-4 p-4"
                   data-testid={`expense-${expense.id}`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[#C4F1F9] border-2 border-[#0F0F0F] rounded-lg flex items-center justify-center flex-shrink-0">
+                    <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-[#e9efee] text-[var(--app-primary)]">
                       <Receipt size={18} weight="bold" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-sm md:text-base">{expense.merchant}</h3>
-                      <p className="text-xs text-gray-600">{expense.date}</p>
+                      <h3 className="text-sm font-bold text-[var(--app-foreground)] md:text-base">{expense.merchant}</h3>
+                      <p className="text-xs text-[var(--app-muted)]">{expense.date}</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-mono text-lg md:text-xl font-bold tracking-tighter">
-                      ${expense.total_amount.toFixed(2)}
+                    <p className="text-lg font-extrabold tracking-[-0.04em] text-[var(--app-foreground)] md:text-xl">
+                      Rs {Number(expense.total_amount).toFixed(2)}
                     </p>
                   </div>
                 </div>
               ))}
             </div>
           )}
-        </div>
+        </AppSurface>
 
-        <div className="neo-card p-4 md:p-6">
-          <h2 className="text-xl sm:text-2xl tracking-tight font-bold mb-4" style={{ fontFamily: 'Cabinet Grotesk, sans-serif' }}>
-            Settlements
-          </h2>
+        <AppSurface className="p-5 md:p-6">
+          <div className="mb-4 flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--app-soft-strong)] text-[var(--app-primary-strong)]">
+              <ArrowsLeftRight size={20} weight="bold" />
+            </div>
+            <h2 className="text-2xl font-extrabold tracking-[-0.04em] text-[var(--app-foreground)]">
+              Settlements
+            </h2>
+          </div>
 
           {settlements.length === 0 ? (
-            <p className="text-gray-600 text-center py-8">All settled up!</p>
+            <p className="py-8 text-center text-[var(--app-muted)]">All settled up!</p>
           ) : (
             <div className="space-y-3" data-testid="group-settlements-list">
               {settlements.map((settlement, index) => (
                 <div
                   key={index}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 md:p-4 border-2 border-[#0F0F0F] rounded-lg bg-white"
+                  className="app-list-row flex flex-col justify-between gap-3 p-4 sm:flex-row sm:items-center"
                   data-testid={`settlement-${index}`}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-sm">{settlement.from_user_name}</span>
-                    <span className="text-gray-600 text-xs">owes</span>
-                    <span className="font-bold text-sm">{settlement.to_user_name}</span>
+                    <span className="text-sm font-bold text-[var(--app-foreground)]">{settlement.from_user_name}</span>
+                    <span className="text-xs text-[var(--app-muted)]">owes</span>
+                    <span className="text-sm font-bold text-[var(--app-foreground)]">{settlement.to_user_name}</span>
                   </div>
-                  <p className="font-mono text-xl font-bold tracking-tighter">
-                    ${settlement.amount.toFixed(2)}
+                  <p className="text-xl font-extrabold tracking-[-0.04em] text-[var(--app-primary)]">
+                    Rs {Number(settlement.amount).toFixed(2)}
                   </p>
                 </div>
               ))}
             </div>
           )}
-        </div>
-      </div>
-    </div>
+        </AppSurface>
+      </PageContent>
+    </AppShell>
   );
 }
 

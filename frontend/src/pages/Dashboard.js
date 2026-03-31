@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { API, getAuthHeader, getCurrentUser } from '../App';
-import { Plus, Receipt, Users, ArrowsLeftRight, SignOut } from '@phosphor-icons/react';
+import { ArrowsLeftRight, ChartLineUp, Plus, Receipt, Users } from '@phosphor-icons/react';
 import Header from '../components/Header';
+import { AppButton, AppShell, AppSurface, EmptyState, IconBadge, MemberBadge, PageContent, PageHero, StatCard } from '../components/app';
 
 function Dashboard({ onLogout }) {
   const [expenses, setExpenses] = useState([]);
@@ -42,115 +43,153 @@ function Dashboard({ onLogout }) {
     }
   };
 
+  const totalSpend = expenses.reduce((sum, expense) => sum + Number(expense.total_amount || 0), 0);
+  const groupedExpenses = expenses.slice(0, 8);
+
   return (
-    <div className="min-h-screen mobile-safe-padding" style={{ background: '#FFFDF2' }}>
+    <AppShell>
       <Header onLogout={onLogout} />
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
-        <div className="mb-6 md:mb-8">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl tracking-tight font-bold mb-2 md:mb-4" style={{ fontFamily: 'Cabinet Grotesk, sans-serif' }}>
-            Welcome back, {user?.name}!
-          </h1>
-          <p className="text-sm md:text-base leading-relaxed" style={{ color: '#4A4A4A', letterSpacing: '-0.01em', lineHeight: '1.6' }}>
-            Manage your expenses, groups, and settlements all in one place.
-          </p>
-        </div>
+      <PageContent>
+        <section className="mb-8 grid grid-cols-1 gap-5 lg:grid-cols-12 lg:gap-6">
+          <AppSurface className="lg:col-span-8 p-6 md:p-8">
+            <PageHero
+              eyebrow="Total Ledger"
+              title={`Welcome back, ${user?.name || 'there'}`}
+              description="Your group money flow is calm, organized, and ready to settle. Review the latest balances and jump back into shared expenses."
+              className="mb-8"
+              actions={(
+                <AppButton
+                  data-testid="new-expense-btn"
+                  onClick={() => navigate('/new-expense')}
+                  className="justify-center whitespace-nowrap"
+                >
+                  <Plus size={18} weight="bold" />
+                  Add Expense
+                </AppButton>
+              )}
+            />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 mb-8">
-          <button
-            data-testid="new-expense-btn"
-            onClick={() => navigate('/new-expense')}
-            className="neo-card-interactive p-6 text-left"
-          >
-            <div className="w-12 h-12 bg-[#C4F1F9] border-2 border-[#0F0F0F] rounded-lg flex items-center justify-center mb-4">
-              <Plus size={24} weight="bold" />
+            <div className="grid gap-5 md:grid-cols-2">
+              <StatCard
+                label="Active Groups"
+                value={groups.length}
+                description="Shared spaces currently tracking expenses together."
+              />
+              <StatCard
+                label="Recent Volume"
+                value={`Rs ${totalSpend.toFixed(2)}`}
+                description="Across the latest shared expenses in your account."
+                indicatorClassName="bg-[var(--app-danger)]"
+                valueClassName="text-[var(--app-foreground)]"
+              />
             </div>
-            <h3 className="text-xl font-bold mb-2" style={{ fontFamily: 'Cabinet Grotesk, sans-serif' }}>
-              New Expense
-            </h3>
-            <p className="text-sm text-gray-600">Scan receipt & split bills</p>
-          </button>
-
-          <button
-            data-testid="groups-btn"
-            onClick={() => navigate('/groups')}
-            className="neo-card-interactive p-6 text-left"
-          >
-            <div className="w-12 h-12 bg-[#BDE6A3] border-2 border-[#0F0F0F] rounded-lg flex items-center justify-center mb-4">
-              <Users size={24} weight="bold" />
-            </div>
-            <h3 className="text-xl font-bold mb-2" style={{ fontFamily: 'Cabinet Grotesk, sans-serif' }}>
-              Groups
-            </h3>
-            <p className="text-sm text-gray-600">{groups.length} active groups</p>
-          </button>
+          </AppSurface>
 
           <button
             data-testid="settlements-btn"
             onClick={() => navigate('/settlements')}
-            className="neo-card-interactive p-6 text-left"
+            className="app-surface-soft lg:col-span-4 flex flex-col justify-between p-6 text-left transition-all hover:-translate-y-1"
           >
-            <div className="w-12 h-12 bg-[#FFC4D9] border-2 border-[#0F0F0F] rounded-lg flex items-center justify-center mb-4">
-              <ArrowsLeftRight size={24} weight="bold" />
+            <div>
+              <IconBadge icon={ChartLineUp} className="mb-5 h-14 w-14" />
+              <h2 className="mb-3 text-2xl font-extrabold tracking-[-0.04em] text-[var(--app-primary-strong)]">Settlement insights</h2>
+              <p className="text-sm leading-6 text-[var(--app-muted)]">
+                Review what is still pending, compare group activity, and move money with less back-and-forth.
+              </p>
             </div>
-            <h3 className="text-xl font-bold mb-2" style={{ fontFamily: 'Cabinet Grotesk, sans-serif' }}>
-              Settlements
-            </h3>
-            <p className="text-sm text-gray-600">See who owes what</p>
+            <div className="mt-8 inline-flex items-center gap-2 text-sm font-bold text-[var(--app-primary-strong)]">
+              View settlements
+              <ArrowsLeftRight size={16} weight="bold" />
+            </div>
+          </button>
+        </section>
+
+        <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
+          <button
+            data-testid="groups-btn"
+            onClick={() => navigate('/groups')}
+            className="app-surface-solid p-6 text-left transition-all hover:-translate-y-1"
+          >
+            <IconBadge icon={Users} className="mb-4" />
+            <h3 className="mb-2 text-xl font-extrabold tracking-[-0.03em] text-[var(--app-foreground)]">Groups</h3>
+            <p className="text-sm text-[var(--app-muted)]">{groups.length} active groups with shared balances and recent bills.</p>
+          </button>
+
+          <button
+            onClick={() => navigate('/upi')}
+            className="app-surface-solid p-6 text-left transition-all hover:-translate-y-1"
+          >
+            <IconBadge icon={ArrowsLeftRight} className="mb-4" />
+            <h3 className="mb-2 text-xl font-extrabold tracking-[-0.03em] text-[var(--app-foreground)]">Fast transfers</h3>
+            <p className="text-sm text-[var(--app-muted)]">Move from tracking to payment with UPI-friendly flows when it is time to settle.</p>
+          </button>
+
+          <button
+            onClick={() => navigate('/new-expense')}
+            className="app-surface-solid p-6 text-left transition-all hover:-translate-y-1"
+          >
+            <IconBadge icon={Receipt} className="mb-4 bg-[#e9efee]" />
+            <h3 className="mb-2 text-xl font-extrabold tracking-[-0.03em] text-[var(--app-foreground)]">Receipt capture</h3>
+            <p className="text-sm text-[var(--app-muted)]">Scan paper bills or enter them manually with the new alpine-styled composer.</p>
           </button>
         </div>
 
-        <div className="neo-card p-6">
-          <h2 className="text-xl sm:text-2xl tracking-tight font-bold mb-6" style={{ fontFamily: 'Cabinet Grotesk, sans-serif' }}>
-            Recent Expenses
-          </h2>
+        <AppSurface className="p-5 md:p-6">
+          <div className="mb-6 flex items-center justify-between gap-4">
+            <h2 className="text-2xl font-extrabold tracking-[-0.04em] text-[var(--app-foreground)]">
+              Recent Expenses
+            </h2>
+            <MemberBadge>{expenses.length} tracked</MemberBadge>
+          </div>
 
           {loading ? (
-            <p className="text-gray-600">Loading...</p>
+            <p className="text-[var(--app-muted)]">Loading...</p>
           ) : expenses.length === 0 ? (
-            <div className="text-center py-12">
-              <Receipt size={64} weight="bold" className="mx-auto mb-4 text-gray-400" />
-              <p className="text-gray-600 mb-4">No expenses yet</p>
-              <button
-                data-testid="create-first-expense-btn"
-                onClick={() => navigate('/new-expense')}
-                className="neo-btn-primary"
-              >
-                Create Your First Expense
-              </button>
-            </div>
+            <EmptyState
+              icon={Receipt}
+              title="No expenses yet"
+              action={(
+                <AppButton
+                  data-testid="create-first-expense-btn"
+                  onClick={() => navigate('/new-expense')}
+                >
+                  Create Your First Expense
+                </AppButton>
+              )}
+            />
           ) : (
-            <div className="space-y-4" data-testid="expenses-list">
-              {expenses.slice(0, 10).map((expense) => (
+            <div className="space-y-3" data-testid="expenses-list">
+              {groupedExpenses.map((expense) => (
                 <div
                   key={expense.id}
                   data-testid={`expense-${expense.id}`}
-                  className="flex items-center justify-between p-4 border-2 border-[#0F0F0F] rounded-lg bg-white"
+                  className="app-list-row flex items-center justify-between gap-4 p-4 md:p-5"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-[#C4F1F9] border-2 border-[#0F0F0F] rounded-lg flex items-center justify-center">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#e9efee] text-[var(--app-primary)]">
                       <Receipt size={20} weight="bold" />
                     </div>
                     <div>
-                      <h3 className="font-bold" data-testid={`expense-merchant-${expense.id}`}>
+                      <h3 className="font-bold text-[var(--app-foreground)]" data-testid={`expense-merchant-${expense.id}`}>
                         {expense.merchant}
                       </h3>
-                      <p className="text-sm text-gray-600">{expense.date}</p>
+                      <p className="text-sm text-[var(--app-muted)]">{expense.date}</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-mono text-xl md:text-2xl font-bold tracking-tighter" data-testid={`expense-amount-${expense.id}`}>
-                      ${expense.total_amount.toFixed(2)}
+                    <p className="text-xl font-extrabold tracking-[-0.04em] text-[var(--app-primary)] md:text-2xl" data-testid={`expense-amount-${expense.id}`}>
+                      Rs {Number(expense.total_amount).toFixed(2)}
                     </p>
-                    <p className="text-xs text-gray-600">{expense.split_type}</p>
+                    <p className="app-eyebrow mt-1">{expense.split_type}</p>
                   </div>
                 </div>
               ))}
             </div>
           )}
-        </div>
-      </div>
-    </div>
+        </AppSurface>
+      </PageContent>
+    </AppShell>
   );
 }
 

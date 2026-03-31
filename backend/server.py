@@ -1,9 +1,11 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, UploadFile, File, Header
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, Header
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
+from starlette.concurrency import run_in_threadpool
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
+import binascii
 from pathlib import Path
 from pydantic import BaseModel, Field, EmailStr, ConfigDict
 from typing import List, Optional, Dict
@@ -12,7 +14,7 @@ from datetime import datetime, timezone, timedelta
 import jwt
 import bcrypt
 import base64
-from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
+import requests
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -25,7 +27,9 @@ app = FastAPI()
 api_router = APIRouter(prefix="/api")
 
 JWT_SECRET = os.getenv('JWT_SECRET', 'fallback-secret')
-EMERGENT_LLM_KEY = os.getenv('EMERGENT_LLM_KEY', '')
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
+
+cors_origins = [origin.strip() for origin in os.environ.get('CORS_ORIGINS', 'http://localhost:3000').split(',') if origin.strip()]
 
 class UserRegister(BaseModel):
     email: EmailStr
@@ -185,12 +189,77 @@ class RechargeRequest(BaseModel):
 
 class OCRRequest(BaseModel):
     image_base64: str
+    mime_type: str = "image/jpeg"
 
 class OCRResult(BaseModel):
     merchant: str
     date: str
     total_amount: float
     items: List[Dict]
+
+
+def _extract_json_block(text: str):
+    import json
+
+    stripped = text.strip()
+    try:
+        return json.loads(stripped)
+    except json.JSONDecodeError:
+        start = stripped.find("{")
+        end = stripped.rfind("}")
+        if start != -1 and end != -1 and end > start:
+            return json.loads(stripped[start : end + 1])
+        raise
+
+
+async def generate_structured_content(parts, response_model):
+    if not GEMINI_API_KEY:
+        raise HTTPException(status_code=503, detail="Gemini API key not configured.")
+
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
+    payload = {
+        "contents": [{"parts": parts}],
+        "generationConfig": {
+            "temperature": 0,
+            "responseMimeType": "application/json",
+        },
+    }
+
+    def _send_request():
+        with requests.Session() as session:
+            session.trust_env = False
+            response = session.post(url, json=payload, timeout=60)
+        response.raise_for_status()
+        return response.json()
+
+    try:
+        response_json = await run_in_threadpool(_send_request)
+    except requests.HTTPError as exc:
+        response = exc.response
+        detail = "Upstream AI request failed."
+
+        if response is not None:
+            try:
+                error_payload = response.json()
+                detail = error_payload.get("error", {}).get("message") or detail
+            except ValueError:
+                detail = response.text or detail
+
+            raise HTTPException(status_code=response.status_code, detail=detail) from exc
+
+        raise HTTPException(status_code=502, detail=detail) from exc
+
+    candidates = response_json.get("candidates") or []
+    if not candidates:
+        raise ValueError(f"Gemini returned no candidates: {response_json}")
+
+    parts = candidates[0].get("content", {}).get("parts", [])
+    text = "".join(part.get("text", "") for part in parts if isinstance(part, dict))
+    if not text:
+        raise ValueError(f"Gemini returned no text: {response_json}")
+
+    parsed = _extract_json_block(text)
+    return response_model.model_validate(parsed)
 
 class SettlementItem(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -268,33 +337,39 @@ async def login(credentials: UserLogin):
 @api_router.post("/ocr/scan", response_model=OCRResult)
 async def scan_receipt(request: OCRRequest, current_user: dict = Depends(verify_token)):
     try:
-        chat = LlmChat(
-            api_key=EMERGENT_LLM_KEY,
-            session_id=f"ocr_{uuid.uuid4()}",
-            system_message="You are an expert at extracting structured data from receipt images. Extract merchant name, date, items with prices, and total amount. Return as JSON."
-        ).with_model("openai", "gpt-5.2")
-        
-        image_content = ImageContent(image_base64=request.image_base64)
-        
-        prompt = """Extract the following from this receipt:
-        - merchant: store/restaurant name
-        - date: transaction date (YYYY-MM-DD format)
-        - total_amount: total amount as a number
-        - items: array of {name: string, price: number}
-        
-        Return ONLY valid JSON, no markdown or extra text."""
-        
-        user_message = UserMessage(
-            text=prompt,
-            file_contents=[image_content]
+        base64.b64decode(request.image_base64, validate=True)
+
+        result = await generate_structured_content(
+            parts=[
+                {
+                    "text": (
+                        "You extract structured data from receipt images.\n"
+                        "Return valid JSON only with this shape:\n"
+                        "{"
+                        "\"merchant\": string, "
+                        "\"date\": \"YYYY-MM-DD\", "
+                        "\"total_amount\": number, "
+                        "\"items\": [{\"name\": string, \"price\": number}]"
+                        "}\n"
+                        "If an exact item list is not visible, return the best available items without inventing values.\n"
+                        "If the date is unclear, use an empty string."
+                    )
+                },
+                {
+                    "inlineData": {
+                        "mimeType": request.mime_type,
+                        "data": request.image_base64,
+                    }
+                },
+            ],
+            response_model=OCRResult,
         )
-        
-        response = await chat.send_message(user_message)
-        
-        import json
-        result = json.loads(response.strip())
-        
-        return OCRResult(**result)
+
+        return result
+    except binascii.Error:
+        raise HTTPException(status_code=400, detail="Invalid receipt image data.")
+    except HTTPException:
+        raise
     except Exception as e:
         error_msg = str(e)
         logging.error(f"OCR error: {error_msg}")
@@ -302,7 +377,7 @@ async def scan_receipt(request: OCRRequest, current_user: dict = Depends(verify_
         if "budget" in error_msg.lower() or "exceeded" in error_msg.lower():
             raise HTTPException(
                 status_code=402,
-                detail="OCR budget limit reached. Please top up your Universal Key balance in Profile → Universal Key → Add Balance."
+                detail="OCR is temporarily unavailable because the Gemini API quota or billing limit was reached."
             )
         
         raise HTTPException(status_code=500, detail=f"OCR scanning failed. Please try again or enter details manually.")
@@ -426,44 +501,38 @@ async def smart_split(request: SmartSplitRequest, current_user: dict = Depends(v
             raise HTTPException(status_code=404, detail="Group not found")
         
         members_info = ", ".join([f"{m['name']} (id: {m['id']})" for m in group['members']])
-        
-        chat = LlmChat(
-            api_key=EMERGENT_LLM_KEY,
-            session_id=f"smart_split_{uuid.uuid4()}",
-            system_message=f"""You are an intelligent expense splitting assistant. 
-Group members: {members_info}
 
-Parse natural language instructions and create precise split plans.
-Return ONLY valid JSON with this structure:
-{{
-  "split_plan": {{
-    "items": [
-      {{
-        "name": "item name",
-        "price": amount,
-        "category": "category",
-        "assigned_to": ["member_id1", "member_id2"]
-      }}
-    ],
-    "split_type": "custom|equal|item-based"
-  }},
-  "clarification_needed": false,
-  "clarification_question": null
-}}
-
-If unclear, set clarification_needed=true and ask a specific question."""
-        ).with_model("openai", "gpt-5.2")
-        
         context = f"Expense context: {request.expense_context}" if request.expense_context else ""
-        prompt = f"{request.instruction}\n{context}"
-        
-        user_message = UserMessage(text=prompt)
-        response = await chat.send_message(user_message)
-        
-        import json
-        result = json.loads(response.strip())
-        
-        return SmartSplitResponse(**result)
+
+        result = await generate_structured_content(
+            parts=[
+                {
+                    "text": (
+                        "You are an intelligent expense splitting assistant. "
+                        "Create precise split plans using only the provided group member ids. "
+                        "If the instruction is ambiguous, set clarification_needed to true and ask one concise question.\n\n"
+                        "Return valid JSON only with this shape:\n"
+                        "{"
+                        "\"split_plan\": {"
+                        "\"items\": [{\"name\": string, \"price\": number, \"category\": string, \"assigned_to\": [string]}], "
+                        "\"split_type\": \"custom|equal|item-based\""
+                        "}, "
+                        "\"clarification_needed\": boolean, "
+                        "\"clarification_question\": string | null"
+                        "}\n\n"
+                        "Group members: "
+                        f"{members_info}\n\n"
+                        f"Instruction: {request.instruction}\n"
+                        f"{context}"
+                    )
+                }
+            ],
+            response_model=SmartSplitResponse,
+        )
+
+        return result
+    except HTTPException:
+        raise
     except Exception as e:
         logging.error(f"Smart split error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Smart split failed: {str(e)}")
@@ -846,7 +915,9 @@ app.include_router(api_router)
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_origins=cors_origins,
+    # Local dev often shifts between localhost/127.0.0.1 and ports like 3000/3001.
+    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?",
     allow_methods=["*"],
     allow_headers=["*"],
 )

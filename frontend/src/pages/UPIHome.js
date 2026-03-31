@@ -1,20 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { toast } from 'sonner';
 import { API, getAuthHeader, getCurrentUser } from '../App';
-import { 
-  PaperPlaneTilt, 
-  Money, 
-  QrCode, 
+import {
+  PaperPlaneTilt,
+  Money,
+  QrCode,
   CurrencyInr,
   Phone,
-  Lightning,
   Receipt as ReceiptIcon,
   ArrowsDownUp,
   Wallet
 } from '@phosphor-icons/react';
 import Header from '../components/Header';
+import { AppButton, AppShell, AppSurface, Callout, EmptyState, IconBadge, PageContent, PageHero } from '../components/app';
 
 function UPIHome({ onLogout }) {
   const [balance, setBalance] = useState(0);
@@ -35,12 +34,12 @@ function UPIHome({ onLogout }) {
         axios.get(`${API}/upi/transactions?limit=5`, { headers: getAuthHeader() })
       ]);
 
-      const primaryAccount = accountsRes.data.find(acc => acc.is_primary);
+      const primaryAccount = accountsRes.data.find((acc) => acc.is_primary);
       if (primaryAccount) {
         setAccount(primaryAccount);
         setBalance(primaryAccount.balance);
       }
-      
+
       setRecentTransactions(transactionsRes.data);
     } catch (error) {
       console.error('Failed to load data:', error);
@@ -54,28 +53,28 @@ function UPIHome({ onLogout }) {
       id: 'send',
       label: 'Send Money',
       icon: PaperPlaneTilt,
-      color: '#C4F1F9',
+      toneClass: 'bg-[var(--app-soft-strong)]',
       route: '/upi/send'
     },
     {
       id: 'request',
       label: 'Request',
       icon: Money,
-      color: '#BDE6A3',
+      toneClass: 'bg-[#e4f1db]',
       route: '/upi/request'
     },
     {
       id: 'scan',
       label: 'Scan QR',
       icon: QrCode,
-      color: '#FFC4D9',
+      toneClass: 'bg-[#f8dfe8]',
       route: '/upi/scan'
     },
     {
       id: 'receive',
       label: 'Receive',
       icon: QrCode,
-      color: '#C4F1F9',
+      toneClass: 'bg-[#e1efef]',
       route: '/upi/receive'
     }
   ];
@@ -109,123 +108,147 @@ function UPIHome({ onLogout }) {
 
   if (!account && !loading) {
     return (
-      <div className="min-h-screen mobile-safe-padding" style={{ background: '#FFFDF2' }}>
+      <AppShell>
         <Header onLogout={onLogout} />
-        
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="neo-card p-8 text-center">
-            <Wallet size={64} weight="bold" className="mx-auto mb-4 text-gray-400" />
-            <h2 className="text-2xl font-bold mb-4" style={{ fontFamily: 'Cabinet Grotesk, sans-serif' }}>
-              Link Bank Account
-            </h2>
-            <p className="text-gray-600 mb-6">
-              Link your bank account to start using UPI payments
-            </p>
-            <button
-              onClick={() => navigate('/upi/accounts/add')}
-              className="neo-btn-primary"
-            >
-              Add Bank Account
-            </button>
-          </div>
-        </div>
-      </div>
+
+        <PageContent className="max-w-5xl">
+          <AppSurface className="p-8 text-center">
+            <EmptyState
+              icon={Wallet}
+              title="Link Bank Account"
+              description="Link your bank account to start using UPI payments."
+              action={(
+                <AppButton onClick={() => navigate('/upi/accounts/add')}>
+                  Add Bank Account
+                </AppButton>
+              )}
+            />
+          </AppSurface>
+        </PageContent>
+      </AppShell>
     );
   }
 
   return (
-    <div className="min-h-screen mobile-safe-padding" style={{ background: '#FFFDF2' }}>
+    <AppShell>
       <Header onLogout={onLogout} />
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
-        <div className="neo-card p-6 md:p-8 mb-6" style={{ background: 'linear-gradient(135deg, #C4F1F9 0%, #BDE6A3 100%)' }}>
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="text-sm font-bold uppercase tracking-wider mb-1">Available Balance</p>
-              <h1 className="text-4xl md:text-5xl font-black tracking-tighter" style={{ fontFamily: 'Cabinet Grotesk, sans-serif' }}>
-                ₹{balance.toFixed(2)}
-              </h1>
+      <PageContent className="max-w-5xl">
+        <PageHero
+          eyebrow="Payments Hub"
+          title="UPI"
+          description="Move from tracking to payment with the same calmer design language across balances, actions, and transaction history."
+        />
+
+        <AppSurface className="mb-6 overflow-hidden p-6 md:p-8">
+          <div className="rounded-[1.75rem] bg-[linear-gradient(135deg,rgba(209,232,221,0.95)_0%,rgba(231,244,239,0.96)_100%)] p-6 md:p-7">
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <div>
+                <p className="app-eyebrow mb-2">Available Balance</p>
+                <h1 className="text-4xl font-extrabold tracking-[-0.05em] text-[var(--app-foreground)] md:text-5xl">
+                  Rs {balance.toFixed(2)}
+                </h1>
+              </div>
+              <IconBadge icon={CurrencyInr} tone="white" className="h-16 w-16 rounded-full text-[var(--app-primary)]" />
             </div>
-            <div className="w-16 h-16 bg-white border-2 border-[#0F0F0F] rounded-full flex items-center justify-center">
-              <CurrencyInr size={32} weight="bold" />
+            {account ? (
+              <div className="text-sm text-[var(--app-primary-strong)]">
+                <p className="font-bold">{account.bank_name}</p>
+                <p className="mt-1 text-xs text-[var(--app-muted)]">{account.upi_id}</p>
+              </div>
+            ) : null}
+          </div>
+        </AppSurface>
+
+        <section className="mb-6">
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <div>
+              <p className="app-eyebrow mb-2">Quick Actions</p>
+              <h2 className="text-2xl font-extrabold tracking-[-0.04em] text-[var(--app-foreground)]">Move money fast</h2>
             </div>
           </div>
-          {account && (
-            <div className="text-sm">
-              <p className="font-bold">{account.bank_name}</p>
-              <p className="text-xs opacity-80">{account.upi_id}</p>
+
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+            {quickActions.map((action) => {
+              const Icon = action.icon;
+              return (
+                <button
+                  key={action.id}
+                  onClick={() => navigate(action.route)}
+                  className="app-surface-interactive p-4 text-center"
+                  data-testid={`action-${action.id}`}
+                >
+                  <div className={`mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full text-[var(--app-primary-strong)] ${action.toneClass}`}>
+                    <Icon size={24} weight="bold" />
+                  </div>
+                  <p className="text-sm font-bold text-[var(--app-foreground)]">{action.label}</p>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="mb-6">
+          <div className="mb-4">
+            <p className="app-eyebrow mb-2">Services</p>
+            <h2 className="text-2xl font-extrabold tracking-[-0.04em] text-[var(--app-foreground)]">UPI tools</h2>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+            {services.map((service) => {
+              const Icon = service.icon;
+              return (
+                <button
+                  key={service.id}
+                  onClick={() => navigate(service.route)}
+                  className="app-surface-solid p-4 text-center transition-all hover:-translate-y-1"
+                  data-testid={`service-${service.id}`}
+                >
+                  <Icon size={28} weight="bold" className="mx-auto mb-3 text-[var(--app-primary-strong)]" />
+                  <p className="text-sm font-bold text-[var(--app-foreground)]">{service.label}</p>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        <AppSurface className="p-5 md:p-6">
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <div>
+              <p className="app-eyebrow mb-2">History</p>
+              <h2 className="text-2xl font-extrabold tracking-[-0.04em] text-[var(--app-foreground)]">
+                Recent Transactions
+              </h2>
             </div>
-          )}
-        </div>
-
-        <h2 className="text-lg font-bold mb-4" style={{ fontFamily: 'Cabinet Grotesk, sans-serif' }}>
-          Quick Actions
-        </h2>
-        
-        <div className="grid grid-cols-4 gap-3 md:gap-4 mb-6">
-          {quickActions.map(action => (
-            <button
-              key={action.id}
-              onClick={() => navigate(action.route)}
-              className="neo-card-interactive p-4 text-center"
-              data-testid={`action-${action.id}`}
-            >
-              <div 
-                className="w-12 h-12 md:w-14 md:h-14 mx-auto mb-2 border-2 border-[#0F0F0F] rounded-full flex items-center justify-center"
-                style={{ background: action.color }}
-              >
-                <action.icon size={24} weight="bold" />
-              </div>
-              <p className="text-xs md:text-sm font-bold">{action.label}</p>
-            </button>
-          ))}
-        </div>
-
-        <h2 className="text-lg font-bold mb-4" style={{ fontFamily: 'Cabinet Grotesk, sans-serif' }}>
-          Services
-        </h2>
-        
-        <div className="grid grid-cols-4 gap-3 md:gap-4 mb-6">
-          {services.map(service => (
-            <button
-              key={service.id}
-              onClick={() => navigate(service.route)}
-              className="neo-card p-4 text-center hover:shadow-[6px_6px_0px_0px_rgba(15,15,15,1)] transition-all"
-              data-testid={`service-${service.id}`}
-            >
-              <service.icon size={28} weight="bold" className="mx-auto mb-2" />
-              <p className="text-xs md:text-sm font-bold">{service.label}</p>
-            </button>
-          ))}
-        </div>
-
-        <div className="neo-card p-4 md:p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-bold" style={{ fontFamily: 'Cabinet Grotesk, sans-serif' }}>
-              Recent Transactions
-            </h2>
-            <button
+            <AppButton
               onClick={() => navigate('/upi/transactions')}
-              className="text-sm font-bold text-blue-600"
+              variant="secondary"
+              size="sm"
             >
               View All
-            </button>
+            </AppButton>
           </div>
 
-          {recentTransactions.length === 0 ? (
-            <p className="text-center text-gray-600 py-8">No transactions yet</p>
+          {loading ? (
+            <p className="text-[var(--app-muted)]">Loading...</p>
+          ) : recentTransactions.length === 0 ? (
+            <EmptyState
+              icon={ArrowsDownUp}
+              title="No transactions yet"
+              description="Your latest UPI payments and collections will appear here."
+            />
           ) : (
             <div className="space-y-3">
-              {recentTransactions.map(txn => {
+              {recentTransactions.map((txn) => {
                 const isDebit = txn.from_user_id === user.id;
                 return (
                   <div
                     key={txn.id}
-                    className="flex items-center justify-between p-3 border-2 border-[#0F0F0F] rounded-lg bg-white"
+                    className="app-list-row flex items-center justify-between gap-4 p-4"
                   >
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <div className={`w-10 h-10 border-2 border-[#0F0F0F] rounded-full flex items-center justify-center ${
-                        isDebit ? 'bg-[#FFC4D9]' : 'bg-[#BDE6A3]'
+                    <div className="flex min-w-0 flex-1 items-center gap-3">
+                      <div className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full ${
+                        isDebit ? 'bg-[#f8dfe8] text-[#8a3b53]' : 'bg-[#e4f1db] text-[var(--app-primary-strong)]'
                       }`}>
                         {isDebit ? (
                           <PaperPlaneTilt size={18} weight="bold" />
@@ -233,26 +256,32 @@ function UPIHome({ onLogout }) {
                           <Money size={18} weight="bold" />
                         )}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-sm truncate">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-bold text-[var(--app-foreground)]">
                           {isDebit ? 'Sent to' : 'Received from'} {isDebit ? txn.to_upi_id : txn.from_upi_id}
                         </p>
-                        <p className="text-xs text-gray-600">{new Date(txn.created_at).toLocaleDateString()}</p>
+                        <p className="text-xs text-[var(--app-muted)]">{new Date(txn.created_at).toLocaleDateString()}</p>
                       </div>
                     </div>
-                    <p className={`font-mono font-bold text-lg ${
-                      isDebit ? 'text-red-600' : 'text-green-600'
+                    <p className={`text-lg font-extrabold tracking-[-0.04em] ${
+                      isDebit ? 'text-[#b24b4a]' : 'text-[var(--app-primary)]'
                     }`}>
-                      {isDebit ? '-' : '+'}₹{txn.amount.toFixed(2)}
+                      {isDebit ? '-' : '+'}Rs {txn.amount.toFixed(2)}
                     </p>
                   </div>
                 );
               })}
             </div>
           )}
-        </div>
-      </div>
-    </div>
+        </AppSurface>
+
+        <Callout className="mt-6">
+          <p className="text-sm text-[var(--app-muted)]">
+            Keep your payment flows consistent with the rest of the app by using the same shared surfaces, actions, and ledger styling here.
+          </p>
+        </Callout>
+      </PageContent>
+    </AppShell>
   );
 }
 

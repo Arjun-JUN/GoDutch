@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { API, getAuthHeader } from '../App';
-import { ArrowLeft, PaperPlaneTilt } from '@phosphor-icons/react';
+import { PaperPlaneTilt } from '@phosphor-icons/react';
 import Header from '../components/Header';
+import { AppButton, AppInput, AppShell, AppSurface, AppTextarea, Field, PageBackButton, PageContent, PageHero } from '../components/app';
 
 function SendMoney({ onLogout }) {
   const [upiId, setUpiId] = useState('');
@@ -15,7 +16,7 @@ function SendMoney({ onLogout }) {
 
   const handleSend = async (e) => {
     e.preventDefault();
-    
+
     if (!upiId || !amount) {
       toast.error('Please fill all required fields');
       return;
@@ -23,7 +24,7 @@ function SendMoney({ onLogout }) {
 
     setLoading(true);
     try {
-      const res = await axios.post(
+      await axios.post(
         `${API}/upi/send-money`,
         {
           to_upi_id: upiId,
@@ -34,7 +35,7 @@ function SendMoney({ onLogout }) {
         { headers: getAuthHeader() }
       );
 
-      toast.success(`₹${amount} sent successfully!`);
+      toast.success(`Rs ${amount} sent successfully!`);
       navigate('/upi');
     } catch (error) {
       const errorMsg = error.response?.data?.detail || 'Transaction failed';
@@ -45,89 +46,76 @@ function SendMoney({ onLogout }) {
   };
 
   return (
-    <div className="min-h-screen mobile-safe-padding" style={{ background: '#FFFDF2' }}>
+    <AppShell>
       <Header onLogout={onLogout} />
 
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
-        <button
-          onClick={() => navigate('/upi')}
-          className="flex items-center gap-2 mb-4 md:mb-6 font-bold text-sm"
-        >
-          <ArrowLeft size={20} weight="bold" />
-          Back
-        </button>
+      <PageContent className="max-w-2xl">
+        <PageBackButton onClick={() => navigate('/upi')}>Back</PageBackButton>
 
-        <h1 className="text-2xl sm:text-3xl tracking-tight font-bold mb-6" style={{ fontFamily: 'Cabinet Grotesk, sans-serif' }}>
-          Send Money
-        </h1>
+        <PageHero
+          eyebrow="Payment Flow"
+          title="Send Money"
+          description="Use the shared payment form patterns so UPI transfers feel consistent with every other surface in the app."
+        />
 
-        <form onSubmit={handleSend} className="neo-card p-6 space-y-6">
-          <div>
-            <label className="block text-sm font-bold uppercase tracking-wider mb-2">
-              UPI ID / Phone Number
-            </label>
-            <input
-              data-testid="upi-id-input"
-              type="text"
-              value={upiId}
-              onChange={(e) => setUpiId(e.target.value)}
-              className="neo-input w-full"
-              placeholder="username@upi or 9876543210"
-              required
-            />
-          </div>
+        <form onSubmit={handleSend}>
+          <AppSurface className="space-y-6 p-6">
+            <Field label="UPI ID / Phone Number">
+              <AppInput
+                data-testid="upi-id-input"
+                type="text"
+                value={upiId}
+                onChange={(e) => setUpiId(e.target.value)}
+                placeholder="username@upi or 9876543210"
+                required
+              />
+            </Field>
 
-          <div>
-            <label className="block text-sm font-bold uppercase tracking-wider mb-2">
-              Amount (₹)
-            </label>
-            <input
-              data-testid="amount-input"
-              type="number"
-              step="0.01"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="neo-input w-full text-2xl font-mono"
-              placeholder="0.00"
-              required
-            />
-          </div>
+            <Field label="Amount (Rs)">
+              <AppInput
+                data-testid="amount-input"
+                type="number"
+                step="0.01"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="text-2xl font-semibold tracking-[-0.04em]"
+                placeholder="0.00"
+                required
+              />
+            </Field>
 
-          <div>
-            <label className="block text-sm font-bold uppercase tracking-wider mb-2">
-              Note (Optional)
-            </label>
-            <textarea
-              data-testid="note-input"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              className="neo-input w-full"
-              rows="2"
-              placeholder="What's this payment for?"
-            />
-          </div>
+            <Field label="Note (Optional)">
+              <AppTextarea
+                data-testid="note-input"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                rows="2"
+                placeholder="What's this payment for?"
+              />
+            </Field>
 
-          <button
-            data-testid="send-button"
-            type="submit"
-            disabled={loading}
-            className="neo-btn-primary w-full flex items-center justify-center gap-2"
-          >
-            {loading ? (
-              <>
-                <span className="spinner"></span>
-                <span>Sending...</span>
-              </>
-            ) : (
-              <>
-                <PaperPlaneTilt size={20} weight="bold" />
-                Send Money
-              </>
-            )}
-          </button>
+            <AppButton
+              data-testid="send-button"
+              type="submit"
+              disabled={loading}
+              className="flex w-full items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <span className="spinner"></span>
+                  <span>Sending...</span>
+                </>
+              ) : (
+                <>
+                  <PaperPlaneTilt size={20} weight="bold" />
+                  Send Money
+                </>
+              )}
+            </AppButton>
+          </AppSurface>
         </form>
-      </div>
-    </div>
+      </PageContent>
+    </AppShell>
   );
 }
 
