@@ -1,70 +1,48 @@
-# GoDutch — Claude Code Guidelines
-
-## Test enforcement
-
-**Every code addition must be accompanied by tests.**
-
-- New backend route or helper function → add a test in `tests/unit/` (for pure functions) or `tests/integration/` (for endpoints).
-- New frontend component or utility → add a test in `frontend/src/__tests__/`.
-- Modified logic (bug fix, refactor) → update or extend the relevant test.
-
-Never mark a coding task as done without running the relevant tests first.
-
-## Running tests
-
-### Backend
-
-```bash
-cd /path/to/GoDutch
-pip install -r backend/requirements.txt
-pytest
-```
-
-Key flags:
-- `pytest tests/unit/` — unit tests only (fast, no HTTP)
-- `pytest tests/integration/` — integration tests with in-memory MongoDB
-- `pytest -x` — stop on first failure
-- `pytest -v` — verbose output
-
-### Frontend
-
-```bash
-cd frontend
-yarn test --watchAll=false
-```
-
-Key flags:
-- `yarn test --testPathPattern=AppButton` — run a single test file
-- `yarn test --coverage` — generate coverage report
-
-## Test structure
-
-```
-tests/
-├── conftest.py              # shared fixtures (mock_db, client, registered_user, …)
-├── unit/
-│   ├── test_helpers.py      # _extract_json_block
-│   ├── test_models.py       # Pydantic model validation
-│   └── test_settlements.py  # settlement calculation algorithm
-└── integration/
-    ├── test_auth.py         # /api/auth/register + /api/auth/login
-    ├── test_groups.py       # /api/groups
-    ├── test_expenses.py     # /api/expenses + /api/groups/{id}/settlements + reports
-    └── test_upi.py          # /api/upi/*
-
-frontend/src/
-├── __mocks__/
-│   └── framer-motion.js     # jsdom-safe animation mock
-└── __tests__/
-    ├── utils.test.js        # cn() utility
-    ├── AppButton.test.js    # AppButton component
-    ├── AppField.test.js     # Field, AppInput, AppSelect, AppTextarea
-    └── AppShell.test.js     # AppShell, PageContent, PageHero, PageBackButton
-```
+# GoDutch — Project Guidelines
 
 ## Architecture
 
-- **Backend**: FastAPI + MongoDB (Motor async driver). Tests use `mongomock-motor` for an in-memory database — no real MongoDB required.
-- **Frontend**: React 19 + Tailwind + Radix UI. Tests use React Testing Library; framer-motion is mocked so animations don't break jsdom.
-- **Auth**: JWT tokens issued at register/login; `verify_token` FastAPI dependency reads `JWT_SECRET` env var.
-- **Settlement algorithm**: Balance-netting logic lives in `GET /api/groups/{id}/settlements`. Algorithm is independently unit-tested in `tests/unit/test_settlements.py`.
+- **Backend**: FastAPI + MongoDB (Motor async). `backend/server.py` is the single-file API.
+- **Frontend**: React 19 + Vite + Tailwind + Radix UI + framer-motion.
+- **Auth**: JWT (30-day expiry). `verify_token` dependency on every protected route.
+- **AI**: Gemini API for receipt OCR (`/api/ocr/scan`) and smart split (`/api/ai/smart-split`).
+- **DB Seeding**: `backend/seed.py` populates dev data on startup.
+
+## Running locally
+
+To start both Backend and Frontend + automatically open the browser:
+
+```bash
+npm run dev
+```
+
+Note: Frontend is configured to auto-open `http://localhost:3000` via `vite --open`.
+
+
+## Tests
+
+Every code change must include tests. Never mark done without running them.
+
+```bash
+# Backend — from project root
+pytest                       # all tests
+pytest tests/unit/ -x        # unit only, stop on first fail
+
+# Frontend
+cd frontend && npx vitest run
+```
+
+- Backend tests use `mongomock-motor` (no real DB needed).
+- Frontend mocks framer-motion for jsdom compatibility.
+
+## Design
+
+Follow [`DESIGN_GUIDELINES.md`](./DESIGN_GUIDELINES.md) strictly: tonal topography, no-line rule, 4-point grid, ambient luminosity, generous breath.
+
+## Status
+
+**Phase: PQ Fixes (Milestone 3).** MVP and hosting are done.
+
+Open bugs — see [`PQ_BUGS_LOG.md`](./PQ_BUGS_LOG.md):
+- **B003**: Any user can settle for anyone (auth gap).
+- **B005**: Enhance Add Expense UX (line-item visibility, quantities, card aesthetic).
