@@ -157,7 +157,41 @@ function AuthPageRedesign({ onAuthSuccess }) {
                 </div>
               </div>
 
+              {process.env.NODE_ENV === 'development' && (
+                <div className="flex flex-wrap gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => { setEmail('arjun@example.com'); setPassword('password123'); }}
+                    className="rounded-full bg-[#4f645b]/10 px-3 py-1 text-[10px] font-bold text-[#4f645b] transition-colors hover:bg-[#4f645b]/20"
+                  >
+                    Dev: Arjun
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setEmail('sarah@example.com'); setPassword('password123'); }}
+                    className="rounded-full bg-[#4f645b]/10 px-3 py-1 text-[10px] font-bold text-[#4f645b] transition-colors hover:bg-[#4f645b]/20"
+                  >
+                    Dev: Sarah
+                  </button>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        await axios.post(`${API}/dev/reset`);
+                        toast.success('Database reset and re-seeded!');
+                      } catch (e) {
+                        toast.error('Reset failed');
+                      }
+                    }}
+                    className="ml-auto rounded-full bg-red-50 px-3 py-1 text-[10px] font-bold text-red-600 transition-colors hover:bg-red-100"
+                  >
+                    Reset DB
+                  </button>
+                </div>
+              )}
+
               <div className="pt-4">
+
                 <button
                   data-testid="submit-button"
                   type="submit"

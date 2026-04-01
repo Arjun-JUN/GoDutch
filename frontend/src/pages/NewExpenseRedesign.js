@@ -353,16 +353,38 @@ function NewExpenseRedesign({ onLogout }) {
           title="New Expense"
           description="Capture the receipt, refine the details, and split the moment with the right people using the calmer alpine design system."
           actions={(
-            <AppButton
-              data-testid="smart-split-toggle"
-              onClick={() => setShowSmartSplit(!showSmartSplit)}
-              variant="secondary"
-              size="sm"
-            >
-              <Sparkle size={18} weight="fill" />
-              {showSmartSplit ? 'Hide AI Split' : 'AI Split'}
-            </AppButton>
+            <div className="flex gap-2">
+              {process.env.NODE_ENV === 'development' && (
+                <AppButton
+                  onClick={() => {
+                    setMerchant('Pizza Hut');
+                    setTotalAmount('1500');
+                    setCategory('Food & Dining');
+                    setItems([
+                      createExpenseItem({ name: 'Pepperoni Pizza', price: '800', category: 'Food & Dining' }, nextItemKey),
+                      createExpenseItem({ name: 'Garlic Bread', price: '300', category: 'Food & Dining' }, nextItemKey),
+                      createExpenseItem({ name: 'Drinks', price: '400', category: 'Food & Dining' }, nextItemKey),
+                    ]);
+                  }}
+                  variant="ghost"
+                  size="sm"
+                  className="bg-white/50"
+                >
+                  Demo Data
+                </AppButton>
+              )}
+              <AppButton
+                data-testid="smart-split-toggle"
+                onClick={() => setShowSmartSplit(!showSmartSplit)}
+                variant="secondary"
+                size="sm"
+              >
+                <Sparkle size={18} weight="fill" />
+                {showSmartSplit ? 'Hide AI Split' : 'AI Split'}
+              </AppButton>
+            </div>
           )}
+
         />
 
         {showSmartSplit && (

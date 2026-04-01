@@ -60,7 +60,7 @@
     "zod": "^3.24.4"
   },
   "scripts": {
-    "start": "vite",
+    "start": "vite --open --port 3000",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest"

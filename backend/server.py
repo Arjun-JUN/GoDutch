@@ -15,6 +15,8 @@ import jwt
 import bcrypt
 import base64
 import requests
+from seed import seed_data
+
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -961,7 +963,30 @@ async def get_expense_reports(group_id: str, current_user: dict = Depends(verify
         logging.error(f"Reports error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to generate reports")
 
+@api_router.post("/dev/reset")
+async def reset_db():
+    if os.getenv("ENV") == "production":
+        raise HTTPException(status_code=403, detail="Reset not allowed in production")
+    
+    await db.users.delete_many({})
+    await db.groups.delete_many({})
+    await db.expenses.delete_many({})
+    await db.bank_accounts.delete_many({})
+    await db.transactions.delete_many({})
+    await db.money_requests.delete_many({})
+    await db.payments.delete_many({})
+    
+    await seed_data(db)
+    return {"status": "success", "message": "Database reset and seeded with fresh fake data"}
+
 app.include_router(api_router)
+
+@app.on_event("startup")
+async def startup_event():
+    # Only seed in development
+    if os.getenv("ENV") != "production":
+        await seed_data(db)
+
 
 app.add_middleware(
     CORSMiddleware,
