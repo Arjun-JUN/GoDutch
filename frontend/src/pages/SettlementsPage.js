@@ -6,6 +6,8 @@ import { API, getAuthHeader } from '../App';
 import { ArrowsLeftRight, Check, CurrencyInr, QrCode } from '@phosphor-icons/react';
 import Header from '../components/Header';
 
+import InDevelopmentOverlay from '../components/InDevelopmentOverlay';
+
 function SettlementsPage({ onLogout }) {
   const [groups, setGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState('');
@@ -90,10 +92,15 @@ function SettlementsPage({ onLogout }) {
   };
 
   return (
-    <div className="min-h-screen mobile-safe-padding" style={{ background: '#FFFDF2' }}>
+    <div className="min-h-screen mobile-safe-padding relative overflow-hidden" style={{ background: '#FFFDF2' }}>
       <Header onLogout={onLogout} />
+      
+      <InDevelopmentOverlay 
+        marketingText="Settling up has never been this satisfying. Automated group settlements are coming to GoDutch very soon."
+        pmText="Our advanced balance-netting algorithm is undergoing final stress tests to guarantee perfect mathematical accuracy across all your groups."
+      />
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8 blur-sm grayscale-[30%] pointer-events-none select-none">
         <div className="flex justify-between items-center mb-6 md:mb-8">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl tracking-tight font-bold" style={{ fontFamily: 'Cabinet Grotesk, sans-serif' }}>
             Settlements
@@ -190,7 +197,7 @@ function SettlementsPage({ onLogout }) {
       </div>
 
       {showPaymentModal && selectedSettlement && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" data-testid="upi-payment-modal">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 blur-sm pointer-events-none" data-testid="upi-payment-modal">
           <div className="neo-card p-6 md:p-8 max-w-md w-full">
             <h2 className="text-xl md:text-2xl font-bold mb-4" style={{ fontFamily: 'Cabinet Grotesk, sans-serif' }}>
               Pay via UPI
