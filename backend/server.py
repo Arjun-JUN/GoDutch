@@ -56,12 +56,14 @@ class TokenResponse(BaseModel):
 class GroupCreate(BaseModel):
     name: str
     member_emails: List[str]
+    currency: str = "INR"
 
 class Group(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str
     name: str
     members: List[Dict]
+    currency: str = "INR"
     created_by: str
     created_at: str
 
@@ -427,6 +429,7 @@ async def create_group(group_data: GroupCreate, current_user: dict = Depends(ver
         "id": group_id,
         "name": group_data.name,
         "members": members,
+        "currency": group_data.currency,
         "created_by": current_user['user_id'],
         "created_at": datetime.now(timezone.utc).isoformat()
     }

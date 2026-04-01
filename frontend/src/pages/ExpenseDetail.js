@@ -565,13 +565,36 @@ function ExpenseDetail({ onLogout }) {
 
             {expense.items?.length > 0 ? (
               <div className="space-y-2" data-testid="items-list">
-                {expense.items.map((item, i) => (
-                  <div
-                    key={i}
-                    className="app-list-row flex items-center justify-between gap-3 p-3"
-                    data-testid={`item-row-${i}`}
-                  >
-                    <div className="flex items-center gap-3">
+                {expense.items.map((item, i) => {
+                  const itemTotal = (Number(item.price) || 0) * (Number(item.quantity) || 1);
+                  let itemShare = 0;
+                  if (expense.split_type === 'item-based') {
+                    const assignedTo = item.assigned_to || [];
+                    if (assignedTo.length > 0) {
+                      if (assignedTo.includes(currentUser?.id)) {
+                        itemShare = itemTotal / assignedTo.length;
+                      }
+                    } else if (group?.members?.some(m => m.id === currentUser?.id)) {
+                      itemShare = itemTotal / group.members.length;
+                    }
+                  } else {
+                    const mySplitDetail = expense.split_details?.find(s => s.user_id === currentUser?.id);
+                    if (mySplitDetail) {
+                      const myTotalShare = Number(mySplitDetail.amount) || 0;
+                      const expenseTotal = Number(expense.total_amount) || 1;
+                      const ratio = myTotalShare / expenseTotal;
+                      itemShare = itemTotal * ratio;
+                    }
+                  }
+
+                  const shareColorClass = itemShare === 0 ? 'text-emerald-500' : 'text-amber-500';
+
+                  return (
+                    <div
+                      key={i}
+                      className="app-list-row flex items-center gap-3 p-3 w-full"
+                      data-testid={`item-row-${i}`}
+                    >
                       <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-[var(--app-soft)] font-black text-xs text-[var(--app-primary)]">
                         {item.quantity || 1}x
                       </div>
@@ -579,23 +602,23 @@ function ExpenseDetail({ onLogout }) {
                         <p className="truncate text-sm font-bold text-[var(--app-foreground)]">
                           {item.name || '—'}
                         </p>
-                        <p className="text-xs text-[var(--app-muted)]">
-                          {item.category || 'Other'}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-base font-extrabold tracking-[-0.03em] text-[var(--app-primary)]">
-                          Rs {((Number(item.price) || 0) * (Number(item.quantity) || 1)).toFixed(2)}
-                        </p>
                         {item.quantity > 1 && (
-                          <p className="text-[10px] text-[var(--app-muted)]">
+                          <p className="text-[10px] text-[var(--app-muted)] mt-0.5">
                             Rs {Number(item.price).toFixed(2)} each
                           </p>
                         )}
                       </div>
+                      <div className="text-right flex-shrink-0">
+                        <p className="text-base font-extrabold tracking-[-0.03em] text-[var(--app-primary)]">
+                          Rs {itemTotal.toFixed(2)}
+                        </p>
+                        <p className={`text-[10px] font-bold ${shareColorClass} mt-0.5`}>
+                          {itemShare === 0 ? 'No share' : `Your share: Rs ${itemShare.toFixed(2)}`}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <p className="py-4 text-center text-sm text-[var(--app-muted)]">

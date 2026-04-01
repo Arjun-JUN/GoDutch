@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { API, getAuthHeader, getCurrentUser } from '../App';
 import { ArrowsLeftRight, ChartLineUp, Plus, Receipt } from '@phosphor-icons/react';
 import Header from '../components/Header';
-import { AppButton, AppShell, AppSurface, EmptyState, IconBadge, MemberBadge, PageContent, PageHero, StatCard } from '../components/app';
+import { AppButton, AppShell, AppSurface, EmptyState, ExpenseCard, IconBadge, MemberBadge, PageContent, PageHero, StatCard } from '../components/app';
 
 function Dashboard({ onLogout }) {
   const [expenses, setExpenses] = useState([]);
@@ -148,35 +148,13 @@ function Dashboard({ onLogout }) {
                   (s) => s.user_id === user?.id,
                 );
                 return (
-                  <button
+                  <ExpenseCard
                     key={expense.id}
-                    data-testid={`expense-${expense.id}`}
+                    expense={expense}
+                    amount={myShare ? myShare.amount : expense.total_amount}
+                    amountLabel={<>YOUR<br className="sm:hidden" /> SHARE</>}
                     onClick={() => navigate(`/expenses/${expense.id}`, { state: { from: '/dashboard', fromLabel: 'Dashboard' } })}
-                    className="w-full flex items-stretch justify-between gap-3 p-4 md:p-5 rounded-[2rem] border border-[var(--app-border)] bg-white text-left transition-all hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm"
-                  >
-                    <div className="flex items-center gap-4 flex-1 min-w-0">
-                      <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-[#e9efee] text-[var(--app-foreground)]">
-                        <Receipt size={24} weight="regular" />
-                      </div>
-                      <div className="flex-1 min-w-0 pr-2">
-                        <h3 className="text-[17px] sm:text-lg font-extrabold text-[var(--app-foreground)] leading-tight whitespace-normal break-words line-clamp-2" data-testid={`expense-merchant-${expense.id}`}>
-                          {expense.merchant}
-                        </h3>
-                        <p className="mt-1.5 text-[13px] font-semibold text-[var(--app-foreground)] opacity-60">{expense.date}</p>
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-end justify-center text-right pl-2 shrink-0">
-                      <div className="flex flex-col items-end">
-                        <span className="text-sm font-extrabold text-[var(--app-foreground)] leading-none mb-1 opacity-80">Rs</span>
-                        <span className="text-[22px] sm:text-2xl font-extrabold tracking-[-0.04em] text-[var(--app-foreground)] leading-none" data-testid={`expense-amount-${expense.id}`}>
-                          {myShare ? Number(myShare.amount).toFixed(2) : Number(expense.total_amount).toFixed(2)}
-                        </span>
-                      </div>
-                      <p className="mt-2 text-[10px] font-bold tracking-[0.15em] text-[var(--app-foreground)] opacity-50 uppercase text-right max-w-[60px] sm:max-w-none leading-tight">
-                        YOUR<br className="sm:hidden" /> SHARE
-                      </p>
-                    </div>
-                  </button>
+                  />
                 );
               })}
             </div>

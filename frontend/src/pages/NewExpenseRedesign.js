@@ -1,199 +1,643 @@
-import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { toast } from 'sonner';
-import { API, getAuthHeader } from '../App';
+import { API, getAuthHeader, getCurrentUser } from '../App';
 import { isEdgeAIReady, smartSplitEdge, scanReceiptEdge } from '../utils/edgeAI';
-import { Camera, Lightning, Microphone, Sparkle, Trash } from '@phosphor-icons/react';
+import {
+  Airplane,
+  ArrowLeft,
+  CalendarBlank,
+  Camera,
+  Car,
+  CaretDown,
+  Check,
+  CurrencyInr,
+  DotsThreeCircle,
+  ForkKnife,
+  ImageSquare,
+  Lightbulb,
+  Note,
+  PencilSimple,
+  Receipt,
+  ShoppingBag,
+  ShoppingCart,
+  Stethoscope,
+  Ticket,
+  UsersThree,
+  X,
+} from '@phosphor-icons/react';
 import Header from '../components/Header';
-import { AppButton, AppInput, AppSelect, AppShell, AppSurface, AppTextarea, Callout, Field, MemberBadge, PageContent, PageHero } from '../components/app';
+import { AppButton, AppInput, AppSelect, AppShell, AppSurface, PageContent } from '../components/app';
+
+/* ─── Constants ─── */
 
 const CATEGORIES = [
-  'Food & Dining',
-  'Transportation',
-  'Entertainment',
-  'Shopping',
-  'Groceries',
-  'Utilities',
-  'Healthcare',
-  'Travel',
-  'Other'
+  'Food & Dining', 'Transportation', 'Entertainment', 'Shopping',
+  'Groceries', 'Utilities', 'Healthcare', 'Travel', 'Other',
 ];
 
-const createExpenseItem = (overrides = {}, createKey) => ({
-  ui_key: createKey(),
-  name: '',
-  price: '',
-  quantity: 1,
-  category: 'Other',
-  assigned_to: [],
-  ...overrides,
-});
-
-const normalizeExpenseItems = (rawItems, createKey) => {
-  if (!Array.isArray(rawItems)) {
-    return [createExpenseItem({}, createKey)];
-  }
-
-  const normalized = rawItems
-    .map((item) => {
-      let name = String(
-        item?.name ??
-        item?.item ??
-        item?.description ??
-        item?.title ??
-        ''
-      ).trim();
-
-      let quantity = parseInt(item?.quantity ?? 1);
-      
-      // Heuristic: Extract quantity from name if present (e.g., "2x Burger" or "3 Beers")
-      const qtyMatch = name.match(/^(\d+)\s*[xX]?\s+(.+)$/);
-      if (qtyMatch && isNaN(parseInt(item?.quantity))) {
-        quantity = parseInt(qtyMatch[1]);
-        name = qtyMatch[2].trim();
-      }
-
-      const rawPrice = item?.price ?? item?.amount ?? item?.total ?? item?.value ?? '';
-      const price = rawPrice === '' || rawPrice == null ? '' : String(rawPrice).trim();
-
-      return createExpenseItem({
-        name,
-        price,
-        quantity: isNaN(quantity) ? 1 : quantity,
-        category: item?.category || 'Other',
-        assigned_to: Array.isArray(item?.assigned_to) ? item.assigned_to : []
-      }, createKey);
-    })
-    .filter((item) => item.name || item.price);
-
-  return normalized.length > 0 ? normalized : [createExpenseItem({}, createKey)];
+const CATEGORY_ICONS = {
+  'Food & Dining': ForkKnife,
+  'Transportation': Car,
+  'Entertainment': Ticket,
+  'Shopping': ShoppingBag,
+  'Groceries': ShoppingCart,
+  'Utilities': Lightbulb,
+  'Healthcare': Stethoscope,
+  'Travel': Airplane,
+  'Other': DotsThreeCircle,
 };
 
-function NewExpenseRedesign({ onLogout }) {
-  const [groups, setGroups] = useState([]);
-  const [selectedGroup, setSelectedGroup] = useState('');
-  const [merchant, setMerchant] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [totalAmount, setTotalAmount] = useState('');
-  const [category, setCategory] = useState('Food & Dining');
-  const [notes, setNotes] = useState('');
-  const itemKeyRef = useRef(0);
-  const nextItemKey = () => {
-    itemKeyRef.current += 1;
-    return `expense-item-${itemKeyRef.current}`;
-  };
-  const [items, setItems] = useState(() => [createExpenseItem({}, nextItemKey)]);
-  const [splitType, setSplitType] = useState('equal');
-  const [receiptImage, setReceiptImage] = useState('');
-  const [scanning, setScanning] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [smartInstruction, setSmartInstruction] = useState('');
-  const [isRecording, setIsRecording] = useState(false);
-  const [showSmartSplit, setShowSmartSplit] = useState(false);
-  const [processingAI, setProcessingAI] = useState(false);
+const DESCRIPTION_ICON_MAP = [
+  { keywords: ['food', 'pizza', 'burger', 'dinner', 'lunch', 'breakfast', 'restaurant', 'cafe', 'coffee', 'tea', 'biryani', 'chicken', 'noodles'], icon: ForkKnife, category: 'Food & Dining' },
+  { keywords: ['uber', 'cab', 'taxi', 'ola', 'gas', 'fuel', 'parking', 'car', 'petrol', 'diesel', 'metro', 'bus'], icon: Car, category: 'Transportation' },
+  { keywords: ['movie', 'netflix', 'concert', 'show', 'game', 'spotify', 'hotstar', 'prime'], icon: Ticket, category: 'Entertainment' },
+  { keywords: ['grocery', 'supermarket', 'vegetables', 'fruits', 'bigbasket', 'blinkit', 'zepto', 'dmart'], icon: ShoppingCart, category: 'Groceries' },
+  { keywords: ['shop', 'amazon', 'flipkart', 'clothes', 'shoes', 'myntra', 'mall'], icon: ShoppingBag, category: 'Shopping' },
+  { keywords: ['electricity', 'water', 'internet', 'phone', 'wifi', 'bill', 'broadband', 'bescom'], icon: Lightbulb, category: 'Utilities' },
+  { keywords: ['doctor', 'hospital', 'medicine', 'pharmacy', 'medical', 'clinic'], icon: Stethoscope, category: 'Healthcare' },
+  { keywords: ['flight', 'hotel', 'trip', 'travel', 'vacation', 'airbnb', 'booking', 'train', 'indigo'], icon: Airplane, category: 'Travel' },
+];
 
-  const navigate = useNavigate();
-  const recognitionRef = useRef(null);
-  const prefersReducedMotion = useReducedMotion();
+const CURRENCY_SYMBOLS = {
+  INR: '₹',
+  USD: '$',
+  EUR: '€',
+  GBP: '£',
+  JPY: '¥',
+};
+
+function getCurrencySymbol(code) {
+  return CURRENCY_SYMBOLS[code] || code;
+}
+
+function getIconForDescription(description) {
+  const lower = (description || '').toLowerCase();
+  for (const entry of DESCRIPTION_ICON_MAP) {
+    if (entry.keywords.some((kw) => lower.includes(kw))) {
+      return { icon: entry.icon, category: entry.category };
+    }
+  }
+  return { icon: Receipt, category: 'Other' };
+}
+
+/* ─── Sub-components ─── */
+
+function PaidByModal({ open, onClose, members, paidBy, onPaidByChange, totalAmount, currencySymbol }) {
+  const [localPaidBy, setLocalPaidBy] = useState(paidBy);
+  const [showUnequal, setShowUnequal] = useState(paidBy.length > 1);
 
   useEffect(() => {
-    loadGroups();
-
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = false;
-      recognitionRef.current.interimResults = false;
-
-      recognitionRef.current.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        setSmartInstruction(transcript);
-        toast.success('Voice captured!');
-      };
-
-      recognitionRef.current.onerror = () => {
-        toast.error('Voice recognition failed');
-        setIsRecording(false);
-      };
-
-      recognitionRef.current.onend = () => {
-        setIsRecording(false);
-      };
+    if (open) {
+      setLocalPaidBy(paidBy);
+      setShowUnequal(paidBy.length > 1);
     }
+  }, [open, paidBy]);
+
+  const toggleMember = (memberId) => {
+    const existing = localPaidBy.find((p) => p.user_id === memberId);
+    if (existing) {
+      if (localPaidBy.length === 1) return; // must have at least 1
+      setLocalPaidBy(localPaidBy.filter((p) => p.user_id !== memberId));
+    } else {
+      setLocalPaidBy([...localPaidBy, { user_id: memberId, amount: '' }]);
+    }
+  };
+
+  const updateAmount = (memberId, amount) => {
+    setLocalPaidBy(localPaidBy.map((p) => (p.user_id === memberId ? { ...p, amount } : p)));
+  };
+
+  const handleDone = () => {
+    onPaidByChange(localPaidBy);
+    onClose();
+  };
+
+  if (!open) return null;
+
+  const selectedCount = localPaidBy.length;
+  const totalEntered = localPaidBy.reduce((s, p) => s + (parseFloat(p.amount) || 0), 0);
+  const remaining = (parseFloat(totalAmount) || 0) - totalEntered;
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        className="modal-fullscreen"
+        initial={{ y: '100%' }}
+        animate={{ y: 0 }}
+        exit={{ y: '100%' }}
+        transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+      >
+        <div className="modal-fullscreen-header">
+          <button className="back-btn" onClick={onClose} data-testid="paidby-modal-close">
+            <ArrowLeft size={20} weight="bold" />
+          </button>
+          <div>
+            <h2 className="text-lg font-extrabold tracking-tight text-[var(--app-foreground)]">Who paid?</h2>
+            <p className="text-xs text-[var(--app-muted)]">{selectedCount} selected</p>
+          </div>
+        </div>
+
+        <div className="modal-fullscreen-body">
+          <div className="member-select-list">
+            {members.map((member) => {
+              const isSelected = localPaidBy.some((p) => p.user_id === member.id);
+              const paidEntry = localPaidBy.find((p) => p.user_id === member.id);
+              return (
+                <div
+                  key={member.id}
+                  className={`member-select-row ${isSelected ? 'selected' : ''}`}
+                  data-testid={`paidby-member-${member.id}`}
+                >
+                  <div className="member-avatar">{member.name.charAt(0).toUpperCase()}</div>
+                  <div className="member-info" onClick={() => toggleMember(member.id)}>
+                    <span className="member-name">{member.name}</span>
+                  </div>
+                  {showUnequal && isSelected ? (
+                    <input
+                      type="number"
+                      className="member-amount-input"
+                      placeholder="0.00"
+                      value={paidEntry?.amount || ''}
+                      onChange={(e) => updateAmount(member.id, e.target.value)}
+                      data-testid={`paidby-amount-${member.id}`}
+                    />
+                  ) : null}
+                  <div
+                    className={`member-check ${isSelected ? 'checked' : ''}`}
+                    onClick={() => toggleMember(member.id)}
+                  >
+                    {isSelected ? <Check size={14} weight="bold" color="white" /> : null}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {selectedCount > 1 && (
+            <div className="mt-4">
+              <button
+                className="expense-split-btn w-full justify-center"
+                onClick={() => setShowUnequal(!showUnequal)}
+                type="button"
+              >
+                {showUnequal ? 'Hide amounts' : 'Set unequal amounts'}
+              </button>
+            </div>
+          )}
+
+          {showUnequal && selectedCount > 1 && (
+            <div className={`amount-remaining ${remaining < 0 ? 'over' : ''}`}>
+              <span className="label">Remaining</span>
+              <span className="value">
+                {currencySymbol}{Math.abs(remaining).toFixed(2)}{remaining < 0 ? ' over' : ''}
+              </span>
+            </div>
+          )}
+        </div>
+
+        <div className="modal-sticky-footer">
+          <AppButton onClick={handleDone} className="w-full justify-center" data-testid="paidby-done-btn">
+            Done
+          </AppButton>
+        </div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
+function SplitBetweenModal({ open, onClose, members, splitBetween, splitMode, onSplitChange, onSplitModeChange, totalAmount, currencySymbol }) {
+  const [localSplit, setLocalSplit] = useState(splitBetween);
+  const [localMode, setLocalMode] = useState(splitMode);
+
+  useEffect(() => {
+    if (open) {
+      setLocalSplit(splitBetween);
+      setLocalMode(splitMode);
+    }
+  }, [open, splitBetween, splitMode]);
+
+  const toggleMember = (memberId) => {
+    const existing = localSplit.find((s) => s.user_id === memberId);
+    if (existing) {
+      if (localSplit.length === 1) return;
+      setLocalSplit(localSplit.filter((s) => s.user_id !== memberId));
+    } else {
+      setLocalSplit([...localSplit, { user_id: memberId, amount: '', shares: 1 }]);
+    }
+  };
+
+  const updateField = (memberId, field, value) => {
+    setLocalSplit(localSplit.map((s) => (s.user_id === memberId ? { ...s, [field]: value } : s)));
+  };
+
+  const handleDone = () => {
+    onSplitChange(localSplit);
+    onSplitModeChange(localMode);
+    onClose();
+  };
+
+  if (!open) return null;
+
+  const total = parseFloat(totalAmount) || 0;
+  const selectedCount = localSplit.length;
+
+  // Compute per-person for equally
+  const perPerson = selectedCount > 0 ? total / selectedCount : 0;
+
+  // For unequally
+  const totalEntered = localSplit.reduce((s, p) => s + (parseFloat(p.amount) || 0), 0);
+  const remaining = total - totalEntered;
+
+  // For shares
+  const totalShares = localSplit.reduce((s, p) => s + (parseInt(p.shares) || 1), 0);
+
+  const tabs = ['Equally', 'Unequally', 'By shares'];
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        className="modal-fullscreen"
+        initial={{ y: '100%' }}
+        animate={{ y: 0 }}
+        exit={{ y: '100%' }}
+        transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+      >
+        <div className="modal-fullscreen-header">
+          <button className="back-btn" onClick={onClose} data-testid="split-modal-close">
+            <ArrowLeft size={20} weight="bold" />
+          </button>
+          <div>
+            <h2 className="text-lg font-extrabold tracking-tight text-[var(--app-foreground)]">Split options</h2>
+            <p className="text-xs text-[var(--app-muted)]">{selectedCount} of {members.length} people</p>
+          </div>
+        </div>
+
+        <div className="modal-fullscreen-body">
+          <div className="split-tab-nav mb-5" data-testid="split-tab-nav">
+            {tabs.map((tab) => (
+              <button
+                key={tab}
+                className={`split-tab-item ${localMode === tab.toLowerCase().replace(' ', '') ? 'active' : ''}`}
+                onClick={() => setLocalMode(tab.toLowerCase().replace(' ', ''))}
+                data-testid={`split-tab-${tab.toLowerCase().replace(' ', '')}`}
+                type="button"
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+
+          <div className="member-select-list">
+            {members.map((member) => {
+              const isSelected = localSplit.some((s) => s.user_id === member.id);
+              const splitEntry = localSplit.find((s) => s.user_id === member.id);
+              return (
+                <div
+                  key={member.id}
+                  className={`member-select-row ${isSelected ? 'selected' : ''}`}
+                  data-testid={`split-member-${member.id}`}
+                >
+                  <div className="member-avatar">{member.name.charAt(0).toUpperCase()}</div>
+                  <div className="member-info" onClick={() => toggleMember(member.id)}>
+                    <span className="member-name">{member.name}</span>
+                    {localMode === 'equally' && isSelected && (
+                      <p className="text-xs text-[var(--app-muted)] mt-0.5">
+                        {currencySymbol}{perPerson.toFixed(2)}
+                      </p>
+                    )}
+                    {localMode === 'byshares' && isSelected && (
+                      <p className="text-xs text-[var(--app-muted)] mt-0.5">
+                        {currencySymbol}{(totalShares > 0 ? ((parseInt(splitEntry?.shares) || 1) / totalShares * total) : 0).toFixed(2)}
+                      </p>
+                    )}
+                  </div>
+
+                  {localMode === 'unequally' && isSelected && (
+                    <input
+                      type="number"
+                      className="member-amount-input"
+                      placeholder="0.00"
+                      value={splitEntry?.amount || ''}
+                      onChange={(e) => updateField(member.id, 'amount', e.target.value)}
+                      data-testid={`split-amount-${member.id}`}
+                    />
+                  )}
+
+                  {localMode === 'byshares' && isSelected && (
+                    <input
+                      type="number"
+                      className="member-amount-input"
+                      placeholder="1"
+                      min="1"
+                      value={splitEntry?.shares || 1}
+                      onChange={(e) => updateField(member.id, 'shares', e.target.value)}
+                      data-testid={`split-shares-${member.id}`}
+                      style={{ width: '4rem' }}
+                    />
+                  )}
+
+                  <div
+                    className={`member-check ${isSelected ? 'checked' : ''}`}
+                    onClick={() => toggleMember(member.id)}
+                  >
+                    {isSelected ? <Check size={14} weight="bold" color="white" /> : null}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {localMode === 'unequally' && (
+            <div className={`amount-remaining ${remaining < -0.01 ? 'over' : ''}`}>
+              <span className="label">Remaining</span>
+              <span className="value">
+                {currencySymbol}{Math.abs(remaining).toFixed(2)}{remaining < -0.01 ? ' over' : ''}
+              </span>
+            </div>
+          )}
+
+          {localMode === 'byshares' && (
+            <div className="amount-remaining">
+              <span className="label">Total shares</span>
+              <span className="value">{totalShares}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="modal-sticky-footer">
+          <AppButton onClick={handleDone} className="w-full justify-center" data-testid="split-done-btn">
+            Done
+          </AppButton>
+        </div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
+function ScanningOverlay({ open, receiptImage }) {
+  if (!open) return null;
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        className="scanning-overlay"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.24 }}
+      >
+        <div className="scan-content">
+          {receiptImage && (
+            <div className="receipt-preview">
+              <img src={receiptImage} alt="Receipt" />
+              <div className="scanning-line" />
+            </div>
+          )}
+          <div className="flex items-center justify-center gap-3 mb-3">
+            <span className="spinner" style={{ borderTopColor: 'var(--app-primary)' }} />
+            <p className="text-base font-extrabold text-[var(--app-foreground)]" data-testid="scanning-text">
+              Scanning receipt...
+            </p>
+          </div>
+          <p className="text-sm text-[var(--app-muted)]">
+            AI is extracting merchant, items, and amounts from your receipt
+          </p>
+        </div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
+function CameraCapture({ open, onClose, onCapture }) {
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    if (open) {
+      startCamera();
+    }
+    return () => stopCamera();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (err) {
+      toast.error('Camera access denied');
+      onClose();
+    }
+  };
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+    }
+  };
+
+  const capturePhoto = () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const canvas = canvasRef.current || document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0);
+
+    canvas.toBlob(
+      (blob) => {
+        const file = new File([blob], 'camera-receipt.jpg', { type: 'image/jpeg' });
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          onCapture(reader.result, file);
+          stopCamera();
+          onClose();
+        };
+        reader.readAsDataURL(file);
+      },
+      'image/jpeg',
+      0.9
+    );
+  };
+
+  if (!open) return null;
+
+  return (
+    <motion.div
+      className="camera-modal"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <video ref={videoRef} autoPlay playsInline muted style={{ flex: 1 }} />
+      <canvas ref={canvasRef} style={{ display: 'none' }} />
+      <div className="camera-controls">
+        <button className="camera-close-btn" onClick={() => { stopCamera(); onClose(); }} data-testid="camera-close">
+          <X size={24} weight="bold" />
+        </button>
+        <button className="camera-capture-btn" onClick={capturePhoto} data-testid="camera-capture" />
+      </div>
+    </motion.div>
+  );
+}
+
+/* ─── Main Component ─── */
+
+function NewExpenseRedesign({ onLogout }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const currentUser = getCurrentUser();
+
+  // Core form state
+  const [groups, setGroups] = useState([]);
+  const [selectedGroup, setSelectedGroup] = useState('');
+  const [description, setDescription] = useState('');
+  const [totalAmount, setTotalAmount] = useState('');
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [editingDate, setEditingDate] = useState(false);
+  const [notes, setNotes] = useState('');
+  const [showNotes, setShowNotes] = useState(false);
+
+  // Split configuration
+  const [paidBy, setPaidBy] = useState([]);
+  const [splitBetween, setSplitBetween] = useState([]);
+  const [splitMode, setSplitMode] = useState('equally');
+
+  // Modals
+  const [showPaidByModal, setShowPaidByModal] = useState(false);
+  const [showSplitModal, setShowSplitModal] = useState(false);
+  const [showCamera, setShowCamera] = useState(false);
+
+  // Receipt / scanning
+  const [receiptImage, setReceiptImage] = useState('');
+  const [scanning, setScanning] = useState(false);
+
+  // Submission
+  const [loading, setLoading] = useState(false);
+
+  // File input ref
+  const fileInputRef = useRef(null);
+
+  // ─── Load groups ───
+  useEffect(() => {
+    loadGroups();
   }, []);
 
   const loadGroups = async () => {
     try {
-      const res = await axios.get(`${API}/groups`, {
-        headers: getAuthHeader(),
-      });
+      const res = await axios.get(`${API}/groups`, { headers: getAuthHeader() });
       setGroups(res.data);
-      if (res.data.length > 0) {
+
+      // Pre-select group if passed via location state or query
+      const preselectedGroupId = location.state?.groupId;
+      if (preselectedGroupId && res.data.some((g) => g.id === preselectedGroupId)) {
+        setSelectedGroup(preselectedGroupId);
+        initSplitForGroup(res.data.find((g) => g.id === preselectedGroupId));
+      } else if (res.data.length > 0) {
         setSelectedGroup(res.data[0].id);
+        initSplitForGroup(res.data[0]);
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to load groups');
     }
   };
 
-  const handleVoiceInput = () => {
-    if (isRecording) {
-      recognitionRef.current?.stop();
-      setIsRecording(false);
-      return;
-    }
+  const initSplitForGroup = useCallback(
+    (group) => {
+      if (!group) return;
+      const userId = currentUser?.id;
 
-    recognitionRef.current?.start();
-    setIsRecording(true);
-    toast.info('Listening...');
+      // Default: current user pays full
+      setPaidBy([{ user_id: userId, amount: '' }]);
+
+      // Default: all members split equally
+      setSplitBetween(
+        group.members.map((m) => ({ user_id: m.id, amount: '', shares: 1 }))
+      );
+      setSplitMode('equally');
+    },
+    [currentUser?.id]
+  );
+
+  // When group changes, reinitialize splits
+  const handleGroupChange = (groupId) => {
+    setSelectedGroup(groupId);
+    const group = groups.find((g) => g.id === groupId);
+    initSplitForGroup(group);
   };
 
-  const handleSmartSplit = async () => {
-    if (!smartInstruction.trim() || !selectedGroup) {
-      toast.error('Please enter instruction and select a group');
-      return;
+  // ─── Derived state ───
+  const currentGroup = groups.find((g) => g.id === selectedGroup);
+  const currencyCode = currentGroup?.currency || 'INR';
+  const currencySymbol = getCurrencySymbol(currencyCode);
+  const { icon: DescriptionIcon, category: autoCategory } = getIconForDescription(description);
+
+  // ─── Paid-by labels ───
+  const getPaidByLabel = () => {
+    if (paidBy.length === 0) return 'you';
+    if (paidBy.length === 1) {
+      if (paidBy[0].user_id === currentUser?.id) return 'you';
+      const member = currentGroup?.members?.find((m) => m.id === paidBy[0].user_id);
+      return member?.name || 'someone';
     }
+    const names = paidBy.map((p) => {
+      if (p.user_id === currentUser?.id) return 'you';
+      return currentGroup?.members?.find((m) => m.id === p.user_id)?.name || '?';
+    });
+    return names.slice(0, 2).join(', ') + (names.length > 2 ? ` +${names.length - 2}` : '');
+  };
 
-    setProcessingAI(true);
+  const getSplitLabel = () => {
+    if (splitMode === 'equally') return 'equally';
+    if (splitMode === 'unequally') return 'unequally';
+    if (splitMode === 'byshares') return 'by shares';
+    return 'equally';
+  };
+
+  // ─── Receipt scanning ───
+  const processReceipt = async (dataUrl, file) => {
+    setReceiptImage(dataUrl);
+    setScanning(true);
+
     try {
-      const group = groups.find(g => g.id === selectedGroup);
-      const membersInfo = (group?.members || []).map(m => `${m.name} (id: ${m.id})`).join(', ');
-      const expenseContext = { merchant, total_amount: totalAmount, existing_items: items };
-
+      const base64 = dataUrl.split(',')[1];
       let data;
       if (await isEdgeAIReady()) {
-        data = await smartSplitEdge({ instruction: smartInstruction, membersInfo, expenseContext });
+        data = await scanReceiptEdge(file);
       } else {
         const res = await axios.post(
-          `${API}/ai/smart-split`,
-          { group_id: selectedGroup, instruction: smartInstruction, expense_context: expenseContext },
+          `${API}/ocr/scan`,
+          { image_base64: base64, mime_type: file.type || 'image/jpeg' },
           { headers: getAuthHeader() }
         );
         data = res.data;
       }
 
-      if (data.clarification_needed) {
-        toast.info(data.clarification_question, { duration: 6000 });
-      } else {
-        const plan = data.split_plan;
-        if (plan.items) {
-          setItems(normalizeExpenseItems(plan.items, nextItemKey));
-        }
-        setSplitType(plan.split_type || 'custom');
-        toast.success('Split plan created!');
-        setShowSmartSplit(false);
-      }
+      setDescription(data.merchant || '');
+      if (data.date) setDate(data.date);
+      setTotalAmount(String(data.total_amount || ''));
+      toast.success('Receipt scanned successfully!');
     } catch (error) {
-      const errorMsg = error.response?.data?.detail || error.message || 'Smart split failed';
+      const errorMsg = error.response?.data?.detail || error.message || 'Scan failed';
       if (error.response?.status === 402) {
         toast.error(errorMsg, { duration: 6000 });
       } else {
         toast.error(errorMsg);
       }
     } finally {
-      setProcessingAI(false);
+      setScanning(false);
     }
   };
 
@@ -202,550 +646,408 @@ function NewExpenseRedesign({ onLogout }) {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onloadend = async () => {
-      const base64 = reader.result.split(',')[1];
-      setReceiptImage(reader.result);
-      setScanning(true);
-
-      try {
-        let data;
-        if (await isEdgeAIReady()) {
-          data = await scanReceiptEdge(file);
-        } else {
-          const res = await axios.post(
-            `${API}/ocr/scan`,
-            { image_base64: base64, mime_type: file.type || 'image/jpeg' },
-            { headers: getAuthHeader() }
-          );
-          data = res.data;
-        }
-
-        setMerchant(data.merchant);
-        setDate(data.date);
-        setTotalAmount(data.total_amount.toString());
-        setItems(normalizeExpenseItems(data.items ?? data.line_items ?? data.bill_items, nextItemKey));
-        toast.success('Receipt scanned successfully!');
-      } catch (error) {
-        const errorMessage = error.response?.data?.detail || error.message || 'Failed to scan receipt';
-        if (error.response?.status === 402) {
-          toast.error(errorMessage, { duration: 6000 });
-        } else {
-          toast.error(errorMessage);
-        }
-      } finally {
-        setScanning(false);
-      }
+    reader.onloadend = () => {
+      processReceipt(reader.result, file);
     };
     reader.readAsDataURL(file);
   };
 
-  const addItem = () => {
-    setItems([...items, createExpenseItem({}, nextItemKey)]);
+  const handleCameraCapture = (dataUrl, file) => {
+    processReceipt(dataUrl, file);
   };
 
-  const removeItem = (index) => {
-    setItems(items.filter((_, i) => i !== index));
-  };
+  // ─── Calculate split details for submission ───
+  const calculateSplitDetails = () => {
+    if (!currentGroup) return [];
+    const total = parseFloat(totalAmount) || 0;
 
-  const updateItem = (index, field, value) => {
-    const updated = [...items];
-    updated[index][field] = value;
-    setItems(updated);
-  };
-
-  const toggleMemberAssignment = (itemIndex, memberId) => {
-    const updated = [...items];
-    const assignedTo = updated[itemIndex].assigned_to || [];
-
-    if (assignedTo.includes(memberId)) {
-      updated[itemIndex].assigned_to = assignedTo.filter((id) => id !== memberId);
-    } else {
-      updated[itemIndex].assigned_to = [...assignedTo, memberId];
+    if (splitMode === 'equally') {
+      const selectedMembers = splitBetween.map((s) => s.user_id);
+      const perPerson = selectedMembers.length > 0 ? total / selectedMembers.length : 0;
+      return currentGroup.members
+        .filter((m) => selectedMembers.includes(m.id))
+        .map((m) => ({
+          user_id: m.id,
+          user_name: m.name,
+          amount: parseFloat(perPerson.toFixed(2)),
+        }));
     }
 
-    setItems(updated);
-  };
-
-  const calculateSplit = () => {
-    const group = groups.find((entry) => entry.id === selectedGroup);
-    if (!group) return [];
-
-    if (splitType === 'item-based') {
-      const memberTotals = {};
-      group.members.forEach((member) => {
-        memberTotals[member.id] = 0;
+    if (splitMode === 'unequally') {
+      return splitBetween.map((s) => {
+        const member = currentGroup.members.find((m) => m.id === s.user_id);
+        return {
+          user_id: s.user_id,
+          user_name: member?.name || '',
+          amount: parseFloat(s.amount) || 0,
+        };
       });
-
-      items.forEach((item) => {
-        const price = parseFloat(item.price) || 0;
-        const qty = parseInt(item.quantity) || 1;
-        const subtotal = price * qty;
-        const assignedTo = item.assigned_to || [];
-
-        if (assignedTo.length > 0) {
-          const perPerson = subtotal / assignedTo.length;
-          assignedTo.forEach((memberId) => {
-            memberTotals[memberId] += perPerson;
-          });
-        } else {
-          const perPerson = subtotal / group.members.length;
-          group.members.forEach((member) => {
-            memberTotals[member.id] += perPerson;
-          });
-        }
-      });
-
-      return group.members.map((member) => ({
-        user_id: member.id,
-        user_name: member.name,
-        amount: parseFloat(memberTotals[member.id].toFixed(2))
-      }));
     }
 
-    const amount = parseFloat(totalAmount) || 0;
-    const perPerson = amount / group.members.length;
+    if (splitMode === 'byshares') {
+      const totalShares = splitBetween.reduce((sum, s) => sum + (parseInt(s.shares) || 1), 0);
+      return splitBetween.map((s) => {
+        const member = currentGroup.members.find((m) => m.id === s.user_id);
+        const shareAmount = totalShares > 0 ? ((parseInt(s.shares) || 1) / totalShares) * total : 0;
+        return {
+          user_id: s.user_id,
+          user_name: member?.name || '',
+          amount: parseFloat(shareAmount.toFixed(2)),
+        };
+      });
+    }
 
-    return group.members.map((member) => ({
-      user_id: member.id,
-      user_name: member.name,
-      amount: parseFloat(perPerson.toFixed(2)),
-    }));
+    return [];
   };
 
+  // ─── Submit ───
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!selectedGroup) {
       toast.error('Please select a group');
       return;
     }
+    if (!description.trim()) {
+      toast.error('Please enter a description');
+      return;
+    }
+    if (!totalAmount || parseFloat(totalAmount) <= 0) {
+      toast.error('Please enter a valid amount');
+      return;
+    }
 
     setLoading(true);
     try {
+      const splitDetails = calculateSplitDetails();
+      const splitTypeMap = { equally: 'equal', unequally: 'custom', byshares: 'custom' };
+
       const expenseData = {
         group_id: selectedGroup,
-        merchant,
+        merchant: description.trim(),
         date,
         total_amount: parseFloat(totalAmount),
-        items: items
-          .filter((item) => item.name.trim() !== '' || (item.price !== '' && !isNaN(parseFloat(item.price))))
-          .map((item) => ({
-            name: item.name.trim(),
-            price: parseFloat(item.price) || 0,
-            quantity: parseInt(item.quantity) || 1,
-            category: item.category || 'Other',
-            assigned_to: item.assigned_to || [],
-          })),
-        split_type: splitType,
-        split_details: calculateSplit(),
+        items: [{ name: description.trim(), price: parseFloat(totalAmount), quantity: 1, category: autoCategory, assigned_to: [] }],
+        split_type: splitTypeMap[splitMode] || 'equal',
+        split_details: splitDetails,
         receipt_image: receiptImage,
-        category,
-        notes
+        category: autoCategory,
+        notes,
       };
 
-      await axios.post(`${API}/expenses`, expenseData, {
-        headers: getAuthHeader(),
-      });
-
+      await axios.post(`${API}/expenses`, expenseData, { headers: getAuthHeader() });
       toast.success('Expense created!');
       navigate('/dashboard');
-    } catch (error) {
+    } catch {
       toast.error('Failed to create expense');
     } finally {
       setLoading(false);
     }
   };
 
-  const currentGroup = groups.find((group) => group.id === selectedGroup);
+  const groupSelected = !!selectedGroup && !!currentGroup;
 
   return (
     <AppShell>
       <Header onLogout={onLogout} />
 
       <PageContent>
-        <PageHero
-          eyebrow="Smart Capture"
-          title="New Expense"
-          description="Capture the receipt, refine the details, and split the moment with the right people using the calmer alpine design system."
-          actions={(
-            <div className="flex gap-2">
-              {process.env.NODE_ENV === 'development' && (
-                <AppButton
-                  onClick={() => {
-                    setMerchant('Pizza Hut');
-                    setTotalAmount('1500');
-                    setCategory('Food & Dining');
-                    setItems([
-                      createExpenseItem({ name: 'Pepperoni Pizza', price: '800', category: 'Food & Dining' }, nextItemKey),
-                      createExpenseItem({ name: 'Garlic Bread', price: '300', category: 'Food & Dining' }, nextItemKey),
-                      createExpenseItem({ name: 'Drinks', price: '400', category: 'Food & Dining' }, nextItemKey),
-                    ]);
-                  }}
-                  variant="ghost"
-                  size="sm"
-                  className="bg-white/50"
-                >
-                  Demo Data
-                </AppButton>
-              )}
-              <AppButton
-                data-testid="smart-split-toggle"
-                onClick={() => setShowSmartSplit(!showSmartSplit)}
-                variant="secondary"
-                size="sm"
-              >
-                <Sparkle size={18} weight="fill" />
-                {showSmartSplit ? 'Hide AI Split' : 'AI Split'}
-              </AppButton>
-            </div>
-          )}
-
-        />
-
-        {showSmartSplit && (
-          <AppSurface className="mb-5 p-5 md:p-6" data-testid="smart-split-panel">
-            <h3 className="mb-3 text-xl font-extrabold tracking-[-0.03em] text-[var(--app-foreground)]">Smart Splitting</h3>
-            <p className="mb-4 text-sm text-[var(--app-muted)]">
-              Say or type: &quot;Put beverages to be split among Arjun and Gokul&quot; or &quot;Split pizza equally&quot;
-            </p>
-            <div className="mb-3 flex gap-2">
-              <AppInput
-                data-testid="smart-instruction-input"
-                type="text"
-                value={smartInstruction}
-                onChange={(e) => setSmartInstruction(e.target.value)}
-                className="flex-1 text-sm"
-                placeholder="How should we split this?"
-              />
-              {recognitionRef.current && (
-                <AppButton
-                  data-testid="voice-input-btn"
-                  onClick={handleVoiceInput}
-                  variant="ghost"
-                  size="icon"
-                  className={isRecording ? 'animate-pulse bg-[var(--app-soft-strong)] text-[var(--app-primary-strong)]' : 'bg-white text-[var(--app-muted)]'}
-                >
-                  <Microphone size={20} weight="bold" />
-                </AppButton>
-              )}
-            </div>
-            <AppButton
-              data-testid="process-smart-split-btn"
-              onClick={handleSmartSplit}
-              disabled={processingAI}
-              className="flex w-full items-center justify-center gap-2 text-sm"
-            >
-              {processingAI ? (
-                <>
-                  <span className="spinner"></span>
-                  <span>Processing...</span>
-                </>
-              ) : (
-                <>
-                  <Lightning size={18} weight="fill" />
-                  Apply Smart Split
-                </>
-              )}
-            </AppButton>
-          </AppSurface>
-        )}
-
-        <div className="grid grid-cols-1 gap-5 xl:grid-cols-[0.95fr,1.25fr]">
-          <div className="space-y-5">
-            <AppSurface className="p-5 md:p-6">
-              <p className="app-eyebrow mb-3">Receipt</p>
-              <h2 className="mb-4 text-2xl font-extrabold tracking-[-0.04em] text-[var(--app-foreground)]">Scan or upload</h2>
-              <label data-testid="receipt-upload-area" className="block cursor-pointer">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                  data-testid="receipt-upload-input"
-                />
-                <div className="relative overflow-hidden rounded-[2rem] bg-[var(--app-soft)] p-6 text-center transition-all hover:bg-[#e9efee] md:p-8">
-                  {receiptImage ? (
-                    <div className="relative">
-                      <img
-                        src={receiptImage}
-                        alt="Receipt"
-                        className="mx-auto max-h-64 rounded-[1.5rem] object-contain"
-                      />
-                      {scanning && <div className="scanning-line" />}
-                    </div>
-                  ) : (
-                    <div>
-                      <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-[1.5rem] bg-white text-[var(--app-primary)]">
-                        <Camera size={34} weight="bold" />
-                      </div>
-                      <p className="mb-2 text-base font-bold text-[var(--app-foreground)]">Upload Receipt</p>
-                      <p className="text-sm text-[var(--app-muted)]">Tap to select an image and let OCR fill the draft.</p>
-                    </div>
-                  )}
-                </div>
-              </label>
-
-              {scanning && (
-                <Callout className="mt-4 bg-[var(--app-primary)] text-[var(--app-primary-foreground)]">
-                  <div className="flex items-center justify-center gap-3">
-                    <span className="spinner"></span>
-                    <p className="font-bold text-sm" data-testid="scanning-text">Scanning with AI...</p>
-                  </div>
-                </Callout>
-              )}
-            </AppSurface>
-
-            <AppSurface variant="soft" className="p-5 md:p-6">
-              <p className="app-eyebrow mb-3">Split Preview</p>
-              <h3 className="mb-4 text-xl font-extrabold tracking-[-0.03em] text-[var(--app-foreground)]">Who is involved</h3>
-              {currentGroup ? (
-                <div className="space-y-3">
-                  <div className="flex flex-wrap gap-2">
-                    {currentGroup.members.map((member) => (
-                      <MemberBadge key={member.id}>{member.name}</MemberBadge>
-                    ))}
-                  </div>
-                  <div className="rounded-[1.5rem] bg-white p-4">
-                    <p className="app-eyebrow mb-2">Current Split Mode</p>
-                    <p className="text-base font-bold text-[var(--app-primary-strong)]">
-                      {splitType === 'equal' ? 'Equal split' : splitType === 'item-based' ? 'Item-based split' : 'Custom split'}
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-sm text-[var(--app-muted)]">Select a group to preview the people involved.</p>
-              )}
-            </AppSurface>
+        <motion.div
+          className="mx-auto max-w-lg"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.24, ease: 'easeOut' }}
+        >
+          {/* Page Title */}
+          <div className="mb-6">
+            <p className="app-eyebrow mb-2">New Expense</p>
+            <h1 className="text-3xl font-extrabold tracking-[-0.05em] text-[var(--app-foreground)]">
+              Add an expense
+            </h1>
           </div>
 
-          <form onSubmit={handleSubmit} className="app-surface space-y-5 p-5 md:p-6">
-            <div>
-              <p className="app-eyebrow mb-2">Manual Input</p>
-              <h2 className="text-2xl font-extrabold tracking-[-0.04em] text-[var(--app-foreground)]">Expense Details</h2>
-            </div>
+          <form onSubmit={handleSubmit}>
+            {/* ─── Step 1: Group Selection ─── */}
+            <AppSurface className="mb-4 p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-[var(--app-soft-strong)] text-[var(--app-primary-strong)]">
+                  <UsersThree size={20} weight="bold" />
+                </div>
+                <div className="relative flex-1">
+                  <select
+                    data-testid="group-select"
+                    value={selectedGroup}
+                    onChange={(e) => handleGroupChange(e.target.value)}
+                    required
+                    className="w-full appearance-none bg-transparent text-base font-extrabold tracking-tight text-[var(--app-foreground)] focus:outline-none cursor-pointer pr-7"
+                    style={{ WebkitAppearance: 'none', MozAppearance: 'none' }}
+                  >
+                    <option value="" disabled>Select a group</option>
+                    {groups.map((group) => (
+                      <option key={group.id} value={group.id}>
+                        {group.name}
+                      </option>
+                    ))}
+                  </select>
+                  <CaretDown size={16} weight="bold" className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--app-muted)]" />
+                </div>
+              </div>
+            </AppSurface>
 
-            <Field label="Group">
-              <AppSelect
-                data-testid="group-select"
-                value={selectedGroup}
-                onChange={(e) => setSelectedGroup(e.target.value)}
-                className="text-sm md:text-base"
-                required
-              >
-                {groups.map((group) => (
-                  <option key={group.id} value={group.id}>{group.name}</option>
-                ))}
-              </AppSelect>
-            </Field>
-
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <Field label="Merchant">
-                <AppInput
-                  data-testid="merchant-input"
-                  type="text"
-                  value={merchant}
-                  onChange={(e) => setMerchant(e.target.value)}
-                  className="text-sm md:text-base"
-                  placeholder="Store or restaurant"
-                  required
-                />
-              </Field>
-
-              <Field label="Category">
-                <AppSelect
-                  data-testid="category-select"
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="text-sm md:text-base"
+            {/* ─── Step 2: Description + Amount (revealed after group) ─── */}
+            <AnimatePresence>
+              {groupSelected && (
+                <motion.div
+                  key="form-fields"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.28, ease: 'easeOut' }}
                 >
-                  {CATEGORIES.map((entry) => (
-                    <option key={entry} value={entry}>{entry}</option>
-                  ))}
-                </AppSelect>
-              </Field>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <Field label="Date">
-                <AppInput
-                  data-testid="date-input"
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className="text-sm md:text-base"
-                  required
-                />
-              </Field>
-
-              <Field label="Total (Rs)">
-                <AppInput
-                  data-testid="total-input"
-                  type="number"
-                  step="0.01"
-                  value={totalAmount}
-                  onChange={(e) => setTotalAmount(e.target.value)}
-                  className="text-sm md:text-base"
-                  placeholder="0.00"
-                  required
-                />
-              </Field>
-            </div>
-
-            <Field label="Items">
-              <motion.div layout className="space-y-3">
-                <AnimatePresence initial={false}>
-                  {items.map((item, index) => (
-                    <motion.div
-                      key={item.ui_key}
-                      layout
-                      initial={prefersReducedMotion ? undefined : { opacity: 0, y: 8 }}
-                      animate={prefersReducedMotion ? undefined : { opacity: 1, y: 0 }}
-                      exit={prefersReducedMotion ? undefined : { opacity: 0, y: -6 }}
-                      transition={{ duration: 0.18, ease: 'easeOut' }}
-                      className="border-b border-[var(--app-border-soft)] py-2 last:border-0"
-                      data-testid={`item-${index}`}
-                    >
-                      <div className="flex flex-col gap-2">
-                        {/* Primary Row: Qty, Name, Price, Delete */}
-                        <div className="flex items-center gap-1.5 md:gap-3">
-                          {/* Quantity */}
-                          <div className="flex bg-[var(--app-soft)] rounded-xl w-14 shrink-0 overflow-hidden items-center group focus-within:ring-2 focus-within:ring-[var(--app-primary-strong)]">
-                             <input
-                               type="number"
-                               value={item.quantity}
-                               onChange={(e) => updateItem(index, 'quantity', e.target.value)}
-                               className="w-full bg-transparent text-center text-sm font-black text-[var(--app-primary)] focus:outline-none py-2.5 px-1"
-                               min="1"
-                             />
-                          </div>
-
-                          {/* Detail Group: Name and Price */}
-                          <div className="flex-1 flex flex-row items-center gap-1.5 md:gap-3">
-                             <input
-                                data-testid={`item-name-${index}`}
-                                type="text"
-                                value={item.name}
-                                onChange={(e) => updateItem(index, 'name', e.target.value)}
-                                className="flex-1 min-w-0 text-sm md:text-base font-extrabold tracking-tight bg-transparent focus:outline-none focus:bg-white focus:ring-1 focus:ring-[var(--app-border)] rounded-lg px-2 py-2 md:py-2.5 transition-colors truncate"
-                                placeholder="Item name"
-                             />
-                             <div className="relative w-24 md:w-28 shrink-0">
-                                <input
-                                  data-testid={`item-price-${index}`}
-                                  type="number"
-                                  step="0.01"
-                                  value={item.price}
-                                  onChange={(e) => updateItem(index, 'price', e.target.value)}
-                                  className="w-full text-sm md:text-base font-black text-right pr-7 pl-1 bg-transparent focus:outline-none focus:bg-white focus:ring-1 focus:ring-[var(--app-border)] rounded-lg py-2 md:py-2.5 transition-colors"
-                                  placeholder="0.00"
-                                />
-                                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-black text-[var(--app-muted)] pointer-events-none">Rs</span>
-                             </div>
-                          </div>
-
-                          {/* Delete Button */}
-                          <div className="flex items-center justify-center shrink-0 w-8 md:w-10">
-                            {items.length > 1 && (
-                              <button
-                                data-testid={`remove-item-${index}`}
-                                onClick={() => removeItem(index)}
-                                type="button"
-                                className="h-8 w-8 !rounded-full text-[var(--app-muted-subtle)] hover:bg-rose-50 hover:text-[var(--app-danger)] flex items-center justify-center transition-all bg-transparent border-none cursor-pointer"
-                              >
-                                <Trash size={18} weight="fill" />
-                              </button>
-                            )}
-                          </div>
+                  <AppSurface className="mb-4 p-5">
+                    <div className="space-y-4">
+                      {/* Description with auto-icon */}
+                      <div>
+                        <label className="app-field-label">Description</label>
+                        <div className="expense-input-group">
+                          <span className="input-icon">
+                            <DescriptionIcon size={22} weight="bold" />
+                          </span>
+                          <AppInput
+                            data-testid="description-input"
+                            type="text"
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            placeholder="What was it for?"
+                            required
+                          />
                         </div>
-
-                        {/* Expandable Split Detail Row */}
-                        {splitType === 'item-based' && currentGroup && (
-                          <div className="pl-14 md:pl-16 pr-8 mt-1 mb-2">
-                             <div className="flex items-center justify-between border-t border-[var(--app-border-soft)] pt-2 md:pt-3">
-                               <div className="flex flex-wrap gap-1.5 flex-1">
-                                 {currentGroup.members.map((member) => (
-                                   <button
-                                     key={member.id}
-                                     type="button"
-                                     onClick={() => toggleMemberAssignment(index, member.id)}
-                                     data-testid={`assign-${index}-${member.id}`}
-                                     className={`rounded-full px-2.5 py-1 text-[10px] font-bold transition-all shadow-sm ${
-                                       (item.assigned_to || []).includes(member.id)
-                                          ? 'bg-[var(--app-primary)] text-white'
-                                          : 'bg-[var(--app-soft)] text-[var(--app-muted)] hover:bg-[var(--app-border-soft)]'
-                                     }`}
-                                   >
-                                     {member.name}
-                                   </button>
-                                 ))}
-                               </div>
-                               
-                               <div className="text-right pl-3">
-                                 <p className="text-[10px] uppercase font-black tracking-widest text-[var(--app-muted)] opacity-60 mb-0.5">Sub</p>
-                                 <p className="text-sm font-black text-[var(--app-primary)] leading-none">
-                                   {((parseFloat(item.price) || 0) * (parseInt(item.quantity) || 1)).toFixed(2)}
-                                 </p>
-                               </div>
-                             </div>
-                          </div>
-                        )}
                       </div>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              </motion.div>
-              <AppButton
-                data-testid="add-item-btn"
-                onClick={addItem}
-                variant="secondary"
-                size="sm"
-                className="mt-3"
-              >
-                Add Item
-              </AppButton>
-            </Field>
 
-            <Field label="Split Type">
-              <AppSelect
-                data-testid="split-type-select"
-                value={splitType}
-                onChange={(e) => setSplitType(e.target.value)}
-                className="text-sm md:text-base"
-              >
-                <option value="equal">Equal Split</option>
-                <option value="item-based">Item-Based (Assign items to people)</option>
-                <option value="custom">Custom Split</option>
-              </AppSelect>
-            </Field>
+                      {/* Amount with currency icon */}
+                      <div>
+                        <label className="app-field-label">Amount</label>
+                        <div className="expense-input-group">
+                          <span className="input-icon">
+                            <span className="text-base font-extrabold">{currencySymbol}</span>
+                          </span>
+                          <AppInput
+                            data-testid="total-input"
+                            type="number"
+                            step="0.01"
+                            value={totalAmount}
+                            onChange={(e) => setTotalAmount(e.target.value)}
+                            placeholder="0.00"
+                            required
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </AppSurface>
 
-            <Field label="Notes (Optional)">
-              <AppTextarea
-                data-testid="notes-input"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                className="text-sm md:text-base"
-                rows="2"
-                placeholder="Add any notes..."
-              />
-            </Field>
+                  {/* ─── Split Text ─── */}
+                  <AppSurface className="mb-4 p-5">
+                    <div className="expense-split-text" data-testid="split-text">
+                      <span>Paid by</span>
+                      <button
+                        type="button"
+                        className="expense-split-btn"
+                        onClick={() => setShowPaidByModal(true)}
+                        data-testid="paidby-btn"
+                      >
+                        {getPaidByLabel()}
+                      </button>
+                      <span>and split</span>
+                      <button
+                        type="button"
+                        className="expense-split-btn"
+                        onClick={() => setShowSplitModal(true)}
+                        data-testid="split-btn"
+                      >
+                        {getSplitLabel()}
+                      </button>
+                    </div>
+                  </AppSurface>
 
-            <AppButton
-              data-testid="create-expense-btn"
-              type="submit"
-              disabled={loading}
-              className="flex w-full items-center justify-center gap-2 text-sm md:text-base"
-            >
-              {loading ? (
-                <>
-                  <span className="spinner"></span>
-                  <span>Creating...</span>
-                </>
-              ) : (
-                'Create Expense'
+                  {/* ─── Receipt Actions ─── */}
+                  <AppSurface className="mb-4 p-5">
+                    <label className="app-field-label">Receipt</label>
+
+                    {receiptImage ? (
+                      <div className="relative mb-3">
+                        <img
+                          src={receiptImage}
+                          alt="Receipt"
+                          className="mx-auto max-h-48 rounded-2xl object-contain"
+                          data-testid="receipt-preview"
+                        />
+                        <button
+                          type="button"
+                          className="absolute top-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white"
+                          onClick={() => setReceiptImage('')}
+                        >
+                          <X size={16} weight="bold" />
+                        </button>
+                      </div>
+                    ) : null}
+
+                    <div className="flex gap-3">
+                      <AppButton
+                        type="button"
+                        variant="secondary"
+                        className="flex-1 justify-center"
+                        onClick={() => setShowCamera(true)}
+                        data-testid="camera-btn"
+                      >
+                        <Camera size={20} weight="bold" />
+                        Take photo
+                      </AppButton>
+                      <AppButton
+                        type="button"
+                        variant="secondary"
+                        className="flex-1 justify-center"
+                        onClick={() => fileInputRef.current?.click()}
+                        data-testid="upload-btn"
+                      >
+                        <ImageSquare size={20} weight="bold" />
+                        Upload
+                      </AppButton>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                        data-testid="receipt-upload-input"
+                      />
+                    </div>
+                  </AppSurface>
+
+                  {/* ─── Date & Notes (inline, minimal) ─── */}
+                  <div className="mb-5 flex items-center gap-3 px-1">
+                    {/* Date: inline with pencil edit */}
+                    <div className="flex items-center gap-2 text-sm text-[var(--app-muted)]">
+                      <CalendarBlank size={16} weight="bold" />
+                      {editingDate ? (
+                        <input
+                          data-testid="date-input"
+                          type="date"
+                          value={date}
+                          onChange={(e) => setDate(e.target.value)}
+                          onBlur={() => setEditingDate(false)}
+                          autoFocus
+                          className="bg-transparent text-sm font-bold text-[var(--app-foreground)] focus:outline-none border-b border-[var(--app-primary)] pb-0.5"
+                        />
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setEditingDate(true)}
+                          className="flex items-center gap-1.5 font-bold text-[var(--app-foreground)] hover:text-[var(--app-primary)] transition-colors"
+                          data-testid="date-edit-btn"
+                        >
+                          {new Date(date + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          <PencilSimple size={13} weight="bold" className="text-[var(--app-muted)]" />
+                        </button>
+                      )}
+                    </div>
+
+                    <span className="h-1 w-1 rounded-full bg-[var(--app-border)]" />
+
+                    {/* Notes: expandable */}
+                    {showNotes ? (
+                      <div className="flex-1">
+                        <input
+                          data-testid="notes-input"
+                          type="text"
+                          value={notes}
+                          onChange={(e) => setNotes(e.target.value)}
+                          onBlur={() => { if (!notes.trim()) setShowNotes(false); }}
+                          autoFocus
+                          placeholder="Add a note..."
+                          className="w-full bg-transparent text-sm font-semibold text-[var(--app-foreground)] focus:outline-none border-b border-[var(--app-primary)] pb-0.5 placeholder:text-[var(--app-muted)]"
+                        />
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setShowNotes(true)}
+                        className="flex items-center gap-1.5 text-sm font-bold text-[var(--app-muted)] hover:text-[var(--app-primary)] transition-colors"
+                        data-testid="notes-add-btn"
+                      >
+                        <Note size={16} weight="bold" />
+                        Add note
+                      </button>
+                    )}
+                  </div>
+
+                  {/* ─── Submit ─── */}
+                  <AppButton
+                    data-testid="create-expense-btn"
+                    type="submit"
+                    disabled={loading}
+                    className="flex w-full items-center justify-center gap-2 mb-6"
+                  >
+                    {loading ? (
+                      <>
+                        <span className="spinner" />
+                        <span>Creating...</span>
+                      </>
+                    ) : (
+                      'Create Expense'
+                    )}
+                  </AppButton>
+
+                  {/* Dev: demo data */}
+                  {process.env.NODE_ENV === 'development' && (
+                    <AppButton
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-center mb-4 opacity-60"
+                      onClick={() => {
+                        setDescription('Pizza Hut');
+                        setTotalAmount('1500');
+                      }}
+                    >
+                      Fill Demo Data
+                    </AppButton>
+                  )}
+                </motion.div>
               )}
-            </AppButton>
+            </AnimatePresence>
           </form>
-        </div>
+        </motion.div>
       </PageContent>
+
+      {/* ─── Modals ─── */}
+      <PaidByModal
+        open={showPaidByModal}
+        onClose={() => setShowPaidByModal(false)}
+        members={currentGroup?.members || []}
+        paidBy={paidBy}
+        onPaidByChange={setPaidBy}
+        totalAmount={totalAmount}
+        currencySymbol={currencySymbol}
+      />
+
+      <SplitBetweenModal
+        open={showSplitModal}
+        onClose={() => setShowSplitModal(false)}
+        members={currentGroup?.members || []}
+        splitBetween={splitBetween}
+        splitMode={splitMode}
+        onSplitChange={setSplitBetween}
+        onSplitModeChange={setSplitMode}
+        totalAmount={totalAmount}
+        currencySymbol={currencySymbol}
+      />
+
+      <ScanningOverlay open={scanning} receiptImage={receiptImage} />
+
+      <CameraCapture
+        open={showCamera}
+        onClose={() => setShowCamera(false)}
+        onCapture={handleCameraCapture}
+      />
     </AppShell>
   );
 }

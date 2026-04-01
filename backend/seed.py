@@ -45,6 +45,7 @@ async def seed_data(db):
                 {"id": u_map["Mike"], "email": u_email_map["Mike"], "name": "Mike"},
             ],
             "created_by": u_map["Arjun"],
+            "currency": "INR",
             "created_at": (datetime.now(timezone.utc) - timedelta(days=10)).isoformat()
         },
         {
@@ -55,6 +56,7 @@ async def seed_data(db):
                 {"id": u_map["Sarah"], "email": u_email_map["Sarah"], "name": "Sarah"},
             ],
             "created_by": u_map["Sarah"],
+            "currency": "INR",
             "created_at": (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
         }
     ]
