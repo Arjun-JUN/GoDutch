@@ -118,7 +118,7 @@ function UPIHome({ onLogout }) {
             marketingText="Revolutionizing how you settle up. Our UPI integration is coming soon to simplify your life."
             pmText="We are currently perfecting the secure UPI integration and real-time bank syncing to ensure 100% accuracy for your financial transactions."
           />
-          <AppSurface className="p-8 text-center blur-sm">
+          <AppSurface className="p-8 text-center blur-xl opacity-30 pointer-events-none select-none">
             <EmptyState
               icon={Wallet}
               title="Link Bank Account"
@@ -144,7 +144,7 @@ function UPIHome({ onLogout }) {
           marketingText="Revolutionizing how you settle up. Our UPI integration is coming soon to simplify your life."
           pmText="We are currently perfecting the secure UPI integration and real-time bank syncing to ensure 100% accuracy for your financial transactions."
         />
-        <div className="blur-sm grayscale-[30%] pointer-events-none select-none">
+        <div className="blur-[18px] opacity-[0.35] pointer-events-none select-none transition-all duration-1000">
           <PageHero
             eyebrow="Payments Hub"
             title="UPI"

@@ -92,7 +92,7 @@ function SettlementsPage({ onLogout }) {
   };
 
   return (
-    <div className="min-h-screen mobile-safe-padding relative overflow-hidden" style={{ background: '#FFFDF2' }}>
+    <div className="min-h-screen mobile-safe-padding relative overflow-hidden">
       <Header onLogout={onLogout} />
       
       <InDevelopmentOverlay 
@@ -100,9 +100,9 @@ function SettlementsPage({ onLogout }) {
         pmText="Our advanced balance-netting algorithm is undergoing final stress tests to guarantee perfect mathematical accuracy across all your groups."
       />
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8 blur-sm grayscale-[30%] pointer-events-none select-none">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8 blur-[20px] opacity-[0.3] pointer-events-none select-none transition-all duration-1000">
         <div className="flex justify-between items-center mb-6 md:mb-8">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl tracking-tight font-bold" style={{ fontFamily: 'Cabinet Grotesk, sans-serif' }}>
+          <h1 className="app-page-title">
             Settlements
           </h1>
           <button
@@ -133,7 +133,7 @@ function SettlementsPage({ onLogout }) {
         </div>
 
         <div className="neo-card p-4 md:p-6">
-          <h2 className="text-lg md:text-xl sm:text-2xl tracking-tight font-bold mb-4 md:mb-6" style={{ fontFamily: 'Cabinet Grotesk, sans-serif' }}>
+          <h2 className="text-xl font-bold mb-4 md:mb-6">
             Who Owes Whom
           </h2>
 
@@ -199,7 +199,7 @@ function SettlementsPage({ onLogout }) {
       {showPaymentModal && selectedSettlement && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 blur-sm pointer-events-none" data-testid="upi-payment-modal">
           <div className="neo-card p-6 md:p-8 max-w-md w-full">
-            <h2 className="text-xl md:text-2xl font-bold mb-4" style={{ fontFamily: 'Cabinet Grotesk, sans-serif' }}>
+            <h2 className="text-xl md:text-2xl font-bold mb-4">
               Pay via UPI
             </h2>
             

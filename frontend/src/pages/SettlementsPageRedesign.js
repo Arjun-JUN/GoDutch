@@ -99,7 +99,7 @@ function SettlementsPageRedesign({ onLogout }) {
           pmText="Performance Optimization: We are optimizing the settlement engine to handle large group graphs with O(n) complexity. Stay tuned!"
         />
         
-        <div className="blur-sm grayscale-[30%] pointer-events-none select-none">
+        <div className="blur-[20px] opacity-[0.3] pointer-events-none select-none transition-all duration-1000">
           <PageHero
             eyebrow="Settlement Summary"
             title="Settlements"
