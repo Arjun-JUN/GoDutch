@@ -112,10 +112,15 @@ function GroupDetail({ onLogout }) {
           ) : (
             <div className="space-y-3" data-testid="group-expenses-list">
               {expenses.map((expense) => (
-                <div
+                <button
                   key={expense.id}
-                  className="app-list-row flex items-center justify-between gap-4 p-4"
+                  className="app-list-row w-full flex items-center justify-between gap-4 p-4 text-left hover:-translate-y-px transition-transform"
                   data-testid={`expense-${expense.id}`}
+                  onClick={() =>
+                    navigate(`/expenses/${expense.id}`, {
+                      state: { from: `/groups/${groupId}`, fromLabel: group.name },
+                    })
+                  }
                 >
                   <div className="flex items-center gap-3">
                     <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-[#e9efee] text-[var(--app-primary)]">
@@ -131,7 +136,7 @@ function GroupDetail({ onLogout }) {
                       Rs {Number(expense.total_amount).toFixed(2)}
                     </p>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           )}

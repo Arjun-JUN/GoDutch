@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { API, getAuthHeader, getCurrentUser } from '../App';
+import { isEdgeAIReady, smartSplitEdge, scanReceiptEdge } from '../utils/edgeAI';
 import { Camera, Microphone, Lightning, Sparkle, User as UserIcon } from '@phosphor-icons/react';
 import Header from '../components/Header';
 
@@ -132,24 +133,26 @@ function NewExpense({ onLogout }) {
 
     setProcessingAI(true);
     try {
-      const res = await axios.post(
-        `${API}/ai/smart-split`,
-        {
-          group_id: selectedGroup,
-          instruction: smartInstruction,
-          expense_context: {
-            merchant,
-            total_amount: totalAmount,
-            existing_items: items
-          }
-        },
-        { headers: getAuthHeader() }
-      );
+      const group = groups.find(g => g.id === selectedGroup);
+      const membersInfo = (group?.members || []).map(m => `${m.name} (id: ${m.id})`).join(', ');
+      const expenseContext = { merchant, total_amount: totalAmount, existing_items: items };
 
-      if (res.data.clarification_needed) {
-        toast.info(res.data.clarification_question, { duration: 6000 });
+      let data;
+      if (await isEdgeAIReady()) {
+        data = await smartSplitEdge({ instruction: smartInstruction, membersInfo, expenseContext });
       } else {
-        const plan = res.data.split_plan;
+        const res = await axios.post(
+          `${API}/ai/smart-split`,
+          { group_id: selectedGroup, instruction: smartInstruction, expense_context: expenseContext },
+          { headers: getAuthHeader() }
+        );
+        data = res.data;
+      }
+
+      if (data.clarification_needed) {
+        toast.info(data.clarification_question, { duration: 6000 });
+      } else {
+        const plan = data.split_plan;
         if (plan.items) {
           setItems(normalizeExpenseItems(plan.items));
         }
@@ -158,7 +161,7 @@ function NewExpense({ onLogout }) {
         setShowSmartSplit(false);
       }
     } catch (error) {
-      const errorMsg = error.response?.data?.detail || 'Smart split failed';
+      const errorMsg = error.response?.data?.detail || error.message || 'Smart split failed';
       if (error.response?.status === 402) {
         toast.error(errorMsg, { duration: 6000 });
       } else {
@@ -180,23 +183,25 @@ function NewExpense({ onLogout }) {
       setScanning(true);
 
       try {
-        const res = await axios.post(
-          `${API}/ocr/scan`,
-          {
-            image_base64: base64,
-            mime_type: file.type || 'image/jpeg',
-          },
-          { headers: getAuthHeader() }
-        );
+        let data;
+        if (await isEdgeAIReady()) {
+          data = await scanReceiptEdge(file);
+        } else {
+          const res = await axios.post(
+            `${API}/ocr/scan`,
+            { image_base64: base64, mime_type: file.type || 'image/jpeg' },
+            { headers: getAuthHeader() }
+          );
+          data = res.data;
+        }
 
-        setMerchant(res.data.merchant);
-        setDate(res.data.date);
-        setTotalAmount(res.data.total_amount.toString());
-        setItems(normalizeExpenseItems(res.data.items ?? res.data.line_items ?? res.data.bill_items));
+        setMerchant(data.merchant);
+        setDate(data.date);
+        setTotalAmount(data.total_amount.toString());
+        setItems(normalizeExpenseItems(data.items ?? data.line_items ?? data.bill_items));
         toast.success('Receipt scanned successfully!');
       } catch (error) {
-        const errorMessage = error.response?.data?.detail || 'Failed to scan receipt';
-        
+        const errorMessage = error.response?.data?.detail || error.message || 'Failed to scan receipt';
         if (error.response?.status === 402) {
           toast.error(errorMessage, { duration: 6000 });
         } else {

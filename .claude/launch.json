@@ -3,14 +3,22 @@
   "configurations": [
     {
       "name": "Frontend (React)",
-      "runtimeExecutable": "yarn",
-      "runtimeArgs": ["start"],
-      "port": 3000
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "start-frontend.js"
+      ],
+      "port": 3000,
+      "env": {
+        "BROWSER": "none"
+      }
     },
     {
       "name": "Backend (FastAPI)",
-      "runtimeExecutable": "uvicorn",
-      "runtimeArgs": ["server:app", "--reload", "--port", "8000"],
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-m", "uvicorn", "server:app", "--reload", "--port", "8000"
+      ],
+      "cwd": "backend",
       "port": 8000
     }
   ]

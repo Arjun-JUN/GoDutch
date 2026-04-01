@@ -102,6 +102,16 @@ class Expense(BaseModel):
     notes: Optional[str] = None
     created_at: str
 
+class ExpenseUpdate(BaseModel):
+    merchant: Optional[str] = None
+    date: Optional[str] = None
+    total_amount: Optional[float] = None
+    items: Optional[List[ExpenseItem]] = None
+    split_type: Optional[str] = None
+    split_details: Optional[List[SplitDetail]] = None
+    category: Optional[str] = None
+    notes: Optional[str] = None
+
 class SmartSplitRequest(BaseModel):
     group_id: str
     instruction: str
@@ -435,6 +445,8 @@ async def create_expense(expense_data: ExpenseCreate, current_user: dict = Depen
         "split_type": expense_data.split_type,
         "split_details": [split.model_dump() for split in expense_data.split_details],
         "receipt_image": expense_data.receipt_image,
+        "category": expense_data.category,
+        "notes": expense_data.notes,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     
@@ -867,6 +879,45 @@ async def get_expense_categories(current_user: dict = Depends(verify_token)):
             "Other"
         ]
     }
+
+@api_router.get("/expenses/{expense_id}", response_model=Expense)
+async def get_expense(expense_id: str, current_user: dict = Depends(verify_token)):
+    expense = await db.expenses.find_one({"id": expense_id}, {"_id": 0})
+    if not expense:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    group = await db.groups.find_one({"id": expense["group_id"], "members.id": current_user['user_id']}, {"_id": 0})
+    if not group:
+        raise HTTPException(status_code=403, detail="Access denied")
+    return expense
+
+@api_router.put("/expenses/{expense_id}", response_model=Expense)
+async def update_expense(expense_id: str, update_data: ExpenseUpdate, current_user: dict = Depends(verify_token)):
+    expense = await db.expenses.find_one({"id": expense_id}, {"_id": 0})
+    if not expense:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    if expense["created_by"] != current_user['user_id']:
+        raise HTTPException(status_code=403, detail="Only the creator can edit this expense")
+    update_fields = {}
+    for field, value in update_data.model_dump(exclude_none=True).items():
+        if field == "items":
+            update_fields["items"] = [i.model_dump() for i in update_data.items]
+        elif field == "split_details":
+            update_fields["split_details"] = [s.model_dump() for s in update_data.split_details]
+        else:
+            update_fields[field] = value
+    if update_fields:
+        await db.expenses.update_one({"id": expense_id}, {"$set": update_fields})
+    updated = await db.expenses.find_one({"id": expense_id}, {"_id": 0})
+    return updated
+
+@api_router.delete("/expenses/{expense_id}", status_code=204)
+async def delete_expense(expense_id: str, current_user: dict = Depends(verify_token)):
+    expense = await db.expenses.find_one({"id": expense_id}, {"_id": 0})
+    if not expense:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    if expense["created_by"] != current_user['user_id']:
+        raise HTTPException(status_code=403, detail="Only the creator can delete this expense")
+    await db.expenses.delete_one({"id": expense_id})
 
 @api_router.get("/groups/{group_id}/reports")
 async def get_expense_reports(group_id: str, current_user: dict = Depends(verify_token)):

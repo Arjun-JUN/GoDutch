@@ -4,6 +4,7 @@ import axios from 'axios';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { toast } from 'sonner';
 import { API, getAuthHeader } from '../App';
+import { isEdgeAIReady, smartSplitEdge, scanReceiptEdge } from '../utils/edgeAI';
 import { Camera, Lightning, Microphone, Sparkle } from '@phosphor-icons/react';
 import Header from '../components/Header';
 import { AppButton, AppInput, AppSelect, AppShell, AppSurface, AppTextarea, Callout, Field, MemberBadge, PageContent, PageHero } from '../components/app';
@@ -146,24 +147,26 @@ function NewExpenseRedesign({ onLogout }) {
 
     setProcessingAI(true);
     try {
-      const res = await axios.post(
-        `${API}/ai/smart-split`,
-        {
-          group_id: selectedGroup,
-          instruction: smartInstruction,
-          expense_context: {
-            merchant,
-            total_amount: totalAmount,
-            existing_items: items
-          }
-        },
-        { headers: getAuthHeader() }
-      );
+      const group = groups.find(g => g.id === selectedGroup);
+      const membersInfo = (group?.members || []).map(m => `${m.name} (id: ${m.id})`).join(', ');
+      const expenseContext = { merchant, total_amount: totalAmount, existing_items: items };
 
-      if (res.data.clarification_needed) {
-        toast.info(res.data.clarification_question, { duration: 6000 });
+      let data;
+      if (await isEdgeAIReady()) {
+        data = await smartSplitEdge({ instruction: smartInstruction, membersInfo, expenseContext });
       } else {
-        const plan = res.data.split_plan;
+        const res = await axios.post(
+          `${API}/ai/smart-split`,
+          { group_id: selectedGroup, instruction: smartInstruction, expense_context: expenseContext },
+          { headers: getAuthHeader() }
+        );
+        data = res.data;
+      }
+
+      if (data.clarification_needed) {
+        toast.info(data.clarification_question, { duration: 6000 });
+      } else {
+        const plan = data.split_plan;
         if (plan.items) {
           setItems(normalizeExpenseItems(plan.items, nextItemKey));
         }
@@ -172,7 +175,7 @@ function NewExpenseRedesign({ onLogout }) {
         setShowSmartSplit(false);
       }
     } catch (error) {
-      const errorMsg = error.response?.data?.detail || 'Smart split failed';
+      const errorMsg = error.response?.data?.detail || error.message || 'Smart split failed';
       if (error.response?.status === 402) {
         toast.error(errorMsg, { duration: 6000 });
       } else {
@@ -194,22 +197,25 @@ function NewExpenseRedesign({ onLogout }) {
       setScanning(true);
 
       try {
-        const res = await axios.post(
-          `${API}/ocr/scan`,
-          {
-            image_base64: base64,
-            mime_type: file.type || 'image/jpeg',
-          },
-          { headers: getAuthHeader() }
-        );
+        let data;
+        if (await isEdgeAIReady()) {
+          data = await scanReceiptEdge(file);
+        } else {
+          const res = await axios.post(
+            `${API}/ocr/scan`,
+            { image_base64: base64, mime_type: file.type || 'image/jpeg' },
+            { headers: getAuthHeader() }
+          );
+          data = res.data;
+        }
 
-        setMerchant(res.data.merchant);
-        setDate(res.data.date);
-        setTotalAmount(res.data.total_amount.toString());
-        setItems(normalizeExpenseItems(res.data.items ?? res.data.line_items ?? res.data.bill_items, nextItemKey));
+        setMerchant(data.merchant);
+        setDate(data.date);
+        setTotalAmount(data.total_amount.toString());
+        setItems(normalizeExpenseItems(data.items ?? data.line_items ?? data.bill_items, nextItemKey));
         toast.success('Receipt scanned successfully!');
       } catch (error) {
-        const errorMessage = error.response?.data?.detail || 'Failed to scan receipt';
+        const errorMessage = error.response?.data?.detail || error.message || 'Failed to scan receipt';
         if (error.response?.status === 402) {
           toast.error(errorMessage, { duration: 6000 });
         } else {
@@ -307,12 +313,14 @@ function NewExpenseRedesign({ onLogout }) {
         merchant,
         date,
         total_amount: parseFloat(totalAmount),
-        items: items.map((item) => ({
-          name: item.name,
-          price: parseFloat(item.price),
-          category: item.category || 'Other',
-          assigned_to: item.assigned_to || [],
-        })),
+        items: items
+          .filter((item) => item.name.trim() !== '' || (item.price !== '' && !isNaN(parseFloat(item.price))))
+          .map((item) => ({
+            name: item.name.trim(),
+            price: parseFloat(item.price) || 0,
+            category: item.category || 'Other',
+            assigned_to: item.assigned_to || [],
+          })),
         split_type: splitType,
         split_details: calculateSplit(),
         receipt_image: receiptImage,

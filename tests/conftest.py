@@ -1,0 +1,108 @@
+"""
+Shared pytest fixtures for all tests.
+
+Environment variables must be set before importing backend.server because
+the server reads them at module-load time (JWT_SECRET, DB_NAME, etc.).
+Motor's AsyncIOMotorClient is lazy, so no real MongoDB connection is made
+until the first query — we swap in a mongomock-motor database before any
+endpoint is called.
+"""
+import os
+import sys
+
+# ── env vars BEFORE any backend import ──────────────────────────────────────
+os.environ.setdefault("MONGO_URL", "mongodb://localhost:27017")
+os.environ.setdefault("DB_NAME", "test_godutch")
+os.environ.setdefault("JWT_SECRET", "test-jwt-secret-for-testing")
+os.environ.setdefault("GEMINI_API_KEY", "")
+
+# ── project root on sys.path so `import backend.server` works ───────────────
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+import pytest
+import mongomock_motor
+from httpx import AsyncClient, ASGITransport
+
+import backend.server as server
+
+
+# ── Database fixture ─────────────────────────────────────────────────────────
+
+@pytest.fixture
+async def mock_db(monkeypatch):
+    """
+    Replace server.db with a fresh in-memory MongoDB for every test.
+    mongomock-motor is a drop-in async replacement for Motor, so all
+    Motor-style awaits (find_one, insert_one, to_list, …) work unchanged.
+    """
+    mock_client = mongomock_motor.AsyncMongoMockClient()
+    db = mock_client["test_godutch"]
+    monkeypatch.setattr(server, "db", db)
+    yield db
+
+
+# ── HTTP client fixture ───────────────────────────────────────────────────────
+
+@pytest.fixture
+async def client(mock_db):
+    """Async HTTPX client wired directly to the FastAPI app (no network)."""
+    async with AsyncClient(
+        transport=ASGITransport(app=server.app),
+        base_url="http://test",
+    ) as ac:
+        yield ac
+
+
+# ── User fixtures ─────────────────────────────────────────────────────────────
+
+@pytest.fixture
+async def registered_user(client):
+    """Register Alice and return token + user metadata."""
+    resp = await client.post(
+        "/api/auth/register",
+        json={"email": "alice@example.com", "password": "TestPass123!", "name": "Alice"},
+    )
+    assert resp.status_code == 200, resp.text
+    data = resp.json()
+    return {
+        "token": data["token"],
+        "user": data["user"],
+        "email": "alice@example.com",
+        "password": "TestPass123!",
+        "headers": {"Authorization": f"Bearer {data['token']}"},
+    }
+
+
+@pytest.fixture
+async def second_user(client):
+    """Register Bob and return token + user metadata."""
+    resp = await client.post(
+        "/api/auth/register",
+        json={"email": "bob@example.com", "password": "TestPass123!", "name": "Bob"},
+    )
+    assert resp.status_code == 200, resp.text
+    data = resp.json()
+    return {
+        "token": data["token"],
+        "user": data["user"],
+        "email": "bob@example.com",
+        "password": "TestPass123!",
+        "headers": {"Authorization": f"Bearer {data['token']}"},
+    }
+
+
+# ── Group fixture ─────────────────────────────────────────────────────────────
+
+@pytest.fixture
+async def test_group(client, registered_user, second_user):
+    """Create a group owned by Alice containing Alice and Bob."""
+    resp = await client.post(
+        "/api/groups",
+        json={
+            "name": "Test Group",
+            "member_emails": ["alice@example.com", "bob@example.com"],
+        },
+        headers=registered_user["headers"],
+    )
+    assert resp.status_code == 200, resp.text
+    return resp.json()

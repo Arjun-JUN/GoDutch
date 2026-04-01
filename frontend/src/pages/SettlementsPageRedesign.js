@@ -17,16 +17,6 @@ function SettlementsPageRedesign({ onLogout }) {
   const [upiId, setUpiId] = useState('');
   const navigate = useNavigate();
 
-  useEffect(() => {
-    loadGroups();
-  }, []);
-
-  useEffect(() => {
-    if (selectedGroup) {
-      loadSettlements();
-    }
-  }, [selectedGroup, loadSettlements]);
-
   const loadGroups = async () => {
     try {
       const res = await axios.get(`${API}/groups`, {
@@ -55,6 +45,16 @@ function SettlementsPageRedesign({ onLogout }) {
       setLoading(false);
     }
   }, [selectedGroup]);
+
+  useEffect(() => {
+    loadGroups();
+  }, []);
+
+  useEffect(() => {
+    if (selectedGroup) {
+      loadSettlements();
+    }
+  }, [selectedGroup, loadSettlements]);
 
   const handlePayNow = (settlement) => {
     setSelectedSettlement(settlement);
@@ -102,6 +102,7 @@ function SettlementsPageRedesign({ onLogout }) {
               onClick={() => navigate(`/reports/${selectedGroup}`)}
               variant="secondary"
               size="sm"
+              disabled={!selectedGroup}
             >
               View Reports
             </AppButton>

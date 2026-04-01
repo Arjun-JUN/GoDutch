@@ -9,6 +9,7 @@ import NewExpense from './pages/NewExpenseRedesign';
 import GroupsPage from './pages/GroupsPage';
 import GroupDetail from './pages/GroupDetail';
 import SettlementsPage from './pages/SettlementsPageRedesign';
+import ExpenseDetail from './pages/ExpenseDetail';
 import ReportsPage from './pages/ReportsPage';
 import UPIHome from './pages/UPIHome';
 import SendMoney from './pages/SendMoney';
@@ -27,12 +28,27 @@ export const getCurrentUser = () => {
   return user ? JSON.parse(user) : null;
 };
 
+const DEV_EMAIL = process.env.REACT_APP_DEV_EMAIL;
+const DEV_PASSWORD = process.env.REACT_APP_DEV_PASSWORD;
+
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    setIsAuthenticated(!!token);
+    if (token) {
+      setIsAuthenticated(true);
+      return;
+    }
+    if (process.env.NODE_ENV === 'development' && DEV_EMAIL && DEV_PASSWORD) {
+      axios.post(`${API}/auth/login`, { email: DEV_EMAIL, password: DEV_PASSWORD })
+        .then(({ data }) => {
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('user', JSON.stringify(data.user));
+          setIsAuthenticated(true);
+        })
+        .catch(() => {});
+    }
   }, []);
 
   const handleLogout = () => {
@@ -71,6 +87,16 @@ function App() {
             element={
               isAuthenticated ? (
                 <NewExpense onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/auth" />
+              )
+            }
+          />
+          <Route
+            path="/expenses/:expenseId"
+            element={
+              isAuthenticated ? (
+                <ExpenseDetail onLogout={handleLogout} />
               ) : (
                 <Navigate to="/auth" />
               )
