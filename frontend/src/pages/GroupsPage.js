@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
@@ -15,11 +15,7 @@ function GroupsPage({ onLogout }) {
   const [memberEmails, setMemberEmails] = useState(['']);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    loadGroups();
-  }, []);
-
-  const loadGroups = async () => {
+  const loadGroups = useCallback(async () => {
     try {
       const res = await axios.get(`${API}/groups`, {
         headers: getAuthHeader(),
@@ -28,7 +24,11 @@ function GroupsPage({ onLogout }) {
     } catch (error) {
       toast.error('Failed to load groups');
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadGroups();
+  }, [loadGroups]);
 
   const addEmailField = () => {
     setMemberEmails([...memberEmails, '']);

@@ -24,29 +24,29 @@ function UPIHome({ onLogout }) {
   const user = getCurrentUser();
 
   useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [accountsRes, transactionsRes] = await Promise.all([
+          axios.get(`${API}/upi/accounts`, { headers: getAuthHeader() }),
+          axios.get(`${API}/upi/transactions?limit=5`, { headers: getAuthHeader() })
+        ]);
+
+        const primaryAccount = accountsRes.data.find((acc) => acc.is_primary);
+        if (primaryAccount) {
+          setAccount(primaryAccount);
+          setBalance(primaryAccount.balance);
+        }
+
+        setRecentTransactions(transactionsRes.data);
+      } catch (error) {
+        console.error('Failed to load data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     loadData();
   }, []);
-
-  const loadData = async () => {
-    try {
-      const [accountsRes, transactionsRes] = await Promise.all([
-        axios.get(`${API}/upi/accounts`, { headers: getAuthHeader() }),
-        axios.get(`${API}/upi/transactions?limit=5`, { headers: getAuthHeader() })
-      ]);
-
-      const primaryAccount = accountsRes.data.find((acc) => acc.is_primary);
-      if (primaryAccount) {
-        setAccount(primaryAccount);
-        setBalance(primaryAccount.balance);
-      }
-
-      setRecentTransactions(transactionsRes.data);
-    } catch (error) {
-      console.error('Failed to load data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const quickActions = [
     {

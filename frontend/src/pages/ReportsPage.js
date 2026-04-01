@@ -14,24 +14,24 @@ function ReportsPage({ onLogout }) {
   const [group, setGroup] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const loadData = async () => {
-    try {
-      const [groupsRes, reportsRes] = await Promise.all([
-        axios.get(`${API}/groups`, { headers: getAuthHeader() }),
-        axios.get(`${API}/groups/${groupId}/reports`, { headers: getAuthHeader() })
-      ]);
-
-      const foundGroup = groupsRes.data.find(g => g.id === groupId);
-      setGroup(foundGroup);
-      setReports(reportsRes.data);
-    } catch (error) {
-      toast.error('Failed to load reports');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [groupsRes, reportsRes] = await Promise.all([
+          axios.get(`${API}/groups`, { headers: getAuthHeader() }),
+          axios.get(`${API}/groups/${groupId}/reports`, { headers: getAuthHeader() })
+        ]);
+
+        const foundGroup = groupsRes.data.find(g => g.id === groupId);
+        setGroup(foundGroup);
+        setReports(reportsRes.data);
+      } catch (error) {
+        toast.error('Failed to load reports');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     loadData();
   }, [groupId]);
 

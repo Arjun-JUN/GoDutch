@@ -16,42 +16,42 @@ function Dashboard({ onLogout }) {
   const user = getCurrentUser();
 
   useEffect(() => {
-    loadData();
-  }, []);
+    const loadData = async () => {
+      try {
+        const groupsRes = await axios.get(`${API}/groups`, {
+          headers: getAuthHeader(),
+        });
 
-  const loadData = async () => {
-    try {
-      const groupsRes = await axios.get(`${API}/groups`, {
-        headers: getAuthHeader(),
-      });
+        if (groupsRes.data.length > 0) {
+          const allExpenses = [];
+          let totalOwed = 0;
+          let totalOwe = 0;
 
-      if (groupsRes.data.length > 0) {
-        const allExpenses = [];
-        let totalOwed = 0;
-        let totalOwe = 0;
-
-        for (const group of groupsRes.data) {
-          const [expensesRes, settlementsRes] = await Promise.all([
-            axios.get(`${API}/groups/${group.id}/expenses`, { headers: getAuthHeader() }),
-            axios.get(`${API}/groups/${group.id}/settlements`, { headers: getAuthHeader() }),
-          ]);
-          allExpenses.push(...expensesRes.data);
-          for (const s of settlementsRes.data) {
-            if (s.to_user_id === user?.id) totalOwed += s.amount;
-            if (s.from_user_id === user?.id) totalOwe += s.amount;
+          for (const group of groupsRes.data) {
+            const [expensesRes, settlementsRes] = await Promise.all([
+              axios.get(`${API}/groups/${group.id}/expenses`, { headers: getAuthHeader() }),
+              axios.get(`${API}/groups/${group.id}/settlements`, { headers: getAuthHeader() }),
+            ]);
+            allExpenses.push(...expensesRes.data);
+            for (const s of settlementsRes.data) {
+              if (s.to_user_id === user?.id) totalOwed += s.amount;
+              if (s.from_user_id === user?.id) totalOwe += s.amount;
+            }
           }
-        }
 
-        setExpenses(allExpenses.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
-        setYoureOwed(totalOwed);
-        setYouOwe(totalOwe);
+          setExpenses(allExpenses.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
+          setYoureOwed(totalOwed);
+          setYouOwe(totalOwe);
+        }
+      } catch (error) {
+        toast.error('Failed to load data');
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      toast.error('Failed to load data');
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    loadData();
+  }, [user?.id]);
 
   const groupedExpenses = expenses.slice(0, 8);
 

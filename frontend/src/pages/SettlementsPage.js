@@ -17,45 +17,45 @@ function SettlementsPage({ onLogout }) {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const loadGroups = async () => {
+      try {
+        const res = await axios.get(`${API}/groups`, {
+          headers: getAuthHeader(),
+        });
+        setGroups(res.data);
+        if (res.data.length > 0) {
+          setSelectedGroup(res.data[0].id);
+        }
+      } catch (error) {
+        toast.error('Failed to load groups');
+      }
+    };
+
     loadGroups();
   }, []);
 
   useEffect(() => {
+    const loadSettlements = async () => {
+      if (!selectedGroup) return;
+      setLoading(true);
+
+      try {
+        const res = await axios.get(
+          `${API}/groups/${selectedGroup}/settlements`,
+          { headers: getAuthHeader() }
+        );
+        setSettlements(res.data);
+      } catch (error) {
+        toast.error('Failed to load settlements');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     if (selectedGroup) {
       loadSettlements();
     }
   }, [selectedGroup]);
-
-  const loadGroups = async () => {
-    try {
-      const res = await axios.get(`${API}/groups`, {
-        headers: getAuthHeader(),
-      });
-      setGroups(res.data);
-      if (res.data.length > 0) {
-        setSelectedGroup(res.data[0].id);
-      }
-    } catch (error) {
-      toast.error('Failed to load groups');
-    }
-  };
-
-  const loadSettlements = async () => {
-    if (!selectedGroup) return;
-    setLoading(true);
-
-    try {
-      const res = await axios.get(
-        `${API}/groups/${selectedGroup}/settlements`,
-        { headers: getAuthHeader() }
-      );
-      setSettlements(res.data);
-    } catch (error) {
-      toast.error('Failed to load settlements');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handlePayNow = (settlement) => {
     setSelectedSettlement(settlement);
