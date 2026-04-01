@@ -26,7 +26,7 @@ import {
   CursorClick, 
   Stack, 
   ProjectorScreen, 
-  Icons, 
+  Palette, 
   Plus, 
   User, 
   Receipt, 
@@ -275,7 +275,7 @@ const SlateDocs = () => {
           {/* Section: Icons */}
           <section id="icons">
             <div className="flex items-center gap-3 mb-6">
-              <IconBadge icon={Icons} tone="primary" />
+              <IconBadge icon={Palette} tone="primary" />
               <h2 className="text-2xl font-extrabold tracking-tight">Centralized Icons</h2>
             </div>
             <Callout className="mb-6">
@@ -288,6 +288,7 @@ const SlateDocs = () => {
               <div className="flex flex-col items-center gap-2"><Plus size={24} weight="bold" /><span className="text-[10px]">Plus</span></div>
               <div className="flex flex-col items-center gap-2"><Receipt size={24} weight="bold" /><span className="text-[10px]">Receipt</span></div>
               <div className="flex flex-col items-center gap-2"><Info size={24} weight="bold" /><span className="text-[10px]">Info</span></div>
+              <div className="flex flex-col items-center gap-2"><Palette size={24} weight="bold" /><span className="text-[10px]">Palette</span></div>
             </div>
           </section>
 
