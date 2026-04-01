@@ -16,6 +16,22 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       outDir: 'build',
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('lucide-react') || id.includes('@phosphor-icons')) {
+                  return 'icons';
+              }
+              if (id.includes('recharts') || id.includes('framer-motion')) {
+                  return 'viz';
+              }
+              return 'vendor';
+            }
+          },
+        },
+      },
+      chunkSizeWarningLimit: 1000,
     },
     define: {
       'process.env': {
