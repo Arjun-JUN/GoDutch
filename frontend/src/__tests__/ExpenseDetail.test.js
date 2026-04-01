@@ -381,10 +381,10 @@ describe('ExpenseDetail — delete from group page', () => {
 // Alice is logged in (mocked), but this expense was created by Bob.
 // isCreator = (expense.created_by === currentUser.id) → false → no Edit/Delete buttons.
 
-describe("ExpenseDetail — non-creator (Alice views Bob's expense)", () => {
+describe("ExpenseDetail — non-creator group member (Alice views Bob's expense)", () => {
   const BOB_EXPENSE = { ...EXPENSE, created_by: 'user-bob' };
 
-  test('does not show Edit or Delete buttons when current user did not create the expense', async () => {
+  test('shows Edit and Delete buttons when current user is a group member (even if not creator)', async () => {
     jest.clearAllMocks();
     mockLocationState = null;
     axios.get.mockImplementation((url) => {
@@ -396,7 +396,7 @@ describe("ExpenseDetail — non-creator (Alice views Bob's expense)", () => {
     await waitFor(() =>
       screen.getByRole('heading', { name: /Test Restaurant/i })
     );
-    expect(screen.queryByTestId('edit-expense-btn')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('delete-expense-btn')).not.toBeInTheDocument();
+    expect(screen.getByTestId('edit-expense-btn')).toBeInTheDocument();
+    expect(screen.getByTestId('delete-expense-btn')).toBeInTheDocument();
   });
 });

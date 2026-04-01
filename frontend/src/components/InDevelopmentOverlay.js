@@ -7,17 +7,17 @@ const InDevelopmentOverlay = ({
   pmText = "Our engineering team is currently perfecting the settlement logic and UPI synchronization to ensure 100% accuracy and institutional-grade security."
 }) => {
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center p-6 overflow-y-auto pointer-events-auto sm:p-12">
+    <div className="fixed inset-0 z-40 grid place-items-center p-6 overflow-y-auto pointer-events-none sm:p-12">
       {/* Ultra-soft glass backdrop */}
-      <div className="fixed inset-0 bg-[var(--app-background-start)]/60 backdrop-blur-[16px] transition-all duration-1000 ease-in-out" />
+      <div className="fixed inset-0 bg-[var(--app-background-start)]/60 backdrop-blur-[16px] transition-all duration-1000 ease-in-out pointer-events-none" />
       
       {/* Premium Content Card */}
-      <div className="relative app-surface-solid max-w-xl w-full p-8 my-12 sm:p-12 text-center animate-in fade-in zoom-in duration-500 [box-shadow:var(--app-shadow-card)] ring-1 ring-[var(--app-border)]/10 backdrop-blur-3xl overflow-visible">
+      <div className="relative app-surface-solid max-w-xl w-full p-8 my-12 sm:p-12 text-center animate-in fade-in zoom-in duration-500 [box-shadow:var(--app-shadow-card)] ring-1 ring-[var(--app-border)]/10 backdrop-blur-3xl overflow-visible pointer-events-auto">
         
         {/* Floating Icon Context */}
         <div className="absolute -top-10 left-1/2 -translate-x-1/2">
-            <div className="flex h-20 w-20 items-center justify-center rounded-[2rem] bg-white shadow-xl ring-1 ring-[var(--app-border)]/20 animate-bounce transition-all duration-[2000ms]">
-                <Cube size={38} weight="fill" className="text-[var(--app-primary)]" />
+            <div className="flex h-20 w-20 items-center justify-center rounded-[2rem] bg-white shadow-xl ring-1 ring-[var(--app-border)]/20">
+                <Cube size={38} weight="fill" className="text-[var(--app-primary)] animate-[spin_8s_linear_infinite]" />
             </div>
         </div>
 

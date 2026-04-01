@@ -68,6 +68,7 @@ class Group(BaseModel):
 class ExpenseItem(BaseModel):
     name: str
     price: float
+    quantity: int = 1
     category: str = "Other"
     assigned_to: List[str] = []
 
@@ -203,11 +204,16 @@ class OCRRequest(BaseModel):
     image_base64: str
     mime_type: str = "image/jpeg"
 
+class OCRItem(BaseModel):
+    name: str
+    price: float
+    quantity: int
+
 class OCRResult(BaseModel):
     merchant: str
     date: str
     total_amount: float
-    items: List[Dict]
+    items: List[OCRItem]
 
 
 def _extract_json_block(text: str):
@@ -359,12 +365,16 @@ async def scan_receipt(request: OCRRequest, current_user: dict = Depends(verify_
                         "Return valid JSON only with this shape:\n"
                         "{"
                         "\"merchant\": string, "
-                        "\"date\": \"YYYY-MM-DD\", "
-                        "\"total_amount\": number, "
-                        "\"items\": [{\"name\": string, \"price\": number}]"
+                        "\"date\": \"YYYY-MM-DD\", \"total_amount\": number, "
+                        "\"items\": [{\"name\": string, \"price\": number, \"quantity\": number}]"
                         "}\n"
-                        "If an exact item list is not visible, return the best available items without inventing values.\n"
-                        "If the date is unclear, use an empty string."
+                        "Instructions:\n"
+                        "1. Every item MUST have a 'name', 'price', and 'quantity'.\n"
+                        "2. If an item has a quantity (e.g., '2x Burger' or '3 Beer'), extract it and use the UNIT price (price per item) in the 'price' field.\n"
+                        "3. If quantity is NOT mentioned on the receipt, you MUST explicitly set it to 1.\n"
+                        "4. Ensure 'total_amount' is the sum of (price * quantity) for all items.\n"
+                        "5. If an exact item list is not visible, return the best available items.\n"
+                        "6. If the date is unclear, use an empty string."
                     )
                 },
                 {
@@ -528,7 +538,7 @@ async def smart_split(request: SmartSplitRequest, current_user: dict = Depends(v
                         "Return valid JSON only with this shape:\n"
                         "{"
                         "\"split_plan\": {"
-                        "\"items\": [{\"name\": string, \"price\": number, \"category\": string, \"assigned_to\": [string]}], "
+                        "\"items\": [{\"name\": string, \"price\": number, \"quantity\": number, \"category\": string, \"assigned_to\": [string]}], "
                         "\"split_type\": \"custom|equal|item-based\""
                         "}, "
                         "\"clarification_needed\": boolean, "
@@ -554,6 +564,14 @@ async def smart_split(request: SmartSplitRequest, current_user: dict = Depends(v
 @api_router.post("/upi/initiate-payment")
 async def initiate_upi_payment(payment: UPIPaymentRequest, current_user: dict = Depends(verify_token)):
     try:
+        # Security check: Ensure user is only paying their own debts
+        # settlement_id format: group_id-from_user_id-to_user_id
+        parts = payment.settlement_id.split('-')
+        if len(parts) >= 2:
+            debtor_id = parts[1]
+            if debtor_id != current_user['user_id']:
+                raise HTTPException(status_code=403, detail="You can only initiate payments for your own debts")
+
         payment_id = str(uuid.uuid4())
         
         upi_url = f"upi://pay?pa={payment.upi_id}&pn=goDutch&am={payment.amount}&cu=INR&tn={payment.note or 'Settlement'}"
@@ -578,6 +596,8 @@ async def initiate_upi_payment(payment: UPIPaymentRequest, current_user: dict = 
             "status": "initiated",
             "qr_data": upi_url
         }
+    except HTTPException:
+        raise
     except Exception as e:
         logging.error(f"UPI payment error: {str(e)}")
         raise HTTPException(status_code=500, detail="Payment initiation failed")
@@ -897,8 +917,11 @@ async def update_expense(expense_id: str, update_data: ExpenseUpdate, current_us
     expense = await db.expenses.find_one({"id": expense_id}, {"_id": 0})
     if not expense:
         raise HTTPException(status_code=404, detail="Expense not found")
-    if expense["created_by"] != current_user['user_id']:
-        raise HTTPException(status_code=403, detail="Only the creator can edit this expense")
+    
+    # Check if user is a member of the group
+    group = await db.groups.find_one({"id": expense["group_id"], "members.id": current_user['user_id']}, {"_id": 0})
+    if not group:
+        raise HTTPException(status_code=403, detail="Only group members can edit this expense")
     update_fields = {}
     for field, value in update_data.model_dump(exclude_none=True).items():
         if field == "items":
@@ -917,8 +940,11 @@ async def delete_expense(expense_id: str, current_user: dict = Depends(verify_to
     expense = await db.expenses.find_one({"id": expense_id}, {"_id": 0})
     if not expense:
         raise HTTPException(status_code=404, detail="Expense not found")
-    if expense["created_by"] != current_user['user_id']:
-        raise HTTPException(status_code=403, detail="Only the creator can delete this expense")
+    
+    # Check if user is a member of the group
+    group = await db.groups.find_one({"id": expense["group_id"], "members.id": current_user['user_id']}, {"_id": 0})
+    if not group:
+        raise HTTPException(status_code=403, detail="Only group members can delete this expense")
     await db.expenses.delete_one({"id": expense_id})
 
 @api_router.get("/groups/{group_id}/reports")

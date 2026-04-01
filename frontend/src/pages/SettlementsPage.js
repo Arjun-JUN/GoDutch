@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
-import { API, getAuthHeader } from '../App';
+import { API, getAuthHeader, getCurrentUser } from '../App';
 import { ArrowsLeftRight, Check, CurrencyInr, QrCode } from '@phosphor-icons/react';
 import Header from '../components/Header';
 
@@ -173,14 +173,16 @@ function SettlementsPage({ onLogout }) {
                     </div>
                   </div>
                   
-                  <button
-                    data-testid={`pay-now-${index}`}
-                    onClick={() => handlePayNow(settlement)}
-                    className="neo-btn-primary w-full text-sm flex items-center justify-center gap-2"
-                  >
-                    <CurrencyInr size={18} weight="bold" />
-                    Pay via UPI
-                  </button>
+                  {settlement.from_user_id === getCurrentUser()?.id && (
+                    <button
+                      data-testid={`pay-now-${index}`}
+                      onClick={() => handlePayNow(settlement)}
+                      className="neo-btn-primary w-full text-sm flex items-center justify-center gap-2"
+                    >
+                      <CurrencyInr size={18} weight="bold" />
+                      Pay via UPI
+                    </button>
+                  )}
                 </div>
               ))}
             </div>

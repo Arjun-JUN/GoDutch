@@ -54,7 +54,7 @@ const SMART_SPLIT_SYSTEM =
   'Create precise split plans using only the provided group member ids. ' +
   'If the instruction is ambiguous, set clarification_needed to true and ask one concise question. ' +
   'Return valid JSON only — no markdown, no explanation — with this exact shape: ' +
-  '{"split_plan": {"items": [{"name": string, "price": number, "category": string, "assigned_to": [string]}], ' +
+  '{"split_plan": {"items": [{"name": string, "price": number, "quantity": number, "category": string, "assigned_to": [string]}], ' +
   '"split_type": "custom|equal|item-based"}, "clarification_needed": boolean, "clarification_question": string | null}';
 
 /**
@@ -82,7 +82,9 @@ const RECEIPT_SYSTEM =
   'You extract structured data from receipt images. ' +
   'Return valid JSON only — no markdown, no explanation — with this exact shape: ' +
   '{"merchant": string, "date": "YYYY-MM-DD", "total_amount": number, ' +
-  '"items": [{"name": string, "price": number}]}. ' +
+  '"items": [{"name": string, "price": number, "quantity": number}]}. ' +
+  '1. Every item MUST have a "name", "price", and "quantity". ' +
+  '2. If quantity is NOT mentioned on the receipt, set it to 1. ' +
   'If an exact item list is not visible, return best available items without inventing values. ' +
   'If the date is unclear, use an empty string.';
 

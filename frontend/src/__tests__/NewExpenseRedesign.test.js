@@ -143,4 +143,26 @@ describe('NewExpenseRedesign — item submission filtering', () => {
     expect(body.items).toHaveLength(1);
     expect(body.items[0]).toMatchObject({ name: 'Drink', price: 20 });
   });
+
+  test('item with custom quantity is included correctly', async () => {
+    renderPage();
+    await fillRequiredFields();
+
+    fireEvent.change(screen.getByTestId('item-name-0'), { target: { value: 'Burger' } });
+    fireEvent.change(screen.getByTestId('item-price-0'), { target: { value: '150' } });
+    
+    // The quantity input is a native input in a div
+    const qtyInput = screen.getByDisplayValue('1');
+    fireEvent.change(qtyInput, { target: { value: '3' } });
+
+    const form = screen.getByTestId('merchant-input').closest('form');
+    await act(async () => {
+      fireEvent.submit(form);
+    });
+
+    await waitFor(() => expect(axios.post).toHaveBeenCalled());
+    const body = axios.post.mock.calls[0][1];
+    expect(body.items).toHaveLength(1);
+    expect(body.items[0]).toMatchObject({ name: 'Burger', price: 150, quantity: 3 });
+  });
 });

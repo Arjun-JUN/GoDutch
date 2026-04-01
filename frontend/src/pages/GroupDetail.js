@@ -3,9 +3,40 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { API, getAuthHeader } from '../App';
-import { ArrowsLeftRight, Receipt, Users } from '@phosphor-icons/react';
+import {
+  Airplane,
+  ArrowsLeftRight,
+  CalendarBlank,
+  Car,
+  DotsThreeCircle,
+  ForkKnife,
+  Lightbulb,
+  Note,
+  PencilSimple,
+  Receipt,
+  ShoppingBag,
+  ShoppingCart,
+  Stethoscope,
+  Tag,
+  Ticket,
+  Trash,
+  Users,
+  X,
+} from '@phosphor-icons/react';
 import Header from '../components/Header';
 import { AppShell, AppSurface, MemberBadge, PageBackButton, PageContent, StatCard } from '../components/app';
+
+const CATEGORY_ICONS = {
+  'Food & Dining': ForkKnife,
+  'Transportation': Car,
+  'Entertainment': Ticket,
+  'Shopping': ShoppingBag,
+  'Groceries': ShoppingCart,
+  'Utilities': Lightbulb,
+  'Healthcare': Stethoscope,
+  'Travel': Airplane,
+  'Other': DotsThreeCircle,
+};
 
 function GroupDetail({ onLogout }) {
   const { groupId } = useParams();
@@ -111,33 +142,51 @@ function GroupDetail({ onLogout }) {
             <p className="py-8 text-center text-[var(--app-muted)]">No expenses yet</p>
           ) : (
             <div className="space-y-3" data-testid="group-expenses-list">
-              {expenses.map((expense) => (
-                <button
-                  key={expense.id}
-                  className="app-list-row w-full flex items-center justify-between gap-4 p-4 text-left hover:-translate-y-px transition-transform"
-                  data-testid={`expense-${expense.id}`}
-                  onClick={() =>
-                    navigate(`/expenses/${expense.id}`, {
-                      state: { from: `/groups/${groupId}`, fromLabel: group.name },
-                    })
-                  }
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-[#e9efee] text-[var(--app-primary)]">
-                      <Receipt size={18} weight="bold" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-bold text-[var(--app-foreground)] md:text-base">{expense.merchant}</h3>
-                      <p className="text-xs text-[var(--app-muted)]">{expense.date}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-lg font-extrabold tracking-[-0.04em] text-[var(--app-foreground)] md:text-xl">
-                      Rs {Number(expense.total_amount).toFixed(2)}
-                    </p>
-                  </div>
-                </button>
-              ))}
+                {expenses.map((expense) => {
+                  const Icon = CATEGORY_ICONS[expense.category] || Receipt;
+                  return (
+                    <button
+                      key={expense.id}
+                      className="app-list-row group flex w-full items-center justify-between gap-4 p-4 text-left transition-all active:scale-[0.98] sm:p-5"
+                      data-testid={`expense-${expense.id}`}
+                      onClick={() =>
+                        navigate(`/expenses/${expense.id}`, {
+                          state: { from: `/groups/${groupId}`, fromLabel: group.name },
+                        })
+                      }
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-[1.5rem] bg-[var(--app-soft)] text-[var(--app-primary)] transition-all group-hover:bg-[var(--app-primary-soft)] group-hover:text-[var(--app-primary-strong)]">
+                          <Icon size={26} weight="bold" />
+                        </div>
+                        <div>
+                          <h3 className="text-base font-black tracking-tight text-[var(--app-foreground)] md:text-lg">
+                            {expense.merchant}
+                          </h3>
+                          <div className="mt-1 flex items-center gap-2">
+                            <span className="rounded-full bg-[var(--app-primary-soft)] px-2.5 py-0.5 text-[0.6rem] font-black uppercase tracking-widest text-[var(--app-primary-strong)]">
+                              {expense.category || 'Other'}
+                            </span>
+                            <span className="hidden h-1 w-1 rounded-full bg-[var(--app-border-soft)] md:block" />
+                            <span className="flex items-center gap-1 text-[11px] font-bold text-[var(--app-muted)]">
+                              <CalendarBlank size={12} weight="bold" />
+                              {expense.date}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xl font-black tracking-tighter text-[var(--app-primary-strong)] md:text-2xl">
+                          <span className="mr-0.5 text-xs font-bold opacity-40">Rs</span>
+                          {Number(expense.total_amount).toFixed(2)}
+                        </p>
+                        <p className="mt-1 text-[0.6rem] font-bold uppercase tracking-widest text-[var(--app-muted)] transition-colors group-hover:text-[var(--app-primary)]">
+                          Details &rarr;
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })}
             </div>
           )}
         </AppSurface>

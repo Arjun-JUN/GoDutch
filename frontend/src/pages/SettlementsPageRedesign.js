@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
-import { API, getAuthHeader } from '../App';
+import { API, getAuthHeader, getCurrentUser } from '../App';
 import { ArrowsLeftRight, Check, CurrencyInr } from '@phosphor-icons/react';
 import Header from '../components/Header';
 import { AppButton, AppInput, AppModal, AppSelect, AppShell, AppSurface, Callout, EmptyState, Field, IconBadge, ModalHeader, PageContent, PageHero } from '../components/app';
@@ -173,14 +173,16 @@ function SettlementsPageRedesign({ onLogout }) {
                       </div>
                     </div>
 
-                    <AppButton
-                      data-testid={`pay-now-${index}`}
-                      onClick={() => handlePayNow(settlement)}
-                      className="flex w-full items-center justify-center gap-2 text-sm"
-                    >
-                      <CurrencyInr size={18} weight="bold" />
-                      Pay via UPI
-                    </AppButton>
+                    {settlement.from_user_id === getCurrentUser()?.id && (
+                      <AppButton
+                        data-testid={`pay-now-${index}`}
+                        onClick={() => handlePayNow(settlement)}
+                        className="flex w-full items-center justify-center gap-2 text-sm"
+                      >
+                        <CurrencyInr size={18} weight="bold" />
+                        Pay via UPI
+                      </AppButton>
+                    )}
                   </div>
                 ))}
               </div>

@@ -4,12 +4,21 @@ import axios from 'axios';
 import { toast } from 'sonner';
 import { API, getAuthHeader, getCurrentUser } from '../App';
 import {
+  Airplane,
   CalendarBlank,
+  Car,
   CurrencyInr,
+  DotsThreeCircle,
+  ForkKnife,
+  Lightbulb,
   Note,
   PencilSimple,
   Receipt,
+  ShoppingBag,
+  ShoppingCart,
+  Stethoscope,
   Tag,
+  Ticket,
   Trash,
   Users,
   X,
@@ -30,7 +39,6 @@ import {
   PageBackButton,
   PageContent,
   PageHero,
-  StatCard,
 } from '../components/app';
 
 const CATEGORIES = [
@@ -44,6 +52,18 @@ const CATEGORIES = [
   'Travel',
   'Other',
 ];
+
+const CATEGORY_ICONS = {
+  'Food & Dining': ForkKnife,
+  'Transportation': Car,
+  'Entertainment': Ticket,
+  'Shopping': ShoppingBag,
+  'Groceries': ShoppingCart,
+  'Utilities': Lightbulb,
+  'Healthcare': Stethoscope,
+  'Travel': Airplane,
+  'Other': DotsThreeCircle,
+};
 
 function ExpenseDetail({ onLogout }) {
   const { expenseId } = useParams();
@@ -139,12 +159,14 @@ function ExpenseDetail({ onLogout }) {
       members.forEach((m) => (memberTotals[m.id] = 0));
       items.forEach((item) => {
         const price = parseFloat(item.price) || 0;
+        const qty = parseInt(item.quantity) || 1;
+        const subtotal = price * qty;
         const assignedTo = item.assigned_to || [];
         if (assignedTo.length > 0) {
-          const perPerson = price / assignedTo.length;
+          const perPerson = subtotal / assignedTo.length;
           assignedTo.forEach((mid) => (memberTotals[mid] += perPerson));
         } else {
-          const perPerson = price / members.length;
+          const perPerson = subtotal / members.length;
           members.forEach((m) => (memberTotals[m.id] += perPerson));
         }
       });
@@ -216,7 +238,8 @@ function ExpenseDetail({ onLogout }) {
   const myShare = expense?.split_details?.find(
     (s) => s.user_id === currentUser?.id,
   );
-  const isCreator = expense?.created_by === currentUser?.id;
+  const isMember = group?.members?.some(m => m.id === currentUser?.id);
+  const isCreator = expense?.created_by === currentUser?.id; // still helpful for labeling maybe?
 
   if (loading) {
     return (
@@ -245,7 +268,7 @@ function ExpenseDetail({ onLogout }) {
           title={expense.merchant}
           description={group ? `Logged in ${group.name}` : undefined}
           actions={
-            isCreator && !editing ? (
+            isMember && !editing ? (
               <>
                 <AppButton
                   onClick={startEditing}
@@ -369,29 +392,45 @@ function ExpenseDetail({ onLogout }) {
                     data-testid={`edit-item-${index}`}
                   >
                     <div className="flex gap-2 mb-2">
-                      <AppInput
-                        data-testid={`edit-item-name-${index}`}
-                        type="text"
-                        value={item.name}
-                        onChange={(e) => updateItem(index, 'name', e.target.value)}
-                        className="flex-1"
-                        placeholder="Item name"
-                      />
-                      <AppInput
-                        data-testid={`edit-item-price-${index}`}
-                        type="number"
-                        step="0.01"
-                        value={item.price}
-                        onChange={(e) => updateItem(index, 'price', e.target.value)}
-                        className="w-24"
-                        placeholder="Price"
-                      />
+                      <div className="flex-1">
+                        <AppInput
+                          data-testid={`edit-item-name-${index}`}
+                          type="text"
+                          value={item.name}
+                          onChange={(e) => updateItem(index, 'name', e.target.value)}
+                          className="w-full text-sm"
+                          placeholder="Item name"
+                        />
+                      </div>
+                      <div className="flex items-center gap-1.5 rounded-xl bg-white px-2 py-1 border border-[var(--app-soft-strong)]">
+                        <span className="text-[10px] font-bold text-[var(--app-muted)] uppercase">Qty</span>
+                        <input
+                          type="number"
+                          value={item.quantity || 1}
+                          onChange={(e) => updateItem(index, 'quantity', e.target.value)}
+                          className="w-8 bg-transparent text-center text-sm font-extrabold text-[var(--app-primary)] focus:outline-none"
+                          min="1"
+                        />
+                      </div>
+                      <div className="relative">
+                        <span className="absolute -left-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-[var(--app-muted)]">×</span>
+                        <AppInput
+                          data-testid={`edit-item-price-${index}`}
+                          type="number"
+                          step="0.01"
+                          value={item.price}
+                          onChange={(e) => updateItem(index, 'price', e.target.value)}
+                          className="w-20 text-sm font-extrabold text-right pr-6"
+                          placeholder="0"
+                        />
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-[var(--app-primary)]">Rs</span>
+                      </div>
                       {items.length > 1 && (
                         <AppButton
                           type="button"
                           variant="secondary"
                           onClick={() => removeItem(index)}
-                          className="!px-3"
+                          className="!p-0 h-8 w-8 flex items-center justify-center !rounded-full bg-white text-[var(--app-danger)] border border-[var(--app-soft-strong)]"
                         >
                           ×
                         </AppButton>
@@ -461,35 +500,56 @@ function ExpenseDetail({ onLogout }) {
           </AppSurface>
         ) : null}
 
-        {/* ── Summary stats ── */}
-        <section className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard
-            label="Total Amount"
-            value={`Rs ${Number(expense.total_amount).toFixed(2)}`}
-            description="Full bill before splitting."
-            icon={CurrencyInr}
-          />
-          <StatCard
-            label="Your Share"
-            value={
-              myShare ? `Rs ${Number(myShare.amount).toFixed(2)}` : '—'
-            }
-            description={myShare ? 'Your portion of this expense.' : 'You are not in the split.'}
-            valueClassName="text-[var(--app-primary-strong)]"
-          />
-          <StatCard
-            label="Date"
-            value={expense.date}
-            description="When the expense occurred."
-            icon={CalendarBlank}
-          />
-          <StatCard
-            label="Category"
-            value={expense.category || 'Other'}
-            description={`Split: ${expense.split_type}`}
-            icon={Tag}
-          />
-        </section>
+        {/* ── Summary statistics consolidated ── */}
+        {!editing && (
+          <AppSurface className="mb-8 p-6 md:p-10 flex flex-col md:flex-row md:items-center justify-between gap-8 overflow-hidden relative shadow-xl border-none">
+            {/* Background Gradient Layer */}
+            <div className="absolute inset-0 bg-gradient-to-br from-[var(--app-primary-strong)] to-[var(--app-primary)] opacity-[0.98]" />
+            
+            {/* Decorative Pattern / Large Icon */}
+            <div className="absolute -right-12 -bottom-12 opacity-10 pointer-events-none transform rotate-12">
+              {(() => {
+                const Icon = CATEGORY_ICONS[expense.category] || DotsThreeCircle;
+                return <Icon size={280} weight="fill" />;
+              })()}
+            </div>
+
+            <div className="relative z-10 flex items-center gap-6">
+               <div className="flex h-20 w-20 items-center justify-center rounded-[2.5rem] bg-white/15 backdrop-blur-md border border-white/20 text-white shadow-lg">
+                  {(() => {
+                    const Icon = CATEGORY_ICONS[expense.category] || DotsThreeCircle;
+                    return <Icon size={40} weight="bold" />;
+                  })()}
+               </div>
+               <div>
+                 <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.25em] text-white/50 mb-3">
+                   <CalendarBlank size={16} weight="bold" />
+                   {expense.date}
+                 </div>
+                 <h3 className="text-3xl font-black tracking-tighter text-white md:text-4xl">
+                   {expense.category || 'Other'}
+                 </h3>
+                 <p className="mt-1 text-sm font-bold text-white/60 uppercase tracking-widest">
+                   {expense.split_type} Split
+                 </p>
+               </div>
+            </div>
+
+            <div className="relative z-10 text-left md:text-right">
+               <p className="text-[11px] font-black uppercase tracking-[0.25em] text-white/50 mb-1">Your Personal Share</p>
+               <p className="text-5xl md:text-7xl font-black tracking-tighter text-white drop-shadow-md">
+                  <span className="text-2xl md:text-3xl mr-1 opacity-60 font-medium tracking-tight">Rs</span>
+                  {myShare ? Number(myShare.amount).toFixed(2) : '0.00'}
+               </p>
+               <div className="flex items-center md:justify-end gap-3 mt-4">
+                  <div className="h-px w-8 bg-white/20 hidden md:block" />
+                  <span className="text-sm font-bold text-white/70">
+                    Total bill <span className="text-white">Rs {Number(expense.total_amount).toFixed(2)}</span>
+                  </span>
+               </div>
+            </div>
+          </AppSurface>
+        )}
 
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr,1fr]">
           {/* ── Line items ── */}
@@ -511,17 +571,29 @@ function ExpenseDetail({ onLogout }) {
                     className="app-list-row flex items-center justify-between gap-3 p-3"
                     data-testid={`item-row-${i}`}
                   >
-                    <div>
-                      <p className="text-sm font-bold text-[var(--app-foreground)]">
-                        {item.name || '—'}
-                      </p>
-                      <p className="text-xs text-[var(--app-muted)]">
-                        {item.category || 'Other'}
-                      </p>
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-[var(--app-soft)] font-black text-xs text-[var(--app-primary)]">
+                        {item.quantity || 1}x
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-bold text-[var(--app-foreground)]">
+                          {item.name || '—'}
+                        </p>
+                        <p className="text-xs text-[var(--app-muted)]">
+                          {item.category || 'Other'}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-base font-extrabold tracking-[-0.03em] text-[var(--app-primary)]">
+                          Rs {((Number(item.price) || 0) * (Number(item.quantity) || 1)).toFixed(2)}
+                        </p>
+                        {item.quantity > 1 && (
+                          <p className="text-[10px] text-[var(--app-muted)]">
+                            Rs {Number(item.price).toFixed(2)} each
+                          </p>
+                        )}
+                      </div>
                     </div>
-                    <p className="text-base font-extrabold tracking-[-0.03em] text-[var(--app-primary)]">
-                      Rs {Number(item.price).toFixed(2)}
-                    </p>
                   </div>
                 ))}
               </div>

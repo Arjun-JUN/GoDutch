@@ -5,7 +5,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { toast } from 'sonner';
 import { API, getAuthHeader } from '../App';
 import { isEdgeAIReady, smartSplitEdge, scanReceiptEdge } from '../utils/edgeAI';
-import { Camera, Lightning, Microphone, Sparkle } from '@phosphor-icons/react';
+import { Camera, Lightning, Microphone, Sparkle, Trash } from '@phosphor-icons/react';
 import Header from '../components/Header';
 import { AppButton, AppInput, AppSelect, AppShell, AppSurface, AppTextarea, Callout, Field, MemberBadge, PageContent, PageHero } from '../components/app';
 
@@ -25,6 +25,7 @@ const createExpenseItem = (overrides = {}, createKey) => ({
   ui_key: createKey(),
   name: '',
   price: '',
+  quantity: 1,
   category: 'Other',
   assigned_to: [],
   ...overrides,
@@ -37,7 +38,7 @@ const normalizeExpenseItems = (rawItems, createKey) => {
 
   const normalized = rawItems
     .map((item) => {
-      const name = String(
+      let name = String(
         item?.name ??
         item?.item ??
         item?.description ??
@@ -45,12 +46,22 @@ const normalizeExpenseItems = (rawItems, createKey) => {
         ''
       ).trim();
 
+      let quantity = parseInt(item?.quantity ?? 1);
+      
+      // Heuristic: Extract quantity from name if present (e.g., "2x Burger" or "3 Beers")
+      const qtyMatch = name.match(/^(\d+)\s*[xX]?\s+(.+)$/);
+      if (qtyMatch && isNaN(parseInt(item?.quantity))) {
+        quantity = parseInt(qtyMatch[1]);
+        name = qtyMatch[2].trim();
+      }
+
       const rawPrice = item?.price ?? item?.amount ?? item?.total ?? item?.value ?? '';
       const price = rawPrice === '' || rawPrice == null ? '' : String(rawPrice).trim();
 
       return createExpenseItem({
         name,
         price,
+        quantity: isNaN(quantity) ? 1 : quantity,
         category: item?.category || 'Other',
         assigned_to: Array.isArray(item?.assigned_to) ? item.assigned_to : []
       }, createKey);
@@ -267,15 +278,17 @@ function NewExpenseRedesign({ onLogout }) {
 
       items.forEach((item) => {
         const price = parseFloat(item.price) || 0;
+        const qty = parseInt(item.quantity) || 1;
+        const subtotal = price * qty;
         const assignedTo = item.assigned_to || [];
 
         if (assignedTo.length > 0) {
-          const perPerson = price / assignedTo.length;
+          const perPerson = subtotal / assignedTo.length;
           assignedTo.forEach((memberId) => {
             memberTotals[memberId] += perPerson;
           });
         } else {
-          const perPerson = price / group.members.length;
+          const perPerson = subtotal / group.members.length;
           group.members.forEach((member) => {
             memberTotals[member.id] += perPerson;
           });
@@ -318,6 +331,7 @@ function NewExpenseRedesign({ onLogout }) {
           .map((item) => ({
             name: item.name.trim(),
             price: parseFloat(item.price) || 0,
+            quantity: parseInt(item.quantity) || 1,
             category: item.category || 'Other',
             assigned_to: item.assigned_to || [],
           })),
@@ -590,59 +604,114 @@ function NewExpenseRedesign({ onLogout }) {
                       className="rounded-[1.5rem] bg-[var(--app-soft)] p-4"
                       data-testid={`item-${index}`}
                     >
-                      <div className="mb-2 flex gap-2">
-                        <AppInput
-                          data-testid={`item-name-${index}`}
-                          type="text"
-                          value={item.name}
-                          onChange={(e) => updateItem(index, 'name', e.target.value)}
-                          className="flex-1 text-sm"
-                          placeholder="Item name"
-                        />
-                        <AppInput
-                          data-testid={`item-price-${index}`}
-                          type="number"
-                          step="0.01"
-                          value={item.price}
-                          onChange={(e) => updateItem(index, 'price', e.target.value)}
-                          className="w-24 text-sm"
-                          placeholder="Rs"
-                        />
-                        {items.length > 1 && (
-                          <AppButton
-                            data-testid={`remove-item-${index}`}
-                            onClick={() => removeItem(index)}
-                            variant="secondary"
-                            size="sm"
-                            className="px-3"
-                          >
-                            x
-                          </AppButton>
-                        )}
-                      </div>
+                      <div className="flex flex-col gap-3">
+                        {/* Header Row: Name & Delete */}
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1">
+                            <AppInput
+                              data-testid={`item-name-${index}`}
+                              type="text"
+                              value={item.name}
+                              onChange={(e) => updateItem(index, 'name', e.target.value)}
+                              className="w-full text-lg font-black tracking-tight !bg-white shadow-sm !py-3 !px-4 focus:ring-2 focus:ring-[var(--app-primary)]/20"
+                              placeholder="Item name"
+                            />
+                          </div>
+                          {items.length > 1 ? (
+                            <AppButton
+                              data-testid={`remove-item-${index}`}
+                              onClick={() => removeItem(index)}
+                              variant="ghost"
+                              size="sm"
+                              className="h-[52px] w-[52px] flex-shrink-0 !rounded-[1.25rem] !bg-white text-[var(--app-danger)] border border-transparent shadow-[0_2px_8px_rgba(42,52,52,0.04)] hover:!bg-rose-50 hover:border-rose-100 !p-0 flex items-center justify-center transition-all"
+                            >
+                              <Trash size={20} weight="fill" />
+                            </AppButton>
+                          ) : (
+                            <div className="h-[52px] w-[52px]" />
+                          )}
+                        </div>
 
-                      {splitType === 'item-based' && currentGroup && (
-                        <div className="mt-2">
-                          <p className="mb-2 text-xs font-bold text-[var(--app-muted)]">Assign to:</p>
-                          <div className="flex flex-wrap gap-1">
-                            {currentGroup.members.map((member) => (
-                              <button
-                                key={member.id}
-                                type="button"
-                                onClick={() => toggleMemberAssignment(index, member.id)}
-                                data-testid={`assign-${index}-${member.id}`}
-                                className={`rounded-full px-3 py-1.5 text-xs font-bold transition-all ${
-                                  (item.assigned_to || []).includes(member.id)
-                                    ? 'bg-[var(--app-soft-strong)] text-[var(--app-primary-strong)]'
-                                    : 'bg-white text-[var(--app-muted)]'
-                                }`}
-                              >
-                                {member.name}
-                              </button>
-                            ))}
+                        {/* Details Row: Qty, Category, Price */}
+                        <div className="grid grid-cols-12 gap-3">
+                          {/* Quantity */}
+                          <div className="col-span-3 lg:col-span-3 flex flex-col gap-1.5 flex-1">
+                             <label className="text-[10px] font-black uppercase tracking-widest text-[var(--app-muted)] opacity-60 ml-2">Qty</label>
+                             <div className="flex h-[46px] items-center justify-center rounded-[1.25rem] bg-white px-1 shadow-[0_2px_8px_rgba(42,52,52,0.04)] overflow-hidden transition-all focus-within:ring-2 focus-within:ring-[var(--app-primary)]/20">
+                                <input
+                                  type="number"
+                                  value={item.quantity}
+                                  onChange={(e) => updateItem(index, 'quantity', e.target.value)}
+                                  className="w-full bg-transparent text-center text-sm font-black text-[var(--app-primary)] focus:outline-none"
+                                  min="1"
+                                />
+                             </div>
+                          </div>
+
+                          {/* Category */}
+                          <div className="col-span-4 lg:col-span-4 flex flex-col gap-1.5 flex-1">
+                             <label className="text-[10px] font-black uppercase tracking-widest text-[var(--app-muted)] opacity-60 ml-2">Type</label>
+                             <AppSelect
+                                value={item.category}
+                                onChange={(e) => updateItem(index, 'category', e.target.value)}
+                                className="h-[46px] text-xs font-bold !bg-white shadow-[0_2px_8px_rgba(42,52,52,0.04)] !py-0 !pl-3 !pr-7"
+                             >
+                                {CATEGORIES.map(c => <option key={c} value={c}>{c.split(' ')[0]}</option>)}
+                             </AppSelect>
+                          </div>
+
+                          {/* Unit Price */}
+                          <div className="col-span-5 lg:col-span-5 flex flex-col gap-1.5 flex-1">
+                             <label className="text-[10px] font-black uppercase tracking-widest text-[var(--app-muted)] opacity-60 ml-2">Price</label>
+                             <div className="relative">
+                                <AppInput
+                                  data-testid={`item-price-${index}`}
+                                  type="number"
+                                  step="0.01"
+                                  value={item.price}
+                                  onChange={(e) => updateItem(index, 'price', e.target.value)}
+                                  className="h-[46px] w-full text-base font-black text-right !pr-8 !pl-3 !bg-white shadow-[0_2px_8px_rgba(42,52,52,0.04)] !py-0"
+                                  placeholder="0.00"
+                                />
+                                <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] font-black text-[var(--app-muted)] pointer-events-none">Rs</span>
+                             </div>
                           </div>
                         </div>
-                      )}
+
+                        {/* Footer Row: Split & Subtotal */}
+                        <div className="flex items-center justify-between border-t border-white/60 pt-3 mt-1">
+                          {splitType === 'item-based' && currentGroup ? (
+                            <div className="min-w-0 flex-1">
+                              <p className="text-[9px] font-black uppercase tracking-widest text-[var(--app-muted)] mb-2 ml-1">Assign to</p>
+                              <div className="flex flex-wrap gap-1.5">
+                                {currentGroup.members.map((member) => (
+                                  <button
+                                    key={member.id}
+                                    type="button"
+                                    onClick={() => toggleMemberAssignment(index, member.id)}
+                                    data-testid={`assign-${index}-${member.id}`}
+                                    className={`rounded-full px-3 py-1.5 text-[10px] font-black transition-all shadow-sm ${
+                                      (item.assigned_to || []).includes(member.id)
+                                        ? 'bg-[var(--app-primary)] text-white ring-2 ring-[var(--app-primary)]/20'
+                                        : 'bg-white text-[var(--app-muted)] hover:bg-white/80'
+                                    }`}
+                                  >
+                                    {member.name}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          ) : <div className="flex-1" />}
+                          
+                          <div className="text-right pl-4">
+                            <p className="text-[10px] uppercase font-black tracking-widest text-[var(--app-muted)] opacity-60 mb-1">Subtotal</p>
+                            <p className="text-xl font-black text-[var(--app-foreground)] leading-none tracking-tighter">
+                              <span className="text-[10px] font-bold mr-1">Rs</span>
+                              {((parseFloat(item.price) || 0) * (parseInt(item.quantity) || 1)).toFixed(2)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     </motion.div>
                   ))}
                 </AnimatePresence>
