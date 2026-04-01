@@ -115,12 +115,15 @@ function Dashboard({ onLogout }) {
           </button>
         </section>
 
-        <AppSurface className="p-5 md:p-6">
-          <div className="mb-6 flex items-center justify-between gap-4">
-            <h2 className="text-2xl font-extrabold tracking-[-0.04em] text-[var(--app-foreground)]">
-              Recent Expenses
+        <AppSurface className="p-6 md:p-8">
+          <div className="mb-8 flex items-start justify-between gap-4">
+            <h2 className="text-[32px] md:text-4xl font-extrabold tracking-[-0.02em] text-[var(--app-foreground)] leading-[1.1]">
+              Recent<br />Expenses
             </h2>
-            <MemberBadge>{expenses.length} tracked</MemberBadge>
+            <div className="flex h-[72px] w-[72px] flex-col items-center justify-center rounded-full border border-[var(--app-border)] bg-transparent flex-shrink-0">
+              <span className="text-xl font-extrabold leading-none text-[var(--app-foreground)] mb-1 mt-1">{expenses.length}</span>
+              <span className="text-[11px] font-bold tracking-wide text-[var(--app-foreground)] opacity-70 leading-none">tracked</span>
+            </div>
           </div>
 
           {loading ? (
@@ -139,7 +142,7 @@ function Dashboard({ onLogout }) {
               )}
             />
           ) : (
-            <div className="space-y-3" data-testid="expenses-list">
+            <div className="space-y-4" data-testid="expenses-list">
               {groupedExpenses.map((expense) => {
                 const myShare = expense.split_details?.find(
                   (s) => s.user_id === user?.id,
@@ -149,24 +152,29 @@ function Dashboard({ onLogout }) {
                     key={expense.id}
                     data-testid={`expense-${expense.id}`}
                     onClick={() => navigate(`/expenses/${expense.id}`, { state: { from: '/dashboard', fromLabel: 'Dashboard' } })}
-                    className="app-list-row w-full flex items-center justify-between gap-4 p-4 md:p-5 text-left hover:-translate-y-px transition-transform"
+                    className="w-full flex items-stretch justify-between gap-3 p-4 md:p-5 rounded-[2rem] border border-[var(--app-border)] bg-white text-left transition-all hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-[#e9efee] text-[var(--app-primary)]">
-                        <Receipt size={20} weight="bold" />
+                    <div className="flex items-center gap-4 flex-1 min-w-0">
+                      <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-[#e9efee] text-[var(--app-foreground)]">
+                        <Receipt size={24} weight="regular" />
                       </div>
-                      <div>
-                        <h3 className="font-bold text-[var(--app-foreground)]" data-testid={`expense-merchant-${expense.id}`}>
+                      <div className="flex-1 min-w-0 pr-2">
+                        <h3 className="text-[17px] sm:text-lg font-extrabold text-[var(--app-foreground)] leading-tight whitespace-normal break-words line-clamp-2" data-testid={`expense-merchant-${expense.id}`}>
                           {expense.merchant}
                         </h3>
-                        <p className="text-sm text-[var(--app-muted)]">{expense.date}</p>
+                        <p className="mt-1.5 text-[13px] font-semibold text-[var(--app-foreground)] opacity-60">{expense.date}</p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-xl font-extrabold tracking-[-0.04em] text-[var(--app-primary)] md:text-2xl" data-testid={`expense-amount-${expense.id}`}>
-                        Rs {myShare ? Number(myShare.amount).toFixed(2) : Number(expense.total_amount).toFixed(2)}
+                    <div className="flex flex-col items-end justify-center text-right pl-2 shrink-0">
+                      <div className="flex flex-col items-end">
+                        <span className="text-sm font-extrabold text-[var(--app-foreground)] leading-none mb-1 opacity-80">Rs</span>
+                        <span className="text-[22px] sm:text-2xl font-extrabold tracking-[-0.04em] text-[var(--app-foreground)] leading-none" data-testid={`expense-amount-${expense.id}`}>
+                          {myShare ? Number(myShare.amount).toFixed(2) : Number(expense.total_amount).toFixed(2)}
+                        </span>
+                      </div>
+                      <p className="mt-2 text-[10px] font-bold tracking-[0.15em] text-[var(--app-foreground)] opacity-50 uppercase text-right max-w-[60px] sm:max-w-none leading-tight">
+                        YOUR<br className="sm:hidden" /> SHARE
                       </p>
-                      <p className="app-eyebrow mt-1">your share</p>
                     </div>
                   </button>
                 );

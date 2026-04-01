@@ -601,116 +601,93 @@ function NewExpenseRedesign({ onLogout }) {
                       animate={prefersReducedMotion ? undefined : { opacity: 1, y: 0 }}
                       exit={prefersReducedMotion ? undefined : { opacity: 0, y: -6 }}
                       transition={{ duration: 0.18, ease: 'easeOut' }}
-                      className="rounded-[1.5rem] bg-[var(--app-soft)] p-4"
+                      className="border-b border-[var(--app-border-soft)] py-2 last:border-0"
                       data-testid={`item-${index}`}
                     >
-                      <div className="flex flex-col gap-3">
-                        {/* Header Row: Name & Delete */}
-                        <div className="flex items-center gap-3">
-                          <div className="flex-1">
-                            <AppInput
-                              data-testid={`item-name-${index}`}
-                              type="text"
-                              value={item.name}
-                              onChange={(e) => updateItem(index, 'name', e.target.value)}
-                              className="w-full text-lg font-black tracking-tight !bg-white shadow-sm !py-3 !px-4 focus:ring-2 focus:ring-[var(--app-primary)]/20"
-                              placeholder="Item name"
-                            />
-                          </div>
-                          {items.length > 1 ? (
-                            <AppButton
-                              data-testid={`remove-item-${index}`}
-                              onClick={() => removeItem(index)}
-                              variant="ghost"
-                              size="sm"
-                              className="h-[52px] w-[52px] flex-shrink-0 !rounded-[1.25rem] !bg-white text-[var(--app-danger)] border border-transparent shadow-[0_2px_8px_rgba(42,52,52,0.04)] hover:!bg-rose-50 hover:border-rose-100 !p-0 flex items-center justify-center transition-all"
-                            >
-                              <Trash size={20} weight="fill" />
-                            </AppButton>
-                          ) : (
-                            <div className="h-[52px] w-[52px]" />
-                          )}
-                        </div>
-
-                        {/* Details Row: Qty, Category, Price */}
-                        <div className="grid grid-cols-12 gap-3">
+                      <div className="flex flex-col gap-2">
+                        {/* Primary Row: Qty, Name, Price, Delete */}
+                        <div className="flex items-center gap-1.5 md:gap-3">
                           {/* Quantity */}
-                          <div className="col-span-3 lg:col-span-3 flex flex-col gap-1.5 flex-1">
-                             <label className="text-[10px] font-black uppercase tracking-widest text-[var(--app-muted)] opacity-60 ml-2">Qty</label>
-                             <div className="flex h-[46px] items-center justify-center rounded-[1.25rem] bg-white px-1 shadow-[0_2px_8px_rgba(42,52,52,0.04)] overflow-hidden transition-all focus-within:ring-2 focus-within:ring-[var(--app-primary)]/20">
+                          <div className="flex bg-[var(--app-soft)] rounded-xl w-14 shrink-0 overflow-hidden items-center group focus-within:ring-2 focus-within:ring-[var(--app-primary-strong)]">
+                             <input
+                               type="number"
+                               value={item.quantity}
+                               onChange={(e) => updateItem(index, 'quantity', e.target.value)}
+                               className="w-full bg-transparent text-center text-sm font-black text-[var(--app-primary)] focus:outline-none py-2.5 px-1"
+                               min="1"
+                             />
+                          </div>
+
+                          {/* Detail Group: Name and Price */}
+                          <div className="flex-1 flex flex-row items-center gap-1.5 md:gap-3">
+                             <input
+                                data-testid={`item-name-${index}`}
+                                type="text"
+                                value={item.name}
+                                onChange={(e) => updateItem(index, 'name', e.target.value)}
+                                className="flex-1 min-w-0 text-sm md:text-base font-extrabold tracking-tight bg-transparent focus:outline-none focus:bg-white focus:ring-1 focus:ring-[var(--app-border)] rounded-lg px-2 py-2 md:py-2.5 transition-colors truncate"
+                                placeholder="Item name"
+                             />
+                             <div className="relative w-24 md:w-28 shrink-0">
                                 <input
-                                  type="number"
-                                  value={item.quantity}
-                                  onChange={(e) => updateItem(index, 'quantity', e.target.value)}
-                                  className="w-full bg-transparent text-center text-sm font-black text-[var(--app-primary)] focus:outline-none"
-                                  min="1"
-                                />
-                             </div>
-                          </div>
-
-                          {/* Category */}
-                          <div className="col-span-4 lg:col-span-4 flex flex-col gap-1.5 flex-1">
-                             <label className="text-[10px] font-black uppercase tracking-widest text-[var(--app-muted)] opacity-60 ml-2">Type</label>
-                             <AppSelect
-                                value={item.category}
-                                onChange={(e) => updateItem(index, 'category', e.target.value)}
-                                className="h-[46px] text-xs font-bold !bg-white shadow-[0_2px_8px_rgba(42,52,52,0.04)] !py-0 !pl-3 !pr-7"
-                             >
-                                {CATEGORIES.map(c => <option key={c} value={c}>{c.split(' ')[0]}</option>)}
-                             </AppSelect>
-                          </div>
-
-                          {/* Unit Price */}
-                          <div className="col-span-5 lg:col-span-5 flex flex-col gap-1.5 flex-1">
-                             <label className="text-[10px] font-black uppercase tracking-widest text-[var(--app-muted)] opacity-60 ml-2">Price</label>
-                             <div className="relative">
-                                <AppInput
                                   data-testid={`item-price-${index}`}
                                   type="number"
                                   step="0.01"
                                   value={item.price}
                                   onChange={(e) => updateItem(index, 'price', e.target.value)}
-                                  className="h-[46px] w-full text-base font-black text-right !pr-8 !pl-3 !bg-white shadow-[0_2px_8px_rgba(42,52,52,0.04)] !py-0"
+                                  className="w-full text-sm md:text-base font-black text-right pr-7 pl-1 bg-transparent focus:outline-none focus:bg-white focus:ring-1 focus:ring-[var(--app-border)] rounded-lg py-2 md:py-2.5 transition-colors"
                                   placeholder="0.00"
                                 />
-                                <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] font-black text-[var(--app-muted)] pointer-events-none">Rs</span>
+                                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-black text-[var(--app-muted)] pointer-events-none">Rs</span>
                              </div>
+                          </div>
+
+                          {/* Delete Button */}
+                          <div className="flex items-center justify-center shrink-0 w-8 md:w-10">
+                            {items.length > 1 && (
+                              <button
+                                data-testid={`remove-item-${index}`}
+                                onClick={() => removeItem(index)}
+                                type="button"
+                                className="h-8 w-8 !rounded-full text-[var(--app-muted-subtle)] hover:bg-rose-50 hover:text-[var(--app-danger)] flex items-center justify-center transition-all bg-transparent border-none cursor-pointer"
+                              >
+                                <Trash size={18} weight="fill" />
+                              </button>
+                            )}
                           </div>
                         </div>
 
-                        {/* Footer Row: Split & Subtotal */}
-                        <div className="flex items-center justify-between border-t border-white/60 pt-3 mt-1">
-                          {splitType === 'item-based' && currentGroup ? (
-                            <div className="min-w-0 flex-1">
-                              <p className="text-[9px] font-black uppercase tracking-widest text-[var(--app-muted)] mb-2 ml-1">Assign to</p>
-                              <div className="flex flex-wrap gap-1.5">
-                                {currentGroup.members.map((member) => (
-                                  <button
-                                    key={member.id}
-                                    type="button"
-                                    onClick={() => toggleMemberAssignment(index, member.id)}
-                                    data-testid={`assign-${index}-${member.id}`}
-                                    className={`rounded-full px-3 py-1.5 text-[10px] font-black transition-all shadow-sm ${
-                                      (item.assigned_to || []).includes(member.id)
-                                        ? 'bg-[var(--app-primary)] text-white ring-2 ring-[var(--app-primary)]/20'
-                                        : 'bg-white text-[var(--app-muted)] hover:bg-white/80'
-                                    }`}
-                                  >
-                                    {member.name}
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-                          ) : <div className="flex-1" />}
-                          
-                          <div className="text-right pl-4">
-                            <p className="text-[10px] uppercase font-black tracking-widest text-[var(--app-muted)] opacity-60 mb-1">Subtotal</p>
-                            <p className="text-xl font-black text-[var(--app-foreground)] leading-none tracking-tighter">
-                              <span className="text-[10px] font-bold mr-1">Rs</span>
-                              {((parseFloat(item.price) || 0) * (parseInt(item.quantity) || 1)).toFixed(2)}
-                            </p>
+                        {/* Expandable Split Detail Row */}
+                        {splitType === 'item-based' && currentGroup && (
+                          <div className="pl-14 md:pl-16 pr-8 mt-1 mb-2">
+                             <div className="flex items-center justify-between border-t border-[var(--app-border-soft)] pt-2 md:pt-3">
+                               <div className="flex flex-wrap gap-1.5 flex-1">
+                                 {currentGroup.members.map((member) => (
+                                   <button
+                                     key={member.id}
+                                     type="button"
+                                     onClick={() => toggleMemberAssignment(index, member.id)}
+                                     data-testid={`assign-${index}-${member.id}`}
+                                     className={`rounded-full px-2.5 py-1 text-[10px] font-bold transition-all shadow-sm ${
+                                       (item.assigned_to || []).includes(member.id)
+                                          ? 'bg-[var(--app-primary)] text-white'
+                                          : 'bg-[var(--app-soft)] text-[var(--app-muted)] hover:bg-[var(--app-border-soft)]'
+                                     }`}
+                                   >
+                                     {member.name}
+                                   </button>
+                                 ))}
+                               </div>
+                               
+                               <div className="text-right pl-3">
+                                 <p className="text-[10px] uppercase font-black tracking-widest text-[var(--app-muted)] opacity-60 mb-0.5">Sub</p>
+                                 <p className="text-sm font-black text-[var(--app-primary)] leading-none">
+                                   {((parseFloat(item.price) || 0) * (parseInt(item.quantity) || 1)).toFixed(2)}
+                                 </p>
+                               </div>
+                             </div>
                           </div>
-                        </div>
+                        )}
                       </div>
                     </motion.div>
                   ))}
