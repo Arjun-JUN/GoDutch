@@ -316,81 +316,96 @@ function SplitBetweenModal({ open, onClose, members, splitBetween, splitMode, on
             ))}
           </div>
 
-          <div className="member-select-list">
-            {members.map((member) => {
-              const isSelected = localSplit.some((s) => s.user_id === member.id);
-              const splitEntry = localSplit.find((s) => s.user_id === member.id);
-              return (
-                <div
-                  key={member.id}
-                  className={`member-select-row ${isSelected ? 'selected' : ''}`}
-                  data-testid={`split-member-${member.id}`}
-                >
-                  <div className="member-avatar">{member.name.charAt(0).toUpperCase()}</div>
-                  <div className="member-info" onClick={() => toggleMember(member.id)}>
-                    <span className="member-name">{member.name}</span>
-                    {localMode === 'equally' && isSelected && (
-                      <p className="text-xs text-[var(--app-muted)] mt-0.5">
-                        {currencySymbol}{perPerson.toFixed(2)}
-                      </p>
-                    )}
-                    {localMode === 'byshares' && isSelected && (
-                      <p className="text-xs text-[var(--app-muted)] mt-0.5">
-                        {currencySymbol}{(totalShares > 0 ? ((parseInt(splitEntry?.shares) || 1) / totalShares * total) : 0).toFixed(2)}
-                      </p>
-                    )}
-                  </div>
-
-                  {localMode === 'unequally' && isSelected && (
-                    <input
-                      type="number"
-                      className="member-amount-input"
-                      placeholder="0.00"
-                      value={splitEntry?.amount || ''}
-                      onChange={(e) => updateField(member.id, 'amount', e.target.value)}
-                      data-testid={`split-amount-${member.id}`}
-                    />
-                  )}
-
-                  {localMode === 'byshares' && isSelected && (
-                    <input
-                      type="number"
-                      className="member-amount-input"
-                      placeholder="1"
-                      min="1"
-                      value={splitEntry?.shares || 1}
-                      onChange={(e) => updateField(member.id, 'shares', e.target.value)}
-                      data-testid={`split-shares-${member.id}`}
-                      style={{ width: '4rem' }}
-                    />
-                  )}
-
+          <motion.div
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.2}
+            onDragEnd={(e, info) => {
+              const swipeThreshold = 50;
+              const currentIdx = tabs.findIndex(tab => tab.toLowerCase().replace(' ', '') === localMode);
+              if (info.offset.x < -swipeThreshold && currentIdx < tabs.length - 1) {
+                setLocalMode(tabs[currentIdx + 1].toLowerCase().replace(' ', ''));
+              } else if (info.offset.x > swipeThreshold && currentIdx > 0) {
+                setLocalMode(tabs[currentIdx - 1].toLowerCase().replace(' ', ''));
+              }
+            }}
+          >
+            <div className="member-select-list">
+              {members.map((member) => {
+                const isSelected = localSplit.some((s) => s.user_id === member.id);
+                const splitEntry = localSplit.find((s) => s.user_id === member.id);
+                return (
                   <div
-                    className={`member-check ${isSelected ? 'checked' : ''}`}
-                    onClick={() => toggleMember(member.id)}
+                    key={member.id}
+                    className={`member-select-row ${isSelected ? 'selected' : ''}`}
+                    data-testid={`split-member-${member.id}`}
                   >
-                    {isSelected ? <Check size={14} weight="bold" color="white" /> : null}
+                    <div className="member-avatar">{member.name.charAt(0).toUpperCase()}</div>
+                    <div className="member-info" onClick={() => toggleMember(member.id)}>
+                      <span className="member-name">{member.name}</span>
+                      {localMode === 'equally' && isSelected && (
+                        <p className="text-xs text-[var(--app-muted)] mt-0.5">
+                          {currencySymbol}{perPerson.toFixed(2)}
+                        </p>
+                      )}
+                      {localMode === 'byshares' && isSelected && (
+                        <p className="text-xs text-[var(--app-muted)] mt-0.5">
+                          {currencySymbol}{(totalShares > 0 ? ((parseInt(splitEntry?.shares) || 1) / totalShares * total) : 0).toFixed(2)}
+                        </p>
+                      )}
+                    </div>
+
+                    {localMode === 'unequally' && isSelected && (
+                      <input
+                        type="number"
+                        className="member-amount-input"
+                        placeholder="0.00"
+                        value={splitEntry?.amount || ''}
+                        onChange={(e) => updateField(member.id, 'amount', e.target.value)}
+                        data-testid={`split-amount-${member.id}`}
+                      />
+                    )}
+
+                    {localMode === 'byshares' && isSelected && (
+                      <input
+                        type="number"
+                        className="member-amount-input"
+                        placeholder="1"
+                        min="1"
+                        value={splitEntry?.shares || 1}
+                        onChange={(e) => updateField(member.id, 'shares', e.target.value)}
+                        data-testid={`split-shares-${member.id}`}
+                        style={{ width: '4rem' }}
+                      />
+                    )}
+
+                    <div
+                      className={`member-check ${isSelected ? 'checked' : ''}`}
+                      onClick={() => toggleMember(member.id)}
+                    >
+                      {isSelected ? <Check size={14} weight="bold" color="white" /> : null}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {localMode === 'unequally' && (
-            <div className={`amount-remaining ${remaining < -0.01 ? 'over' : ''}`}>
-              <span className="label">Remaining</span>
-              <span className="value">
-                {currencySymbol}{Math.abs(remaining).toFixed(2)}{remaining < -0.01 ? ' over' : ''}
-              </span>
+                );
+              })}
             </div>
-          )}
 
-          {localMode === 'byshares' && (
-            <div className="amount-remaining">
-              <span className="label">Total shares</span>
-              <span className="value">{totalShares}</span>
-            </div>
-          )}
+            {localMode === 'unequally' && (
+              <div className={`amount-remaining ${remaining < -0.01 ? 'over' : ''}`}>
+                <span className="label">Remaining</span>
+                <span className="value">
+                  {currencySymbol}{Math.abs(remaining).toFixed(2)}{remaining < -0.01 ? ' over' : ''}
+                </span>
+              </div>
+            )}
+
+            {localMode === 'byshares' && (
+              <div className="amount-remaining">
+                <span className="label">Total shares</span>
+                <span className="value">{totalShares}</span>
+              </div>
+            )}
+          </motion.div>
         </div>
 
         <div className="modal-sticky-footer">

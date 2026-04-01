@@ -15,6 +15,7 @@ import ReportsPage from './pages/ReportsPage';
 import UPIHome from './pages/UPIHome';
 import SendMoney from './pages/SendMoney';
 import AddBankAccount from './pages/AddBankAccount';
+import SlateDocs from './pages/SlateDocs';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;
@@ -173,6 +174,7 @@ function App() {
               )
             }
           />
+          <Route path="/docs/slate" element={<SlateDocs />} />
           <Route path="/" element={<Navigate to="/dashboard" />} />
         </Routes>
       </BrowserRouter>
