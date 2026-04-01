@@ -1,9 +1,15 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import axios from 'axios';
-import { AnimatePresence, motion } from 'framer-motion';
 import { toast } from 'sonner';
-import { API, getAuthHeader, getCurrentUser } from '../App';
+import { useAuth } from '../contexts/AuthContext';
+import { api } from '../lib/api';
+import { 
+  CATEGORIES, 
+  CATEGORY_ICONS, 
+  getCurrencySymbol, 
+  getIconForDescription 
+} from '../lib/constants';
+import { calculateSplitDetails } from '../utils/calculateShare';
 import { isEdgeAIReady, smartSplitEdge, scanReceiptEdge } from '../utils/edgeAI';
 import {
   Airplane,
@@ -30,57 +36,6 @@ import {
 } from '@/slate/icons';
 import { Header, AppButton, AppInput, AppSelect, AppShell, AppSurface, PageContent, Callout } from '@/slate';
 
-/* ─── Constants ─── */
-
-const CATEGORIES = [
-  'Food & Dining', 'Transportation', 'Entertainment', 'Shopping',
-  'Groceries', 'Utilities', 'Healthcare', 'Travel', 'Other',
-];
-
-const CATEGORY_ICONS = {
-  'Food & Dining': ForkKnife,
-  'Transportation': Car,
-  'Entertainment': Ticket,
-  'Shopping': ShoppingBag,
-  'Groceries': ShoppingCart,
-  'Utilities': Lightbulb,
-  'Healthcare': Stethoscope,
-  'Travel': Airplane,
-  'Other': DotsThreeCircle,
-};
-
-const DESCRIPTION_ICON_MAP = [
-  { keywords: ['food', 'pizza', 'burger', 'dinner', 'lunch', 'breakfast', 'restaurant', 'cafe', 'coffee', 'tea', 'biryani', 'chicken', 'noodles'], icon: ForkKnife, category: 'Food & Dining' },
-  { keywords: ['uber', 'cab', 'taxi', 'ola', 'gas', 'fuel', 'parking', 'car', 'petrol', 'diesel', 'metro', 'bus'], icon: Car, category: 'Transportation' },
-  { keywords: ['movie', 'netflix', 'concert', 'show', 'game', 'spotify', 'hotstar', 'prime'], icon: Ticket, category: 'Entertainment' },
-  { keywords: ['grocery', 'supermarket', 'vegetables', 'fruits', 'bigbasket', 'blinkit', 'zepto', 'dmart'], icon: ShoppingCart, category: 'Groceries' },
-  { keywords: ['shop', 'amazon', 'flipkart', 'clothes', 'shoes', 'myntra', 'mall'], icon: ShoppingBag, category: 'Shopping' },
-  { keywords: ['electricity', 'water', 'internet', 'phone', 'wifi', 'bill', 'broadband', 'bescom'], icon: Lightbulb, category: 'Utilities' },
-  { keywords: ['doctor', 'hospital', 'medicine', 'pharmacy', 'medical', 'clinic'], icon: Stethoscope, category: 'Healthcare' },
-  { keywords: ['flight', 'hotel', 'trip', 'travel', 'vacation', 'airbnb', 'booking', 'train', 'indigo'], icon: Airplane, category: 'Travel' },
-];
-
-const CURRENCY_SYMBOLS = {
-  INR: '₹',
-  USD: '$',
-  EUR: '€',
-  GBP: '£',
-  JPY: '¥',
-};
-
-function getCurrencySymbol(code) {
-  return CURRENCY_SYMBOLS[code] || code;
-}
-
-function getIconForDescription(description) {
-  const lower = (description || '').toLowerCase();
-  for (const entry of DESCRIPTION_ICON_MAP) {
-    if (entry.keywords.some((kw) => lower.includes(kw))) {
-      return { icon: entry.icon, category: entry.category };
-    }
-  }
-  return { icon: Receipt, category: 'Other' };
-}
 
 /* ─── Sub-components ─── */
 
@@ -541,10 +496,10 @@ function CameraCapture({ open, onClose, onCapture }) {
 
 /* ─── Main Component ─── */
 
-function NewExpenseRedesign({ onLogout }) {
+function NewExpenseRedesign() {
   const navigate = useNavigate();
   const location = useLocation();
-  const currentUser = getCurrentUser();
+  const { user: currentUser } = useAuth();
 
   // Core form state
   const [groups, setGroups] = useState([]);
@@ -583,17 +538,17 @@ function NewExpenseRedesign({ onLogout }) {
 
   const loadGroups = async () => {
     try {
-      const res = await axios.get(`${API}/groups`, { headers: getAuthHeader() });
-      setGroups(res.data);
+      const groupsData = await api.get('/groups');
+      setGroups(groupsData);
 
       // Pre-select group if passed via location state or query
       const preselectedGroupId = location.state?.groupId;
-      if (preselectedGroupId && res.data.some((g) => g.id === preselectedGroupId)) {
+      if (preselectedGroupId && groupsData.some((g) => g.id === preselectedGroupId)) {
         setSelectedGroup(preselectedGroupId);
-        initSplitForGroup(res.data.find((g) => g.id === preselectedGroupId));
-      } else if (res.data.length > 0) {
-        setSelectedGroup(res.data[0].id);
-        initSplitForGroup(res.data[0]);
+        initSplitForGroup(groupsData.find((g) => g.id === preselectedGroupId));
+      } else if (groupsData.length > 0) {
+        setSelectedGroup(groupsData[0].id);
+        initSplitForGroup(groupsData[0]);
       }
     } catch {
       toast.error('Failed to load groups');
@@ -659,12 +614,7 @@ function NewExpenseRedesign({ onLogout }) {
       if (await isEdgeAIReady()) {
         data = await scanReceiptEdge(file);
       } else {
-        const res = await axios.post(
-          `${API}/ocr/scan`,
-          { image_base64: base64, mime_type: file.type || 'image/jpeg' },
-          { headers: getAuthHeader() }
-        );
-        data = res.data;
+        data = await api.post('/ocr/scan', { image_base64: base64, mime_type: file.type || 'image/jpeg' });
       }
 
       setDescription(data.merchant || '');
@@ -672,8 +622,8 @@ function NewExpenseRedesign({ onLogout }) {
       setTotalAmount(String(data.total_amount || ''));
       toast.success('Receipt scanned successfully!');
     } catch (error) {
-      const errorMsg = error.response?.data?.detail || error.message || 'Scan failed';
-      if (error.response?.status === 402) {
+      const errorMsg = error.message || 'Scan failed';
+      if (error.status === 402) {
         toast.error(errorMsg, { duration: 6000 });
       } else {
         toast.error(errorMsg);
@@ -698,50 +648,6 @@ function NewExpenseRedesign({ onLogout }) {
     processReceipt(dataUrl, file);
   };
 
-  // ─── Calculate split details for submission ───
-  const calculateSplitDetails = () => {
-    if (!currentGroup) return [];
-    const total = parseFloat(totalAmount) || 0;
-
-    if (splitMode === 'equally') {
-      const selectedMembers = splitBetween.map((s) => s.user_id);
-      const perPerson = selectedMembers.length > 0 ? total / selectedMembers.length : 0;
-      return currentGroup.members
-        .filter((m) => selectedMembers.includes(m.id))
-        .map((m) => ({
-          user_id: m.id,
-          user_name: m.name,
-          amount: parseFloat(perPerson.toFixed(2)),
-        }));
-    }
-
-    if (splitMode === 'unequally') {
-      return splitBetween.map((s) => {
-        const member = currentGroup.members.find((m) => m.id === s.user_id);
-        return {
-          user_id: s.user_id,
-          user_name: member?.name || '',
-          amount: parseFloat(s.amount) || 0,
-        };
-      });
-    }
-
-    if (splitMode === 'byshares') {
-      const totalShares = splitBetween.reduce((sum, s) => sum + (parseInt(s.shares) || 1), 0);
-      return splitBetween.map((s) => {
-        const member = currentGroup.members.find((m) => m.id === s.user_id);
-        const shareAmount = totalShares > 0 ? ((parseInt(s.shares) || 1) / totalShares) * total : 0;
-        return {
-          user_id: s.user_id,
-          user_name: member?.name || '',
-          amount: parseFloat(shareAmount.toFixed(2)),
-        };
-      });
-    }
-
-    return [];
-  };
-
   // ─── Submit ───
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -760,7 +666,12 @@ function NewExpenseRedesign({ onLogout }) {
 
     setLoading(true);
     try {
-      const splitDetails = calculateSplitDetails();
+      const splitDetails = calculateSplitDetails({
+        totalAmount,
+        splitMode,
+        members: currentGroup?.members || [],
+        splitBetween,
+      });
       const splitTypeMap = { equally: 'equal', unequally: 'custom', byshares: 'custom' };
 
       const expenseData = {
@@ -776,7 +687,7 @@ function NewExpenseRedesign({ onLogout }) {
         notes,
       };
 
-      await axios.post(`${API}/expenses`, expenseData, { headers: getAuthHeader() });
+      await api.post('/expenses', expenseData);
       toast.success('Expense created!');
       navigate('/dashboard');
     } catch {
@@ -790,7 +701,7 @@ function NewExpenseRedesign({ onLogout }) {
 
   return (
     <AppShell>
-      <Header onLogout={onLogout} />
+      <Header />
 
       <PageContent>
         <motion.div

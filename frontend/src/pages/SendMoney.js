@@ -1,12 +1,9 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { toast } from 'sonner';
-import { API, getAuthHeader } from '../App';
+import { useAuth } from '../contexts/AuthContext';
+import { api } from '../lib/api';
 import { PaperPlaneTilt } from '@/slate/icons';
 import { Header, AppButton, AppInput, AppShell, AppSurface, AppTextarea, Field, PageBackButton, PageContent, PageHero } from '@/slate';
 
-function SendMoney({ onLogout }) {
+function SendMoney() {
   const [upiId, setUpiId] = useState('');
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
@@ -23,22 +20,17 @@ function SendMoney({ onLogout }) {
 
     setLoading(true);
     try {
-      await axios.post(
-        `${API}/upi/send-money`,
-        {
-          to_upi_id: upiId,
-          amount: parseFloat(amount),
-          transaction_type: 'payment',
-          note
-        },
-        { headers: getAuthHeader() }
-      );
+      await api.post('/upi/send-money', {
+        to_upi_id: upiId,
+        amount: parseFloat(amount),
+        transaction_type: 'payment',
+        note
+      });
 
       toast.success(`Rs ${amount} sent successfully!`);
       navigate('/upi');
     } catch (error) {
-      const errorMsg = error.response?.data?.detail || 'Transaction failed';
-      toast.error(errorMsg);
+      toast.error(error.message || 'Transaction failed');
     } finally {
       setLoading(false);
     }
@@ -46,7 +38,7 @@ function SendMoney({ onLogout }) {
 
   return (
     <AppShell>
-      <Header onLogout={onLogout} />
+      <Header />
 
       <PageContent className="max-w-2xl">
         <PageBackButton onClick={() => navigate('/upi')}>Back</PageBackButton>

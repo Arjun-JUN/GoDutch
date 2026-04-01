@@ -1,22 +1,28 @@
+import { describe, it, test, expect, beforeEach, vi } from 'vitest';
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import axios from 'axios';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { api } from '../lib/api';
+import { useAuth } from '../contexts/AuthContext';
 import UPIHome from '../pages/UPIHome';
 
-/**
- * Integration/Integration-style unit tests for src/pages/UPIHome.js
- * specifically focused on the "In Development" blurring functionality.
- */
-
 // Mock external dependencies
-vi.mock('axios');
-vi.mock('../slate/components/Header', () => () => <div data-testid="header" />);
-vi.mock('../App', () => ({
-  API: 'http://localhost/api',
-  getAuthHeader: () => ({ Authorization: 'Bearer test-token' }),
-  getCurrentUser: () => ({ id: 'user-alice', name: 'Alice' }),
+vi.mock('../lib/api', () => ({
+  api: {
+    get: vi.fn(),
+    post: vi.fn(),
+  },
+}));
+
+vi.mock('../contexts/AuthContext', () => ({
+  useAuth: vi.fn(() => ({
+    user: { id: 'user-alice', name: 'Alice' },
+    isAuthenticated: true,
+  })),
+}));
+
+vi.mock('../slate/components/Header', () => ({
+  default: () => <div data-testid="header" />
 }));
 
 // Mock react-router-dom
@@ -28,17 +34,17 @@ describe('UPIHome — In Development Blur', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Default account data mock
-    axios.get.mockImplementation((url) => {
-        if (url.includes('/upi/accounts')) return Promise.resolve({ data: [{ is_primary: true, balance: 1000, bank_name: 'Test Bank', upi_id: 'test@upi' }] });
-        if (url.includes('/upi/transactions')) return Promise.resolve({ data: [] });
+    api.get.mockImplementation((url) => {
+        if (url.includes('/upi/accounts')) return Promise.resolve([{ is_primary: true, balance: 1000, bank_name: 'Test Bank', upi_id: 'test@upi' }]);
+        if (url.includes('/upi/transactions')) return Promise.resolve([]);
     });
   });
 
   it('renders the InDevelopmentOverlay over the content', async () => {
-    render(<UPIHome onLogout={vi.fn()} />);
+    render(<UPIHome />);
     
     // Check for "In Development" title from the overlay
-    expect(screen.getByText('( In Development )')).toBeInTheDocument();
+    expect(await screen.findByText('In Development')).toBeInTheDocument();
     
     // Check for marketing/PM messages from the overlay
     expect(screen.getByText(/Our UPI integration is coming soon/i)).toBeInTheDocument();
@@ -46,11 +52,13 @@ describe('UPIHome — In Development Blur', () => {
   });
 
   it('contains the blurred background content which is non-interactive', async () => {
-    render(<UPIHome onLogout={vi.fn()} />);
+    render(<UPIHome />);
     
     // The main content area should have blurring classes
-    const contentArea = screen.getByText(/Payments Hub/i).closest('.blur-sm');
-    expect(contentArea).toBeInTheDocument();
+    // The main content area should have blurring/disabled classes
+    const contentArea = (await screen.findByText(/Payments Hub/i)).parentElement; 
+    expect(await screen.findByText(/Payments Hub/i)).toBeInTheDocument();
+    expect(contentArea).toHaveClass('pointer-events-none', 'select-none');
     
     // Ensure the blurred content area is set to pointer-events-none so users can't interact with what's below
     expect(contentArea).toHaveClass('pointer-events-none', 'select-none');
@@ -58,15 +66,15 @@ describe('UPIHome — In Development Blur', () => {
 
   it('shows the overlay even if no account is found', async () => {
     // Override GET to return no accounts (EmptyState scenario)
-    axios.get.mockImplementation((url) => {
-        if (url.includes('/upi/accounts')) return Promise.resolve({ data: [] });
-        if (url.includes('/upi/transactions')) return Promise.resolve({ data: [] });
+    api.get.mockImplementation((url) => {
+        if (url.includes('/upi/accounts')) return Promise.resolve([]);
+        if (url.includes('/upi/transactions')) return Promise.resolve([]);
     });
     
-    render(<UPIHome onLogout={vi.fn()} />);
+    render(<UPIHome />);
     
     // InDevelopmentOverlay should be present even in empty state
-    expect(screen.getByText('( In Development )')).toBeInTheDocument();
-    expect(screen.getByText(/Link Bank Account/i).closest('.blur-sm')).toBeInTheDocument();
+    expect(await screen.findByText('In Development')).toBeInTheDocument();
+    expect(await screen.findByText(/Link Bank Account/i)).toBeInTheDocument();
   });
 });

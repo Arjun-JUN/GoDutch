@@ -9,34 +9,47 @@
  *  - Back button uses location.state.from (defaults to /dashboard)
  *  - Delete button visible only for creator; confirmation modal; DELETE API call
  */
+import { describe, it, test, expect, beforeEach, vi } from 'vitest';
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import axios from 'axios';
+import { api } from '../lib/api';
+import { useAuth } from '../contexts/AuthContext';
+import ExpenseDetail from '../pages/ExpenseDetail';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
-jest.mock('axios');
-jest.mock('sonner', () => ({ toast: { error: jest.fn(), success: jest.fn() } }));
+vi.mock('../lib/api', () => ({
+  api: {
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn(),
+  },
+}));
 
-const mockNavigate = jest.fn();
+vi.mock('../contexts/AuthContext', () => ({
+  useAuth: vi.fn(() => ({
+    user: { id: 'user-alice', name: 'Alice' },
+    isAuthenticated: true,
+  })),
+}));
+
+vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
+
+const mockNavigate = vi.fn();
 let mockLocationState = null;
 
-// Full manual mock — avoids jest.requireActual which fails with react-router-dom v7 ESM
-jest.mock('react-router-dom', () => ({
+// Full manual mock — avoids vi.requireActual which fails with react-router-dom v7 ESM
+vi.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
   useParams: () => ({ expenseId: 'exp-1' }),
   useLocation: () => ({ state: mockLocationState }),
 }));
 
 // Stub Header to remove auth/nav dependencies
-jest.mock('../slate/components/Header', () => () => <div data-testid="header" />);
-
-// Default: Alice is logged in (creator)
-jest.mock('../App', () => ({
-  API: 'http://localhost/api',
-  getAuthHeader: () => ({ Authorization: 'Bearer test-token' }),
-  getCurrentUser: () => ({ id: 'user-alice', name: 'Alice' }),
+vi.mock('../slate/components/Header', () => ({
+  default: () => <div data-testid="header" />
 }));
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -76,18 +89,17 @@ const GROUPS = [
 
 // ── Helper ────────────────────────────────────────────────────────────────────
 
-function setupAxios(expenseOverride = {}) {
-  axios.get.mockImplementation((url) => {
+function setupMocks(expenseOverride = {}) {
+  api.get.mockImplementation((url) => {
     if (url.includes('/expenses/exp-1'))
-      return Promise.resolve({ data: { ...EXPENSE, ...expenseOverride } });
+      return Promise.resolve({ ...EXPENSE, ...expenseOverride });
     if (url.includes('/groups'))
-      return Promise.resolve({ data: GROUPS });
+      return Promise.resolve(GROUPS);
     return Promise.reject(new Error(`Unexpected GET: ${url}`));
   });
 }
 
 function renderPage() {
-  const ExpenseDetail = require('../pages/ExpenseDetail').default;
   render(<ExpenseDetail />);
 }
 
@@ -95,9 +107,9 @@ function renderPage() {
 
 describe('ExpenseDetail — view mode', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockLocationState = null;
-    setupAxios();
+    setupMocks();
     renderPage();
   });
 
@@ -165,8 +177,8 @@ describe('ExpenseDetail — view mode', () => {
 
 describe('ExpenseDetail — back navigation', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    setupAxios();
+    vi.clearAllMocks();
+    setupMocks();
   });
 
   test('back button navigates to /dashboard when no location state', async () => {
@@ -190,9 +202,9 @@ describe('ExpenseDetail — back navigation', () => {
 
 describe('ExpenseDetail — no receipt image', () => {
   test('does not render receipt section when receipt_image is null', async () => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockLocationState = null;
-    setupAxios({ receipt_image: null });
+    setupMocks({ receipt_image: null });
     renderPage();
     await waitFor(() => screen.getByRole('heading', { name: /Test Restaurant/i }));
     expect(screen.queryByTestId('receipt-image')).not.toBeInTheDocument();
@@ -203,9 +215,9 @@ describe('ExpenseDetail — no receipt image', () => {
 
 describe('ExpenseDetail — edit mode', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockLocationState = null;
-    setupAxios();
+    setupMocks();
     renderPage();
   });
 
@@ -229,7 +241,7 @@ describe('ExpenseDetail — edit mode', () => {
 
   test('saving calls PUT and closes form', async () => {
     const updated = { ...EXPENSE, merchant: 'New Bistro' };
-    axios.put.mockResolvedValue({ data: updated });
+    api.put.mockResolvedValue(updated);
 
     await waitFor(() => screen.getByTestId('edit-expense-btn'));
     fireEvent.click(screen.getByTestId('edit-expense-btn'));
@@ -240,10 +252,9 @@ describe('ExpenseDetail — edit mode', () => {
     fireEvent.click(screen.getByTestId('save-expense-btn'));
 
     await waitFor(() =>
-      expect(axios.put).toHaveBeenCalledWith(
+      expect(api.put).toHaveBeenCalledWith(
         expect.stringContaining('/expenses/exp-1'),
-        expect.objectContaining({ merchant: 'New Bistro' }),
-        expect.any(Object)
+        expect.objectContaining({ merchant: 'New Bistro' })
       )
     );
     await waitFor(() =>
@@ -279,7 +290,7 @@ describe('ExpenseDetail — edit mode', () => {
 
   test('saving includes updated items and split details in payload', async () => {
     const updated = { ...EXPENSE, items: [{ name: 'Pizza', price: 100, category: 'Food', assigned_to: [] }] };
-    axios.put.mockResolvedValue({ data: updated });
+    api.put.mockResolvedValue(updated);
 
     await waitFor(() => screen.getByTestId('edit-expense-btn'));
     fireEvent.click(screen.getByTestId('edit-expense-btn'));
@@ -296,7 +307,7 @@ describe('ExpenseDetail — edit mode', () => {
     fireEvent.click(screen.getByTestId('save-expense-btn'));
 
     await waitFor(() =>
-      expect(axios.put).toHaveBeenCalledWith(
+      expect(api.put).toHaveBeenCalledWith(
         expect.stringContaining('/expenses/exp-1'),
         expect.objectContaining({
           items: expect.arrayContaining([
@@ -307,8 +318,7 @@ describe('ExpenseDetail — edit mode', () => {
             expect.objectContaining({ user_id: 'user-alice', amount: 50 }),
             expect.objectContaining({ user_id: 'user-bob', amount: 50 }),
           ])
-        }),
-        expect.any(Object)
+        })
       )
     );
   });
@@ -318,9 +328,9 @@ describe('ExpenseDetail — edit mode', () => {
 
 describe('ExpenseDetail — delete', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockLocationState = null;
-    setupAxios();
+    setupMocks();
     renderPage();
   });
 
@@ -335,21 +345,22 @@ describe('ExpenseDetail — delete', () => {
     await waitFor(() => screen.getByTestId('delete-expense-btn'));
     fireEvent.click(screen.getByTestId('delete-expense-btn'));
     fireEvent.click(screen.getByTestId('cancel-delete-btn'));
-    expect(screen.queryByTestId('confirm-delete-btn')).not.toBeInTheDocument();
-    expect(axios.delete).not.toHaveBeenCalled();
+    await waitFor(() => {
+      expect(screen.queryByTestId('confirm-delete-btn')).not.toBeInTheDocument();
+    });
+    expect(api.delete).not.toHaveBeenCalled();
   });
 
   test('confirming delete calls DELETE and navigates back', async () => {
-    axios.delete.mockResolvedValue({});
+    api.delete.mockResolvedValue({});
 
     await waitFor(() => screen.getByTestId('delete-expense-btn'));
     fireEvent.click(screen.getByTestId('delete-expense-btn'));
     fireEvent.click(screen.getByTestId('confirm-delete-btn'));
 
     await waitFor(() =>
-      expect(axios.delete).toHaveBeenCalledWith(
-        expect.stringContaining('/expenses/exp-1'),
-        expect.any(Object)
+      expect(api.delete).toHaveBeenCalledWith(
+        expect.stringContaining('/expenses/exp-1')
       )
     );
     await waitFor(() =>
@@ -361,11 +372,11 @@ describe('ExpenseDetail — delete', () => {
 
 describe('ExpenseDetail — delete from group page', () => {
   test('delete navigates to group path when location.state.from is a group', async () => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockLocationState = { from: '/groups/grp-1', fromLabel: 'Friends' };
-    setupAxios();
+    setupMocks();
     renderPage();
-    axios.delete.mockResolvedValue({});
+    api.delete.mockResolvedValue({});
 
     await waitFor(() => screen.getByTestId('delete-expense-btn'));
     fireEvent.click(screen.getByTestId('delete-expense-btn'));
@@ -385,11 +396,11 @@ describe("ExpenseDetail — non-creator group member (Alice views Bob's expense)
   const BOB_EXPENSE = { ...EXPENSE, created_by: 'user-bob' };
 
   test('shows Edit and Delete buttons when current user is a group member (even if not creator)', async () => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockLocationState = null;
-    axios.get.mockImplementation((url) => {
-      if (url.includes('/expenses/exp-1')) return Promise.resolve({ data: BOB_EXPENSE });
-      if (url.includes('/groups')) return Promise.resolve({ data: GROUPS });
+    api.get.mockImplementation((url) => {
+      if (url.includes('/expenses/exp-1')) return Promise.resolve(BOB_EXPENSE);
+      if (url.includes('/groups')) return Promise.resolve(GROUPS);
     });
     renderPage();
 

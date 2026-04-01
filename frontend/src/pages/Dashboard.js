@@ -1,38 +1,33 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { toast } from 'sonner';
-import { API, getAuthHeader, getCurrentUser } from '../App';
+import { useAuth } from '../contexts/AuthContext';
+import { api } from '../lib/api';
 import { ArrowsLeftRight, ChartLineUp, Plus, Receipt } from '@/slate/icons';
 import { Header, AppButton, AppShell, AppSurface, EmptyState, ExpenseCard, IconBadge, MemberBadge, PageContent, PageHero, StatCard } from '@/slate';
 
-function Dashboard({ onLogout }) {
+function Dashboard() {
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [youreOwed, setYoureOwed] = useState(0);
   const [youOwe, setYouOwe] = useState(0);
   const navigate = useNavigate();
-  const user = getCurrentUser();
+  const { user } = useAuth();
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const groupsRes = await axios.get(`${API}/groups`, {
-          headers: getAuthHeader(),
-        });
+        const groups = await api.get('/groups');
 
-        if (groupsRes.data.length > 0) {
+        if (groups.length > 0) {
           const allExpenses = [];
           let totalOwed = 0;
           let totalOwe = 0;
 
-          for (const group of groupsRes.data) {
-            const [expensesRes, settlementsRes] = await Promise.all([
-              axios.get(`${API}/groups/${group.id}/expenses`, { headers: getAuthHeader() }),
-              axios.get(`${API}/groups/${group.id}/settlements`, { headers: getAuthHeader() }),
+          for (const group of groups) {
+            const [expensesData, settlementsData] = await Promise.all([
+              api.get(`/groups/${group.id}/expenses`),
+              api.get(`/groups/${group.id}/settlements`),
             ]);
-            allExpenses.push(...expensesRes.data);
-            for (const s of settlementsRes.data) {
+            allExpenses.push(...expensesData);
+            for (const s of settlementsData) {
               if (s.to_user_id === user?.id) totalOwed += s.amount;
               if (s.from_user_id === user?.id) totalOwe += s.amount;
             }
@@ -56,7 +51,7 @@ function Dashboard({ onLogout }) {
 
   return (
     <AppShell>
-      <Header onLogout={onLogout} />
+      <Header />
 
       <PageContent>
         <section className="mb-8 grid grid-cols-1 gap-5 lg:grid-cols-12 lg:gap-6">

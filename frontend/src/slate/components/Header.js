@@ -1,13 +1,10 @@
-import { useLocation, useNavigate } from 'react-router-dom';
-import { ArrowsLeftRight, CurrencyInr, House, Plus, Receipt, SignOut, Users } from '@/slate/icons';
-import { motion, useReducedMotion } from 'framer-motion';
-import { AppButton } from './AppButton';
-import { IconBadge } from './AppSurface';
+import { AuthProvider, useAuth } from '../../contexts/AuthContext';
 
-function Header({ onLogout }) {
+function Header() {
   const navigate = useNavigate();
   const location = useLocation();
   const prefersReducedMotion = useReducedMotion();
+  const { logout } = useAuth();
 
   const navItems = [
     { key: 'dashboard', label: 'Home', path: '/dashboard', icon: House },
@@ -18,7 +15,7 @@ function Header({ onLogout }) {
   ];
   const actionItems = [
     ...navItems,
-    { key: 'logout', label: 'Logout', icon: SignOut, onClick: onLogout },
+    { key: 'logout', label: 'Logout', icon: SignOut, onClick: logout },
   ];
 
   const isActive = (item) => {

@@ -1,12 +1,9 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { toast } from 'sonner';
-import { API, getAuthHeader } from '../App';
+import { useAuth } from '../contexts/AuthContext';
+import { api } from '../lib/api';
 import { ChartBar, TrendUp, Users } from '@/slate/icons';
 import { Header, AppShell, AppSurface, Callout, EmptyState, IconBadge, PageBackButton, PageContent, PageHero, StatCard } from '@/slate';
 
-function ReportsPage({ onLogout }) {
+function ReportsPage() {
   const { groupId } = useParams();
   const navigate = useNavigate();
   const [reports, setReports] = useState(null);
@@ -16,14 +13,14 @@ function ReportsPage({ onLogout }) {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [groupsRes, reportsRes] = await Promise.all([
-          axios.get(`${API}/groups`, { headers: getAuthHeader() }),
-          axios.get(`${API}/groups/${groupId}/reports`, { headers: getAuthHeader() })
+        const [groups, reportsData] = await Promise.all([
+          api.get('/groups'),
+          api.get(`/groups/${groupId}/reports`)
         ]);
 
-        const foundGroup = groupsRes.data.find(g => g.id === groupId);
+        const foundGroup = groups.find(g => g.id === groupId);
         setGroup(foundGroup);
-        setReports(reportsRes.data);
+        setReports(reportsData);
       } catch (error) {
         toast.error('Failed to load reports');
       } finally {
@@ -38,7 +35,7 @@ function ReportsPage({ onLogout }) {
 
   return (
     <AppShell>
-      <Header onLogout={onLogout} />
+      <Header />
 
       <PageContent>
         <PageBackButton

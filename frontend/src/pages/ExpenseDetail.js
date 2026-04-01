@@ -1,8 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import axios from 'axios';
 import { toast } from 'sonner';
-import { API, getAuthHeader, getCurrentUser } from '../App';
+import { useAuth } from '../contexts/AuthContext';
+import { api } from '../lib/api';
+import { CATEGORIES, CATEGORY_ICONS } from '../lib/constants';
+import { calculateSplitDetails } from '../utils/calculateShare';
 import {
   Airplane,
   CalendarBlank,
@@ -41,35 +43,11 @@ import {
   PageHero,
 } from '@/slate';
 
-const CATEGORIES = [
-  'Food & Dining',
-  'Transportation',
-  'Entertainment',
-  'Shopping',
-  'Groceries',
-  'Utilities',
-  'Healthcare',
-  'Travel',
-  'Other',
-];
-
-const CATEGORY_ICONS = {
-  'Food & Dining': ForkKnife,
-  'Transportation': Car,
-  'Entertainment': Ticket,
-  'Shopping': ShoppingBag,
-  'Groceries': ShoppingCart,
-  'Utilities': Lightbulb,
-  'Healthcare': Stethoscope,
-  'Travel': Airplane,
-  'Other': DotsThreeCircle,
-};
-
-function ExpenseDetail({ onLogout }) {
+function ExpenseDetail() {
   const { expenseId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const currentUser = getCurrentUser();
+  const { user: currentUser } = useAuth();
 
   // Determine where to go back — passed via navigation state from caller
   const fromPath = location.state?.from || '/dashboard';
@@ -94,13 +72,12 @@ function ExpenseDetail({ onLogout }) {
 
   const loadExpense = useCallback(async () => {
     try {
-      const [expenseRes, groupsRes] = await Promise.all([
-        axios.get(`${API}/expenses/${expenseId}`, { headers: getAuthHeader() }),
-        axios.get(`${API}/groups`, { headers: getAuthHeader() }),
+      const [exp, groups] = await Promise.all([
+        api.get(`/expenses/${expenseId}`),
+        api.get('/groups'),
       ]);
-      const exp = expenseRes.data;
       setExpense(exp);
-      const grp = groupsRes.data.find((g) => g.id === exp.group_id);
+      const grp = groups.find((g) => g.id === exp.group_id);
       setGroup(grp || null);
     } catch (error) {
       toast.error('Failed to load expense');
@@ -150,41 +127,7 @@ function ExpenseDetail({ onLogout }) {
     setItems(updated);
   };
 
-  const calculateSplit = () => {
-    if (!group) return [];
-    const members = group.members;
 
-    if (splitType === 'item-based') {
-      const memberTotals = {};
-      members.forEach((m) => (memberTotals[m.id] = 0));
-      items.forEach((item) => {
-        const price = parseFloat(item.price) || 0;
-        const qty = parseInt(item.quantity) || 1;
-        const subtotal = price * qty;
-        const assignedTo = item.assigned_to || [];
-        if (assignedTo.length > 0) {
-          const perPerson = subtotal / assignedTo.length;
-          assignedTo.forEach((mid) => (memberTotals[mid] += perPerson));
-        } else {
-          const perPerson = subtotal / members.length;
-          members.forEach((m) => (memberTotals[m.id] += perPerson));
-        }
-      });
-      return members.map((m) => ({
-        user_id: m.id,
-        user_name: m.name,
-        amount: parseFloat(memberTotals[m.id].toFixed(2)),
-      }));
-    }
-
-    const total = parseFloat(totalAmount) || 0;
-    const perPerson = members.length > 0 ? total / members.length : 0;
-    return members.map((m) => ({
-      user_id: m.id,
-      user_name: m.name,
-      amount: parseFloat(perPerson.toFixed(2)),
-    }));
-  };
 
   const cancelEditing = () => {
     setEditing(false);
@@ -205,16 +148,19 @@ function ExpenseDetail({ onLogout }) {
           ...i,
           price: parseFloat(i.price),
         })),
-        split_details: calculateSplit(),
+        split_details: calculateSplitDetails({
+          totalAmount,
+          splitMode: splitType,
+          members: group?.members || [],
+          items,
+        }),
       };
-      const res = await axios.put(`${API}/expenses/${expenseId}`, payload, {
-        headers: getAuthHeader(),
-      });
-      setExpense(res.data);
+      const data = await api.put(`/expenses/${expenseId}`, payload);
+      setExpense(data);
       setEditing(false);
       toast.success('Expense updated');
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to update expense');
+      toast.error(error.message || 'Failed to update expense');
     } finally {
       setSaving(false);
     }
@@ -223,13 +169,11 @@ function ExpenseDetail({ onLogout }) {
   const handleDelete = async () => {
     setDeleting(true);
     try {
-      await axios.delete(`${API}/expenses/${expenseId}`, {
-        headers: getAuthHeader(),
-      });
+      await api.delete(`/expenses/${expenseId}`);
       toast.success('Expense deleted');
       navigate(fromPath);
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to delete expense');
+      toast.error(error.message || 'Failed to delete expense');
       setDeleting(false);
       setShowDeleteConfirm(false);
     }
@@ -244,7 +188,7 @@ function ExpenseDetail({ onLogout }) {
   if (loading) {
     return (
       <AppShell>
-        <Header onLogout={onLogout} />
+        <Header />
         <PageContent>
           <p className="text-[var(--app-muted)]">Loading...</p>
         </PageContent>
@@ -256,7 +200,7 @@ function ExpenseDetail({ onLogout }) {
 
   return (
     <AppShell>
-      <Header onLogout={onLogout} />
+      <Header />
 
       <PageContent>
         <PageBackButton onClick={() => navigate(fromPath)}>

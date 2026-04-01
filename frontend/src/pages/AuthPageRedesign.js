@@ -1,35 +1,31 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { toast } from 'sonner';
-import { API } from '../App';
+import { useAuth } from '../contexts/AuthContext';
+import { api } from '../lib/api';
 import { ArrowLeft, Fingerprint, Lock, User } from '@/slate/icons';
 
-function AuthPageRedesign({ onAuthSuccess }) {
+function AuthPageRedesign() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login, register } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const endpoint = isLogin ? '/auth/login' : '/auth/register';
-      const payload = isLogin ? { email, password } : { email, password, name };
-      const response = await axios.post(`${API}${endpoint}`, payload);
-
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+      if (isLogin) {
+        await login(email, password);
+      } else {
+        await register(name, email, password);
+      }
 
       toast.success(isLogin ? 'Welcome back!' : 'Account created!');
-      onAuthSuccess();
       navigate('/dashboard');
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Authentication failed');
+      toast.error(error.message || 'Authentication failed');
     } finally {
       setLoading(false);
     }
@@ -177,7 +173,7 @@ function AuthPageRedesign({ onAuthSuccess }) {
                     type="button"
                     onClick={async () => {
                       try {
-                        await axios.post(`${API}/dev/reset`);
+                        await api.post('/dev/reset');
                         toast.success('Database reset and re-seeded!');
                       } catch (e) {
                         toast.error('Reset failed');

@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { toast } from 'sonner';
-import { API, getAuthHeader } from '../App';
+import { useAuth } from '../contexts/AuthContext';
+import { api } from '../lib/api';
+import { CATEGORY_ICONS } from '../lib/constants';
 import {
   Airplane,
   ArrowsLeftRight,
@@ -25,19 +26,7 @@ import {
 } from '@/slate/icons';
 import { Header, AppShell, AppSurface, ExpenseCard, MemberBadge, PageBackButton, PageContent, StatCard } from '@/slate';
 
-const CATEGORY_ICONS = {
-  'Food & Dining': ForkKnife,
-  'Transportation': Car,
-  'Entertainment': Ticket,
-  'Shopping': ShoppingBag,
-  'Groceries': ShoppingCart,
-  'Utilities': Lightbulb,
-  'Healthcare': Stethoscope,
-  'Travel': Airplane,
-  'Other': DotsThreeCircle,
-};
-
-function GroupDetail({ onLogout }) {
+function GroupDetail() {
   const { groupId } = useParams();
   const navigate = useNavigate();
   const [group, setGroup] = useState(null);
@@ -47,10 +36,8 @@ function GroupDetail({ onLogout }) {
 
   const loadGroupData = useCallback(async () => {
     try {
-      const groupsRes = await axios.get(`${API}/groups`, {
-        headers: getAuthHeader(),
-      });
-      const foundGroup = groupsRes.data.find((g) => g.id === groupId);
+      const groups = await api.get('/groups');
+      const foundGroup = groups.find((g) => g.id === groupId);
 
       if (!foundGroup) {
         toast.error('Group not found');
@@ -60,17 +47,13 @@ function GroupDetail({ onLogout }) {
 
       setGroup(foundGroup);
 
-      const [expensesRes, settlementsRes] = await Promise.all([
-        axios.get(`${API}/groups/${groupId}/expenses`, {
-          headers: getAuthHeader(),
-        }),
-        axios.get(`${API}/groups/${groupId}/settlements`, {
-          headers: getAuthHeader(),
-        }),
+      const [expensesData, settlementsData] = await Promise.all([
+        api.get(`/groups/${groupId}/expenses`),
+        api.get(`/groups/${groupId}/settlements`),
       ]);
 
-      setExpenses(expensesRes.data);
-      setSettlements(settlementsRes.data);
+      setExpenses(expensesData);
+      setSettlements(settlementsData);
     } catch (error) {
       toast.error('Failed to load group data');
     } finally {
@@ -85,7 +68,7 @@ function GroupDetail({ onLogout }) {
   if (loading) {
     return (
       <AppShell>
-        <Header onLogout={onLogout} />
+        <Header />
         <PageContent className="text-center">
           <p>Loading...</p>
         </PageContent>

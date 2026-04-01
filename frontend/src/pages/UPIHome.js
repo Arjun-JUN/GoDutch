@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { API, getAuthHeader, getCurrentUser } from '../App';
+import { toast } from 'sonner';
+import { useAuth } from '../contexts/AuthContext';
+import { api } from '../lib/api';
 import {
   PaperPlaneTilt,
   Money,
@@ -14,31 +15,29 @@ import {
 } from '@/slate/icons';
 import { Header, InDevelopmentOverlay, AppButton, AppShell, AppSurface, Callout, EmptyState, IconBadge, PageContent, PageHero } from '@/slate';
 
-function UPIHome({ onLogout }) {
+function UPIHome() {
   const [balance, setBalance] = useState(0);
   const [account, setAccount] = useState(null);
   const [recentTransactions, setRecentTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const user = getCurrentUser();
+  const { user } = useAuth();
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [accountsRes, transactionsRes] = await Promise.all([
-          axios.get(`${API}/upi/accounts`, { headers: getAuthHeader() }),
-          axios.get(`${API}/upi/transactions?limit=5`, { headers: getAuthHeader() })
+        const [accounts, transactions] = await Promise.all([
+          api.get('/upi/accounts'),
+          api.get('/upi/transactions?limit=5')
         ]);
 
-        const primaryAccount = accountsRes.data.find((acc) => acc.is_primary);
+        const primaryAccount = accounts.find((acc) => acc.is_primary);
         if (primaryAccount) {
           setAccount(primaryAccount);
           setBalance(primaryAccount.balance);
         }
 
-        setRecentTransactions(transactionsRes.data);
-      } catch (error) {
-        console.error('Failed to load data:', error);
+        setRecentTransactions(transactions);
       } finally {
         setLoading(false);
       }
@@ -108,7 +107,7 @@ function UPIHome({ onLogout }) {
   if (!account && !loading) {
     return (
       <AppShell>
-        <Header onLogout={onLogout} />
+        <Header />
 
         <PageContent className="max-w-5xl relative">
           <InDevelopmentOverlay 
@@ -134,7 +133,7 @@ function UPIHome({ onLogout }) {
 
   return (
     <AppShell>
-      <Header onLogout={onLogout} />
+      <Header />
 
       <PageContent className="max-w-5xl relative">
         <InDevelopmentOverlay 

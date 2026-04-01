@@ -6,30 +6,43 @@
  *  - Valid items (name + price) are included in submission
  *  - Items with only a name or only a price are included
  */
+import { describe, it, test, expect, beforeEach, vi } from 'vitest';
 import React from 'react';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import axios from 'axios';
+import { api } from '../lib/api';
+import { useAuth } from '../contexts/AuthContext';
+import NewExpenseRedesign from '../pages/NewExpenseRedesign';
 
-jest.mock('axios');
-jest.mock('sonner', () => ({ toast: { error: jest.fn(), success: jest.fn(), info: jest.fn() } }));
+vi.mock('../lib/api', () => ({
+  api: {
+    get: vi.fn(),
+    post: vi.fn(),
+  },
+}));
 
-const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => ({
+vi.mock('../contexts/AuthContext', () => ({
+  useAuth: vi.fn(() => ({
+    user: { id: 'user-alice', name: 'Alice' },
+    isAuthenticated: true,
+  })),
+}));
+
+vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn(), info: vi.fn() } }));
+
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
 }));
 
-jest.mock('../slate/components/Header', () => () => <div data-testid="header" />);
-
-jest.mock('../App', () => ({
-  API: 'http://localhost/api',
-  getAuthHeader: () => ({ Authorization: 'Bearer test-token' }),
+vi.mock('../slate/components/Header', () => ({
+  default: () => <div data-testid="header" />
 }));
 
-jest.mock('../utils/edgeAI', () => ({
+vi.mock('../utils/edgeAI', () => ({
   isEdgeAIReady: () => Promise.resolve(false),
-  smartSplitEdge: jest.fn(),
-  scanReceiptEdge: jest.fn(),
+  smartSplitEdge: vi.fn(),
+  scanReceiptEdge: vi.fn(),
 }));
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -45,13 +58,12 @@ const GROUPS = [
   },
 ];
 
-function setupAxios() {
-  axios.get.mockResolvedValue({ data: GROUPS });
-  axios.post.mockResolvedValue({ data: {} });
+function setupMocks() {
+  api.get.mockResolvedValue(GROUPS);
+  api.post.mockResolvedValue({});
 }
 
 function renderPage() {
-  const NewExpenseRedesign = require('../pages/NewExpenseRedesign').default;
   render(<NewExpenseRedesign />);
 }
 
@@ -66,8 +78,8 @@ async function fillRequiredFields() {
 
 describe('NewExpenseRedesign — item submission filtering', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    setupAxios();
+    vi.clearAllMocks();
+    setupMocks();
   });
 
   test('blank default item is filtered out — submits items: []', async () => {
@@ -80,8 +92,8 @@ describe('NewExpenseRedesign — item submission filtering', () => {
       fireEvent.submit(form);
     });
 
-    await waitFor(() => expect(axios.post).toHaveBeenCalled());
-    const body = axios.post.mock.calls[0][1];
+    await waitFor(() => expect(api.post).toHaveBeenCalled());
+    const body = api.post.mock.calls[0][1];
     expect(body.items).toEqual([]);
   });
 
@@ -97,8 +109,8 @@ describe('NewExpenseRedesign — item submission filtering', () => {
       fireEvent.submit(form);
     });
 
-    await waitFor(() => expect(axios.post).toHaveBeenCalled());
-    const body = axios.post.mock.calls[0][1];
+    await waitFor(() => expect(api.post).toHaveBeenCalled());
+    const body = api.post.mock.calls[0][1];
     expect(body.items).toHaveLength(1);
     expect(body.items[0]).toMatchObject({ name: 'Pizza', price: 40 });
   });
@@ -115,8 +127,8 @@ describe('NewExpenseRedesign — item submission filtering', () => {
       fireEvent.submit(form);
     });
 
-    await waitFor(() => expect(axios.post).toHaveBeenCalled());
-    const body = axios.post.mock.calls[0][1];
+    await waitFor(() => expect(api.post).toHaveBeenCalled());
+    const body = api.post.mock.calls[0][1];
     expect(body.items).toHaveLength(1);
     expect(body.items[0]).toMatchObject({ name: 'Misc', price: 0 });
   });
@@ -138,8 +150,8 @@ describe('NewExpenseRedesign — item submission filtering', () => {
       fireEvent.submit(form);
     });
 
-    await waitFor(() => expect(axios.post).toHaveBeenCalled());
-    const body = axios.post.mock.calls[0][1];
+    await waitFor(() => expect(api.post).toHaveBeenCalled());
+    const body = api.post.mock.calls[0][1];
     expect(body.items).toHaveLength(1);
     expect(body.items[0]).toMatchObject({ name: 'Drink', price: 20 });
   });
@@ -160,8 +172,8 @@ describe('NewExpenseRedesign — item submission filtering', () => {
       fireEvent.submit(form);
     });
 
-    await waitFor(() => expect(axios.post).toHaveBeenCalled());
-    const body = axios.post.mock.calls[0][1];
+    await waitFor(() => expect(api.post).toHaveBeenCalled());
+    const body = api.post.mock.calls[0][1];
     expect(body.items).toHaveLength(1);
     expect(body.items[0]).toMatchObject({ name: 'Burger', price: 150, quantity: 3 });
   });

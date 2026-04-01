@@ -1,9 +1,7 @@
-import { useState, useEffect } from 'react';
-import '@/slate/styles/tokens.css';
-import '@/slate/styles/base.css';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import axios from 'axios';
 import { Toaster } from 'sonner';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+
 import AuthPage from './pages/AuthPageRedesign';
 import Dashboard from './pages/Dashboard';
 import NewExpense from './pages/NewExpenseRedesign';
@@ -17,167 +15,43 @@ import SendMoney from './pages/SendMoney';
 import AddBankAccount from './pages/AddBankAccount';
 import SlateDocs from './pages/SlateDocs';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-export const API = `${BACKEND_URL}/api`;
+import '@/slate/styles/tokens.css';
+import '@/slate/styles/base.css';
 
-export const getAuthHeader = () => {
-  const token = localStorage.getItem('token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
+const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated, loading } = useAuth();
+  
+  if (loading) return <div className="p-8 text-center text-[var(--app-muted)]">Loading...</div>;
+  if (!isAuthenticated) return <Navigate to="/auth" />;
+  
+  return children;
 };
-
-export const getCurrentUser = () => {
-  const user = localStorage.getItem('user');
-  return user ? JSON.parse(user) : null;
-};
-
-const DEV_EMAIL = process.env.REACT_APP_DEV_EMAIL;
-const DEV_PASSWORD = process.env.REACT_APP_DEV_PASSWORD;
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      setIsAuthenticated(true);
-      return;
-    }
-    if (process.env.NODE_ENV === 'development' && DEV_EMAIL && DEV_PASSWORD) {
-      axios.post(`${API}/auth/login`, { email: DEV_EMAIL, password: DEV_PASSWORD })
-        .then(({ data }) => {
-          localStorage.setItem('token', data.token);
-          localStorage.setItem('user', JSON.stringify(data.user));
-          setIsAuthenticated(true);
-        })
-        .catch(() => {});
-    }
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setIsAuthenticated(false);
-  };
-
   return (
     <div className="App">
       <Toaster position="top-center" richColors />
-      <BrowserRouter>
-        <Routes>
-          <Route
-            path="/auth"
-            element={
-              isAuthenticated ? (
-                <Navigate to="/dashboard" />
-              ) : (
-                <AuthPage onAuthSuccess={() => setIsAuthenticated(true)} />
-              )
-            }
-          />
-          <Route
-            path="/dashboard"
-            element={
-              isAuthenticated ? (
-                <Dashboard onLogout={handleLogout} />
-              ) : (
-                <Navigate to="/auth" />
-              )
-            }
-          />
-          <Route
-            path="/new-expense"
-            element={
-              isAuthenticated ? (
-                <NewExpense onLogout={handleLogout} />
-              ) : (
-                <Navigate to="/auth" />
-              )
-            }
-          />
-          <Route
-            path="/expenses/:expenseId"
-            element={
-              isAuthenticated ? (
-                <ExpenseDetail onLogout={handleLogout} />
-              ) : (
-                <Navigate to="/auth" />
-              )
-            }
-          />
-          <Route
-            path="/groups"
-            element={
-              isAuthenticated ? (
-                <GroupsPage onLogout={handleLogout} />
-              ) : (
-                <Navigate to="/auth" />
-              )
-            }
-          />
-          <Route
-            path="/groups/:groupId"
-            element={
-              isAuthenticated ? (
-                <GroupDetail onLogout={handleLogout} />
-              ) : (
-                <Navigate to="/auth" />
-              )
-            }
-          />
-          <Route
-            path="/settlements"
-            element={
-              isAuthenticated ? (
-                <SettlementsPage onLogout={handleLogout} />
-              ) : (
-                <Navigate to="/auth" />
-              )
-            }
-          />
-          <Route
-            path="/reports/:groupId"
-            element={
-              isAuthenticated ? (
-                <ReportsPage onLogout={handleLogout} />
-              ) : (
-                <Navigate to="/auth" />
-              )
-            }
-          />
-          <Route
-            path="/upi"
-            element={
-              isAuthenticated ? (
-                <UPIHome onLogout={handleLogout} />
-              ) : (
-                <Navigate to="/auth" />
-              )
-            }
-          />
-          <Route
-            path="/upi/send"
-            element={
-              isAuthenticated ? (
-                <SendMoney onLogout={handleLogout} />
-              ) : (
-                <Navigate to="/auth" />
-              )
-            }
-          />
-          <Route
-            path="/upi/accounts/add"
-            element={
-              isAuthenticated ? (
-                <AddBankAccount onLogout={handleLogout} />
-              ) : (
-                <Navigate to="/auth" />
-              )
-            }
-          />
-          <Route path="/docs/slate" element={<SlateDocs />} />
-          <Route path="/" element={<Navigate to="/dashboard" />} />
-        </Routes>
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/auth" element={<AuthPage />} />
+            
+            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/new-expense" element={<ProtectedRoute><NewExpense /></ProtectedRoute>} />
+            <Route path="/expenses/:expenseId" element={<ProtectedRoute><ExpenseDetail /></ProtectedRoute>} />
+            <Route path="/groups" element={<ProtectedRoute><GroupsPage /></ProtectedRoute>} />
+            <Route path="/groups/:groupId" element={<ProtectedRoute><GroupDetail /></ProtectedRoute>} />
+            <Route path="/settlements" element={<ProtectedRoute><SettlementsPage /></ProtectedRoute>} />
+            <Route path="/reports/:groupId" element={<ProtectedRoute><ReportsPage /></ProtectedRoute>} />
+            <Route path="/upi" element={<ProtectedRoute><UPIHome /></ProtectedRoute>} />
+            <Route path="/upi/send" element={<ProtectedRoute><SendMoney /></ProtectedRoute>} />
+            <Route path="/upi/accounts/add" element={<ProtectedRoute><AddBankAccount /></ProtectedRoute>} />
+            
+            <Route path="/docs/slate" element={<SlateDocs />} />
+            <Route path="/" element={<Navigate to="/dashboard" />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
     </div>
   );
 }

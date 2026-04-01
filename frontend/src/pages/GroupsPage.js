@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { toast } from 'sonner';
-import { API, getAuthHeader } from '../App';
+import { useAuth } from '../contexts/AuthContext';
+import { api } from '../lib/api';
 import { Users, Plus, X } from '@/slate/icons';
 import { Header, AppButton, AppInput, AppModal, AppShell, EmptyState, Field, MemberBadge, ModalHeader, PageContent, PageHero } from '@/slate';
 
-function GroupsPage({ onLogout }) {
+function GroupsPage() {
   const navigate = useNavigate();
   const [groups, setGroups] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -16,10 +16,8 @@ function GroupsPage({ onLogout }) {
 
   const loadGroups = useCallback(async () => {
     try {
-      const res = await axios.get(`${API}/groups`, {
-        headers: getAuthHeader(),
-      });
-      setGroups(res.data);
+      const data = await api.get('/groups');
+      setGroups(data);
     } catch (error) {
       toast.error('Failed to load groups');
     }
@@ -49,11 +47,7 @@ function GroupsPage({ onLogout }) {
 
     try {
       const emails = memberEmails.filter((email) => email.trim());
-      await axios.post(
-        `${API}/groups`,
-        { name: groupName, member_emails: emails },
-        { headers: getAuthHeader() }
-      );
+      await api.post('/groups', { name: groupName, member_emails: emails });
 
       toast.success('Group created!');
       setShowCreateModal(false);
@@ -61,7 +55,7 @@ function GroupsPage({ onLogout }) {
       setMemberEmails(['']);
       loadGroups();
     } catch (error) {
-      const errorMessage = error.response?.data?.detail || 'Failed to create group';
+      const errorMessage = error.message || 'Failed to create group';
 
       if (errorMessage.includes('not found')) {
         toast.error('Some member emails are not registered. Please ask them to sign up first!', { duration: 5000 });
@@ -75,7 +69,7 @@ function GroupsPage({ onLogout }) {
 
   return (
     <AppShell>
-      <Header onLogout={onLogout} />
+      <Header />
 
       <PageContent className="max-w-5xl">
         <PageHero

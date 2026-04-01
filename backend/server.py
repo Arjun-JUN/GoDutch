@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, Header
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, Header, status
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from starlette.concurrency import run_in_threadpool
@@ -28,15 +28,17 @@ db = client[os.environ['DB_NAME']]
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
 
-JWT_SECRET = os.getenv('JWT_SECRET', 'fallback-secret')
+JWT_SECRET = os.getenv('JWT_SECRET')
+if not JWT_SECRET:
+    raise RuntimeError("JWT_SECRET environment variable is missing. Cannot start securely.")
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
 
 cors_origins = [origin.strip() for origin in os.environ.get('CORS_ORIGINS', 'http://localhost:3000').split(',') if origin.strip()]
 
 class UserRegister(BaseModel):
     email: EmailStr
-    password: str
-    name: str
+    password: str = Field(..., min_length=6)
+    name: str = Field(..., min_length=2)
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -54,8 +56,8 @@ class TokenResponse(BaseModel):
     user: User
 
 class GroupCreate(BaseModel):
-    name: str
-    member_emails: List[str]
+    name: str = Field(..., min_length=2)
+    member_emails: List[EmailStr]
     currency: str = "INR"
 
 class Group(BaseModel):
@@ -68,22 +70,22 @@ class Group(BaseModel):
     created_at: str
 
 class ExpenseItem(BaseModel):
-    name: str
-    price: float
-    quantity: int = 1
+    name: str = Field(..., min_length=1)
+    price: float = Field(..., ge=0)
+    quantity: int = Field(1, gt=0)
     category: str = "Other"
     assigned_to: List[str] = []
 
 class SplitDetail(BaseModel):
     user_id: str
     user_name: str
-    amount: float
+    amount: float = Field(..., ge=0)
 
 class ExpenseCreate(BaseModel):
     group_id: str
-    merchant: str
+    merchant: str = Field(..., min_length=1)
     date: str
-    total_amount: float
+    total_amount: float = Field(..., gt=0)
     items: List[ExpenseItem]
     split_type: str
     split_details: List[SplitDetail]
@@ -128,8 +130,8 @@ class SmartSplitResponse(BaseModel):
     clarification_question: Optional[str] = None
 
 class UPIPaymentRequest(BaseModel):
-    upi_id: str
-    amount: float
+    upi_id: str = Field(..., pattern=r"^[\w.-]+@[\w.-]+$")
+    amount: float = Field(..., gt=0)
     settlement_id: str
     note: Optional[str] = None
 
@@ -147,11 +149,11 @@ class BankAccount(BaseModel):
     created_at: str
 
 class BankAccountCreate(BaseModel):
-    bank_name: str
-    account_number: str
-    ifsc_code: str
-    account_holder: str
-    upi_id: str
+    bank_name: str = Field(..., min_length=2)
+    account_number: str = Field(..., min_length=8)
+    ifsc_code: str = Field(..., pattern=r"^[A-Z]{4}0[A-Z0-9]{6}$")
+    account_holder: str = Field(..., min_length=2)
+    upi_id: str = Field(..., pattern=r"^[\w.-]+@[\w.-]+$")
 
 class Transaction(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -168,8 +170,8 @@ class Transaction(BaseModel):
     created_at: str
 
 class TransactionCreate(BaseModel):
-    to_upi_id: str
-    amount: float
+    to_upi_id: str = Field(..., pattern=r"^[\w.-]+@[\w.-]+$")
+    amount: float = Field(..., gt=0)
     transaction_type: str = "payment"
     note: Optional[str] = None
 
@@ -186,20 +188,20 @@ class MoneyRequest(BaseModel):
     created_at: str
 
 class MoneyRequestCreate(BaseModel):
-    to_upi_id: str
-    amount: float
+    to_upi_id: str = Field(..., pattern=r"^[\w.-]+@[\w.-]+$")
+    amount: float = Field(..., gt=0)
     note: Optional[str] = None
 
 class BillPayment(BaseModel):
-    biller_name: str
-    bill_number: str
-    amount: float
+    biller_name: str = Field(..., min_length=2)
+    bill_number: str = Field(..., min_length=1)
+    amount: float = Field(..., gt=0)
     category: str
 
 class RechargeRequest(BaseModel):
-    mobile_number: str
-    operator: str
-    amount: float
+    mobile_number: str = Field(..., pattern=r"^\d{10}$")
+    operator: str = Field(..., min_length=2)
+    amount: float = Field(..., gt=0)
     recharge_type: str
 
 class OCRRequest(BaseModel):
@@ -218,6 +220,26 @@ class OCRResult(BaseModel):
     items: List[OCRItem]
 
 
+def handle_server_error(e: Exception, context: str, default_detail: str):
+    if isinstance(e, HTTPException):
+        raise e
+    
+    error_msg = str(e)
+    logging.error(f"{context} error: {error_msg}")
+    
+    # Handle quota/billing-specific AI errors
+    if "budget" in error_msg.lower() or "exceeded" in error_msg.lower():
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail="Upstream AI service is temporarily unavailable due to quota or billing limits."
+        )
+    
+    raise HTTPException(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail=default_detail if not str(e) else f"{default_detail}: {str(e)}"
+    )
+
+
 def _extract_json_block(text: str):
     import json
 
@@ -234,7 +256,7 @@ def _extract_json_block(text: str):
 
 async def generate_structured_content(parts, response_model):
     if not GEMINI_API_KEY:
-        raise HTTPException(status_code=503, detail="Gemini API key not configured.")
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Gemini API key not configured.")
 
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
     payload = {
@@ -267,7 +289,7 @@ async def generate_structured_content(parts, response_model):
 
             raise HTTPException(status_code=response.status_code, detail=detail) from exc
 
-        raise HTTPException(status_code=502, detail=detail) from exc
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=detail) from exc
 
     candidates = response_json.get("candidates") or []
     if not candidates:
@@ -297,22 +319,22 @@ class MarkPaidRequest(BaseModel):
 
 def verify_token(authorization: Optional[str] = Header(None)):
     if not authorization or not authorization.startswith('Bearer '):
-        raise HTTPException(status_code=401, detail="Missing or invalid token")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing or invalid token")
     
     token = authorization.replace('Bearer ', '')
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=['HS256'])
         return payload
     except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token expired")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired")
     except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
 @api_router.post("/auth/register", response_model=TokenResponse)
 async def register(user_data: UserRegister):
     existing = await db.users.find_one({"email": user_data.email}, {"_id": 0})
     if existing:
-        raise HTTPException(status_code=400, detail="Email already registered")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
     
     password_hash = bcrypt.hashpw(user_data.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     
@@ -340,10 +362,10 @@ async def register(user_data: UserRegister):
 async def login(credentials: UserLogin):
     user_doc = await db.users.find_one({"email": credentials.email}, {"_id": 0})
     if not user_doc:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
     
     if not bcrypt.checkpw(credentials.password.encode('utf-8'), user_doc['password_hash'].encode('utf-8')):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
     
     token = jwt.encode(
         {"user_id": user_doc['id'], "email": user_doc['email'], "exp": datetime.now(timezone.utc) + timedelta(days=30)},
@@ -391,20 +413,9 @@ async def scan_receipt(request: OCRRequest, current_user: dict = Depends(verify_
 
         return result
     except binascii.Error:
-        raise HTTPException(status_code=400, detail="Invalid receipt image data.")
-    except HTTPException:
-        raise
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid receipt image data.")
     except Exception as e:
-        error_msg = str(e)
-        logging.error(f"OCR error: {error_msg}")
-        
-        if "budget" in error_msg.lower() or "exceeded" in error_msg.lower():
-            raise HTTPException(
-                status_code=402,
-                detail="OCR is temporarily unavailable because the Gemini API quota or billing limit was reached."
-            )
-        
-        raise HTTPException(status_code=500, detail=f"OCR scanning failed. Please try again or enter details manually.")
+        handle_server_error(e, "OCR", "OCR scanning failed. Please try again or enter details manually.")
 
 @api_router.post("/groups", response_model=Group)
 async def create_group(group_data: GroupCreate, current_user: dict = Depends(verify_token)):
@@ -412,7 +423,7 @@ async def create_group(group_data: GroupCreate, current_user: dict = Depends(ver
     
     current_user_doc = await db.users.find_one({"id": current_user['user_id']}, {"_id": 0})
     if not current_user_doc:
-        raise HTTPException(status_code=404, detail="Current user not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Current user not found")
     
     current_user_in_list = any(u['email'] == current_user_doc['email'] for u in member_users)
     
@@ -420,7 +431,7 @@ async def create_group(group_data: GroupCreate, current_user: dict = Depends(ver
         member_users.append(current_user_doc)
     
     if len(member_users) < len(group_data.member_emails) + (0 if current_user_in_list else 1):
-        raise HTTPException(status_code=400, detail="Some member emails not found")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Some member emails not found")
     
     members = [{"id": u['id'], "email": u['email'], "name": u['name']} for u in member_users]
     
@@ -467,13 +478,21 @@ async def create_expense(expense_data: ExpenseCreate, current_user: dict = Depen
     
     await db.expenses.insert_one(expense_doc)
     
+    await db.expense_logs.insert_one({
+        "id": str(uuid.uuid4()),
+        "expense_id": expense_id,
+        "action": "added",
+        "user_id": current_user['user_id'],
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    })
+    
     return Expense(**expense_doc)
 
 @api_router.get("/groups/{group_id}/expenses", response_model=List[Expense])
 async def get_group_expenses(group_id: str, current_user: dict = Depends(verify_token)):
     group = await db.groups.find_one({"id": group_id, "members.id": current_user['user_id']}, {"_id": 0})
     if not group:
-        raise HTTPException(status_code=404, detail="Group not found or access denied")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found or access denied")
     
     expenses = await db.expenses.find({"group_id": group_id}, {"_id": 0}).to_list(1000)
     return expenses
@@ -482,7 +501,7 @@ async def get_group_expenses(group_id: str, current_user: dict = Depends(verify_
 async def get_settlements(group_id: str, current_user: dict = Depends(verify_token)):
     group = await db.groups.find_one({"id": group_id, "members.id": current_user['user_id']}, {"_id": 0})
     if not group:
-        raise HTTPException(status_code=404, detail="Group not found or access denied")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found or access denied")
     
     expenses = await db.expenses.find({"group_id": group_id}, {"_id": 0}).to_list(1000)
     
@@ -525,7 +544,7 @@ async def smart_split(request: SmartSplitRequest, current_user: dict = Depends(v
     try:
         group = await db.groups.find_one({"id": request.group_id}, {"_id": 0})
         if not group:
-            raise HTTPException(status_code=404, detail="Group not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found")
         
         members_info = ", ".join([f"{m['name']} (id: {m['id']})" for m in group['members']])
 
@@ -558,22 +577,30 @@ async def smart_split(request: SmartSplitRequest, current_user: dict = Depends(v
         )
 
         return result
-    except HTTPException:
-        raise
     except Exception as e:
-        logging.error(f"Smart split error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Smart split failed: {str(e)}")
+        handle_server_error(e, "Smart Split", "Smart split failed")
 
 @api_router.post("/upi/initiate-payment")
 async def initiate_upi_payment(payment: UPIPaymentRequest, current_user: dict = Depends(verify_token)):
     try:
         # Security check: Ensure user is only paying their own debts
-        # settlement_id format: group_id-from_user_id-to_user_id
-        parts = payment.settlement_id.split('-')
-        if len(parts) >= 2:
-            debtor_id = parts[1]
+        # settlement_id format: group_id(36)-from_user_id(36)-to_user_id(36)
+        if len(payment.settlement_id) >= 110:
+            group_id = payment.settlement_id[0:36]
+            debtor_id = payment.settlement_id[37:73]
+            to_user_id = payment.settlement_id[74:110]
             if debtor_id != current_user['user_id']:
-                raise HTTPException(status_code=403, detail="You can only initiate payments for your own debts")
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You can only initiate payments for your own debts")
+                
+            # Security check: Verify that the UPI payment amount matches the specific settlement
+            settlements = await get_settlements(group_id, current_user)
+            valid_amount = False
+            for s in settlements:
+                if s.from_user_id == debtor_id and s.to_user_id == to_user_id and abs(s.amount - payment.amount) <= 0.01:
+                    valid_amount = True
+                    break
+            if not valid_amount:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid settlement amount provided for this payment")
 
         payment_id = str(uuid.uuid4())
         
@@ -599,18 +626,15 @@ async def initiate_upi_payment(payment: UPIPaymentRequest, current_user: dict = 
             "status": "initiated",
             "qr_data": upi_url
         }
-    except HTTPException:
-        raise
     except Exception as e:
-        logging.error(f"UPI payment error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Payment initiation failed")
+        handle_server_error(e, "UPI Payment", "Payment initiation failed")
 
 @api_router.post("/upi/accounts", response_model=BankAccount)
 async def add_bank_account(account: BankAccountCreate, current_user: dict = Depends(verify_token)):
     try:
         existing = await db.bank_accounts.find_one({"user_id": current_user['user_id'], "upi_id": account.upi_id}, {"_id": 0})
         if existing:
-            raise HTTPException(status_code=400, detail="UPI ID already linked")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="UPI ID already linked")
         
         account_id = str(uuid.uuid4())
         
@@ -632,11 +656,8 @@ async def add_bank_account(account: BankAccountCreate, current_user: dict = Depe
         await db.bank_accounts.insert_one(account_doc)
         
         return BankAccount(**account_doc)
-    except HTTPException:
-        raise
     except Exception as e:
-        logging.error(f"Add account error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to add account")
+        handle_server_error(e, "Add Account", "Failed to add account")
 
 @api_router.get("/upi/accounts", response_model=List[BankAccount])
 async def get_bank_accounts(current_user: dict = Depends(verify_token)):
@@ -648,10 +669,10 @@ async def send_money(transaction: TransactionCreate, current_user: dict = Depend
     try:
         account = await db.bank_accounts.find_one({"user_id": current_user['user_id'], "is_primary": True}, {"_id": 0})
         if not account:
-            raise HTTPException(status_code=400, detail="No bank account linked")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No bank account linked")
         
         if account['balance'] < transaction.amount:
-            raise HTTPException(status_code=400, detail="Insufficient balance")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Insufficient balance")
         
         recipient_account = await db.bank_accounts.find_one({"upi_id": transaction.to_upi_id}, {"_id": 0})
         
@@ -686,22 +707,19 @@ async def send_money(transaction: TransactionCreate, current_user: dict = Depend
             )
         
         return Transaction(**transaction_doc)
-    except HTTPException:
-        raise
     except Exception as e:
-        logging.error(f"Send money error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Transaction failed")
+        handle_server_error(e, "Send Money", "Transaction failed")
 
 @api_router.post("/upi/request-money", response_model=MoneyRequest)
 async def request_money(request: MoneyRequestCreate, current_user: dict = Depends(verify_token)):
     try:
         account = await db.bank_accounts.find_one({"user_id": current_user['user_id'], "is_primary": True}, {"_id": 0})
         if not account:
-            raise HTTPException(status_code=400, detail="No bank account linked")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No bank account linked")
         
         recipient_account = await db.bank_accounts.find_one({"upi_id": request.to_upi_id}, {"_id": 0})
         if not recipient_account:
-            raise HTTPException(status_code=404, detail="UPI ID not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="UPI ID not found")
         
         request_id = str(uuid.uuid4())
         
@@ -720,11 +738,8 @@ async def request_money(request: MoneyRequestCreate, current_user: dict = Depend
         await db.money_requests.insert_one(request_doc)
         
         return MoneyRequest(**request_doc)
-    except HTTPException:
-        raise
     except Exception as e:
-        logging.error(f"Request money error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Request failed")
+        handle_server_error(e, "Request Money", "Request failed")
 
 @api_router.get("/upi/requests", response_model=List[MoneyRequest])
 async def get_money_requests(current_user: dict = Depends(verify_token)):
@@ -744,14 +759,14 @@ async def accept_money_request(request_id: str, current_user: dict = Depends(ver
     try:
         money_request = await db.money_requests.find_one({"id": request_id, "to_user_id": current_user['user_id']}, {"_id": 0})
         if not money_request:
-            raise HTTPException(status_code=404, detail="Request not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Request not found")
         
         if money_request['status'] != 'pending':
-            raise HTTPException(status_code=400, detail="Request already processed")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Request already processed")
         
         account = await db.bank_accounts.find_one({"user_id": current_user['user_id'], "is_primary": True}, {"_id": 0})
         if account['balance'] < money_request['amount']:
-            raise HTTPException(status_code=400, detail="Insufficient balance")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Insufficient balance")
         
         transaction_id = str(uuid.uuid4())
         reference_id = f"UPI{uuid.uuid4().hex[:12].upper()}"
@@ -788,11 +803,8 @@ async def accept_money_request(request_id: str, current_user: dict = Depends(ver
         )
         
         return {"status": "success", "transaction_id": transaction_id}
-    except HTTPException:
-        raise
     except Exception as e:
-        logging.error(f"Accept request error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to accept request")
+        handle_server_error(e, "Accept Request", "Failed to accept request")
 
 @api_router.get("/upi/transactions", response_model=List[Transaction])
 async def get_transactions(current_user: dict = Depends(verify_token), limit: int = 50):
@@ -812,10 +824,10 @@ async def pay_bill(bill: BillPayment, current_user: dict = Depends(verify_token)
     try:
         account = await db.bank_accounts.find_one({"user_id": current_user['user_id'], "is_primary": True}, {"_id": 0})
         if not account:
-            raise HTTPException(status_code=400, detail="No bank account linked")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No bank account linked")
         
         if account['balance'] < bill.amount:
-            raise HTTPException(status_code=400, detail="Insufficient balance")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Insufficient balance")
         
         transaction_id = str(uuid.uuid4())
         reference_id = f"BILL{uuid.uuid4().hex[:12].upper()}"
@@ -842,21 +854,18 @@ async def pay_bill(bill: BillPayment, current_user: dict = Depends(verify_token)
         )
         
         return {"status": "success", "transaction_id": transaction_id, "reference_id": reference_id}
-    except HTTPException:
-        raise
     except Exception as e:
-        logging.error(f"Bill payment error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Bill payment failed")
+        handle_server_error(e, "Bill Payment", "Bill payment failed")
 
 @api_router.post("/upi/recharge")
 async def mobile_recharge(recharge: RechargeRequest, current_user: dict = Depends(verify_token)):
     try:
         account = await db.bank_accounts.find_one({"user_id": current_user['user_id'], "is_primary": True}, {"_id": 0})
         if not account:
-            raise HTTPException(status_code=400, detail="No bank account linked")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No bank account linked")
         
         if account['balance'] < recharge.amount:
-            raise HTTPException(status_code=400, detail="Insufficient balance")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Insufficient balance")
         
         transaction_id = str(uuid.uuid4())
         reference_id = f"RECH{uuid.uuid4().hex[:12].upper()}"
@@ -883,11 +892,8 @@ async def mobile_recharge(recharge: RechargeRequest, current_user: dict = Depend
         )
         
         return {"status": "success", "transaction_id": transaction_id, "reference_id": reference_id}
-    except HTTPException:
-        raise
     except Exception as e:
-        logging.error(f"Recharge error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Recharge failed")
+        handle_server_error(e, "Recharge", "Recharge failed")
 
 @api_router.get("/expenses/categories")
 async def get_expense_categories(current_user: dict = Depends(verify_token)):
@@ -909,22 +915,22 @@ async def get_expense_categories(current_user: dict = Depends(verify_token)):
 async def get_expense(expense_id: str, current_user: dict = Depends(verify_token)):
     expense = await db.expenses.find_one({"id": expense_id}, {"_id": 0})
     if not expense:
-        raise HTTPException(status_code=404, detail="Expense not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Expense not found")
     group = await db.groups.find_one({"id": expense["group_id"], "members.id": current_user['user_id']}, {"_id": 0})
     if not group:
-        raise HTTPException(status_code=403, detail="Access denied")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
     return expense
 
 @api_router.put("/expenses/{expense_id}", response_model=Expense)
 async def update_expense(expense_id: str, update_data: ExpenseUpdate, current_user: dict = Depends(verify_token)):
     expense = await db.expenses.find_one({"id": expense_id}, {"_id": 0})
     if not expense:
-        raise HTTPException(status_code=404, detail="Expense not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Expense not found")
     
     # Check if user is a member of the group
     group = await db.groups.find_one({"id": expense["group_id"], "members.id": current_user['user_id']}, {"_id": 0})
     if not group:
-        raise HTTPException(status_code=403, detail="Only group members can edit this expense")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only group members can edit this expense")
     update_fields = {}
     for field, value in update_data.model_dump(exclude_none=True).items():
         if field == "items":
@@ -935,19 +941,34 @@ async def update_expense(expense_id: str, update_data: ExpenseUpdate, current_us
             update_fields[field] = value
     if update_fields:
         await db.expenses.update_one({"id": expense_id}, {"$set": update_fields})
+        await db.expense_logs.insert_one({
+            "id": str(uuid.uuid4()),
+            "expense_id": expense_id,
+            "action": "edited",
+            "user_id": current_user['user_id'],
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        })
     updated = await db.expenses.find_one({"id": expense_id}, {"_id": 0})
     return updated
 
-@api_router.delete("/expenses/{expense_id}", status_code=204)
+@api_router.delete("/expenses/{expense_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_expense(expense_id: str, current_user: dict = Depends(verify_token)):
     expense = await db.expenses.find_one({"id": expense_id}, {"_id": 0})
     if not expense:
-        raise HTTPException(status_code=404, detail="Expense not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Expense not found")
     
     # Check if user is a member of the group
     group = await db.groups.find_one({"id": expense["group_id"], "members.id": current_user['user_id']}, {"_id": 0})
     if not group:
-        raise HTTPException(status_code=403, detail="Only group members can delete this expense")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only group members can delete this expense")
+        
+    await db.expense_logs.insert_one({
+        "id": str(uuid.uuid4()),
+        "expense_id": expense_id,
+        "action": "deleted",
+        "user_id": current_user['user_id'],
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    })
     await db.expenses.delete_one({"id": expense_id})
 
 @api_router.get("/groups/{group_id}/reports")
@@ -955,7 +976,7 @@ async def get_expense_reports(group_id: str, current_user: dict = Depends(verify
     try:
         group = await db.groups.find_one({"id": group_id, "members.id": current_user['user_id']}, {"_id": 0})
         if not group:
-            raise HTTPException(status_code=404, detail="Group not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found")
         
         expenses = await db.expenses.find({"group_id": group_id}, {"_id": 0}).to_list(1000)
         
@@ -989,13 +1010,12 @@ async def get_expense_reports(group_id: str, current_user: dict = Depends(verify
             "monthly_trend": monthly_trend
         }
     except Exception as e:
-        logging.error(f"Reports error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to generate reports")
+        handle_server_error(e, "Reports", "Failed to generate reports")
 
 @api_router.post("/dev/reset")
 async def reset_db():
-    if os.getenv("ENV") == "production":
-        raise HTTPException(status_code=403, detail="Reset not allowed in production")
+    if os.getenv("ENV", "development") != "development":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Reset not allowed in production")
     
     await db.users.delete_many({})
     await db.groups.delete_many({})
@@ -1023,8 +1043,8 @@ app.add_middleware(
     allow_origins=cors_origins,
     # Local dev often shifts between localhost/127.0.0.1 and ports like 3000/3001.
     allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?",
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization", "Accept", "Origin"],
 )
 
 logging.basicConfig(

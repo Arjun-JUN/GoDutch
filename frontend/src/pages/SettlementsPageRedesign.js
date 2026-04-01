@@ -1,12 +1,12 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { toast } from 'sonner';
-import { API, getAuthHeader, getCurrentUser } from '../App';
+import { useAuth } from '../contexts/AuthContext';
+import { api } from '../lib/api';
 import { ArrowsLeftRight, Check, CurrencyInr } from '@/slate/icons';
 import { Header, InDevelopmentOverlay, AppButton, AppInput, AppModal, AppSelect, AppShell, AppSurface, Callout, EmptyState, Field, IconBadge, ModalHeader, PageContent, PageHero } from '@/slate';
 
-function SettlementsPageRedesign({ onLogout }) {
+function SettlementsPageRedesign() {
   const [groups, setGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState('');
   const [settlements, setSettlements] = useState([]);
@@ -15,15 +15,14 @@ function SettlementsPageRedesign({ onLogout }) {
   const [selectedSettlement, setSelectedSettlement] = useState(null);
   const [upiId, setUpiId] = useState('');
   const navigate = useNavigate();
+  const { user: currentUser } = useAuth();
 
   const loadGroups = async () => {
     try {
-      const res = await axios.get(`${API}/groups`, {
-        headers: getAuthHeader(),
-      });
-      setGroups(res.data);
-      if (res.data.length > 0) {
-        setSelectedGroup(res.data[0].id);
+      const data = await api.get('/groups');
+      setGroups(data);
+      if (data.length > 0) {
+        setSelectedGroup(data[0].id);
       }
     } catch (error) {
       toast.error('Failed to load groups');
@@ -34,10 +33,8 @@ function SettlementsPageRedesign({ onLogout }) {
     if (!selectedGroup) return;
     setLoading(true);
     try {
-      const res = await axios.get(`${API}/groups/${selectedGroup}/settlements`, {
-        headers: getAuthHeader(),
-      });
-      setSettlements(res.data);
+      const data = await api.get(`/groups/${selectedGroup}/settlements`);
+      setSettlements(data);
     } catch (error) {
       toast.error('Failed to load settlements');
     } finally {
@@ -67,18 +64,14 @@ function SettlementsPageRedesign({ onLogout }) {
     }
 
     try {
-      const res = await axios.post(
-        `${API}/upi/initiate-payment`,
-        {
-          upi_id: upiId,
-          amount: selectedSettlement.amount,
-          settlement_id: `${selectedGroup}-${selectedSettlement.from_user_id}-${selectedSettlement.to_user_id}`,
-          note: 'goDutch settlement'
-        },
-        { headers: getAuthHeader() }
-      );
+      const data = await api.post('/upi/initiate-payment', {
+        upi_id: upiId,
+        amount: selectedSettlement.amount,
+        settlement_id: `${selectedGroup}-${selectedSettlement.from_user_id}-${selectedSettlement.to_user_id}`,
+        note: 'goDutch settlement'
+      });
 
-      window.location.href = res.data.upi_url;
+      window.location.href = data.upi_url;
       toast.success('Opening UPI app...');
       setShowPaymentModal(false);
     } catch (error) {
@@ -88,7 +81,7 @@ function SettlementsPageRedesign({ onLogout }) {
 
   return (
     <AppShell>
-      <Header onLogout={onLogout} />
+      <Header />
 
       <PageContent className="relative overflow-hidden">
         <InDevelopmentOverlay 
@@ -170,7 +163,7 @@ function SettlementsPageRedesign({ onLogout }) {
                       </div>
                     </div>
 
-                    {settlement.from_user_id === getCurrentUser()?.id && (
+                    {settlement.from_user_id === currentUser?.id && (
                       <AppButton
                         data-testid={`pay-now-${index}`}
                         onClick={() => handlePayNow(settlement)}

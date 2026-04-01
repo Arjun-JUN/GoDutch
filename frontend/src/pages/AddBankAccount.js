@@ -1,11 +1,8 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { toast } from 'sonner';
-import { API, getAuthHeader } from '../App';
+import { useAuth } from '../contexts/AuthContext';
+import { api } from '../lib/api';
 import { Header, AppButton, AppInput, AppShell, AppSurface, Callout, Field, PageBackButton, PageContent, PageHero } from '@/slate';
 
-function AddBankAccount({ onLogout }) {
+function AddBankAccount() {
   const [formData, setFormData] = useState({
     bank_name: '',
     account_number: '',
@@ -21,17 +18,12 @@ function AddBankAccount({ onLogout }) {
     setLoading(true);
 
     try {
-      await axios.post(
-        `${API}/upi/accounts`,
-        formData,
-        { headers: getAuthHeader() }
-      );
+      await api.post('/upi/accounts', formData);
 
       toast.success('Bank account linked successfully!');
       navigate('/upi');
     } catch (error) {
-      const errorMsg = error.response?.data?.detail || 'Failed to add account';
-      toast.error(errorMsg);
+      toast.error(error.message || 'Failed to add account');
     } finally {
       setLoading(false);
     }
@@ -43,7 +35,7 @@ function AddBankAccount({ onLogout }) {
 
   return (
     <AppShell>
-      <Header onLogout={onLogout} />
+      <Header />
 
       <PageContent className="max-w-2xl">
         <PageBackButton onClick={() => navigate('/upi')}>Back</PageBackButton>
