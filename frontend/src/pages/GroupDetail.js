@@ -22,9 +22,8 @@ import {
   Trash,
   Users,
   X,
-} from '@phosphor-icons/react';
-import Header from '../components/Header';
-import { AppShell, AppSurface, ExpenseCard, MemberBadge, PageBackButton, PageContent, StatCard } from '../components/app';
+} from '@/slate/icons';
+import { Header, AppShell, AppSurface, ExpenseCard, MemberBadge, PageBackButton, PageContent, StatCard } from '@/slate';
 
 const CATEGORY_ICONS = {
   'Food & Dining': ForkKnife,

@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { API, getAuthHeader } from '../App';
-import Header from '../components/Header';
-import { AppButton, AppInput, AppShell, AppSurface, Callout, Field, PageBackButton, PageContent, PageHero } from '../components/app';
+import { Header, AppButton, AppInput, AppShell, AppSurface, Callout, Field, PageBackButton, PageContent, PageHero } from '@/slate';
 
 function AddBankAccount({ onLogout }) {
   const [formData, setFormData] = useState({

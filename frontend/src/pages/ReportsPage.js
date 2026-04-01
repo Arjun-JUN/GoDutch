@@ -3,9 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { API, getAuthHeader } from '../App';
-import { ChartBar, TrendUp, Users } from '@phosphor-icons/react';
-import Header from '../components/Header';
-import { AppShell, AppSurface, Callout, EmptyState, IconBadge, PageBackButton, PageContent, PageHero, StatCard } from '../components/app';
+import { ChartBar, TrendUp, Users } from '@/slate/icons';
+import { Header, AppShell, AppSurface, Callout, EmptyState, IconBadge, PageBackButton, PageContent, PageHero, StatCard } from '@/slate';
 
 function ReportsPage({ onLogout }) {
   const { groupId } = useParams();

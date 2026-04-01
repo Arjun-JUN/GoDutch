@@ -3,9 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { API, getAuthHeader } from '../App';
-import { PaperPlaneTilt } from '@phosphor-icons/react';
-import Header from '../components/Header';
-import { AppButton, AppInput, AppShell, AppSurface, AppTextarea, Field, PageBackButton, PageContent, PageHero } from '../components/app';
+import { PaperPlaneTilt } from '@/slate/icons';
+import { Header, AppButton, AppInput, AppShell, AppSurface, AppTextarea, Field, PageBackButton, PageContent, PageHero } from '@/slate';
 
 function SendMoney({ onLogout }) {
   const [upiId, setUpiId] = useState('');

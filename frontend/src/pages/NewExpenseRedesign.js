@@ -27,9 +27,8 @@ import {
   Ticket,
   UsersThree,
   X,
-} from '@phosphor-icons/react';
-import Header from '../components/Header';
-import { AppButton, AppInput, AppSelect, AppShell, AppSurface, PageContent } from '../components/app';
+} from '@/slate/icons';
+import { Header, AppButton, AppInput, AppSelect, AppShell, AppSurface, PageContent, Callout } from '@/slate';
 
 /* ─── Constants ─── */
 
@@ -99,7 +98,6 @@ function PaidByModal({ open, onClose, members, paidBy, onPaidByChange, totalAmou
   const toggleMember = (memberId) => {
     const existing = localPaidBy.find((p) => p.user_id === memberId);
     if (existing) {
-      if (localPaidBy.length === 1) return; // must have at least 1
       setLocalPaidBy(localPaidBy.filter((p) => p.user_id !== memberId));
     } else {
       setLocalPaidBy([...localPaidBy, { user_id: memberId, amount: '' }]);
@@ -131,7 +129,12 @@ function PaidByModal({ open, onClose, members, paidBy, onPaidByChange, totalAmou
         transition={{ type: 'spring', damping: 28, stiffness: 300 }}
       >
         <div className="modal-fullscreen-header">
-          <button className="back-btn" onClick={onClose} data-testid="paidby-modal-close">
+          <button 
+            className="back-btn" 
+            onClick={() => { if (localPaidBy.length > 0) handleDone(); }} 
+            data-testid="paidby-modal-close"
+            style={{ opacity: localPaidBy.length === 0 ? 0.5 : 1, cursor: localPaidBy.length === 0 ? 'not-allowed' : 'pointer' }}
+          >
             <ArrowLeft size={20} weight="bold" />
           </button>
           <div>
@@ -141,6 +144,13 @@ function PaidByModal({ open, onClose, members, paidBy, onPaidByChange, totalAmou
         </div>
 
         <div className="modal-fullscreen-body">
+          {localPaidBy.length === 0 && (
+            <Callout className="mb-4 border border-red-200 bg-red-50 text-red-600 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-400">
+              <div className="flex items-start gap-2">
+                <span className="text-sm font-medium">Please select at least one person who paid.</span>
+              </div>
+            </Callout>
+          )}
           <div className="member-select-list">
             {members.map((member) => {
               const isSelected = localPaidBy.some((p) => p.user_id === member.id);
@@ -199,7 +209,12 @@ function PaidByModal({ open, onClose, members, paidBy, onPaidByChange, totalAmou
         </div>
 
         <div className="modal-sticky-footer">
-          <AppButton onClick={handleDone} className="w-full justify-center" data-testid="paidby-done-btn">
+          <AppButton 
+            onClick={handleDone} 
+            className="w-full justify-center" 
+            disabled={localPaidBy.length === 0}
+            data-testid="paidby-done-btn"
+          >
             Done
           </AppButton>
         </div>
@@ -222,7 +237,6 @@ function SplitBetweenModal({ open, onClose, members, splitBetween, splitMode, on
   const toggleMember = (memberId) => {
     const existing = localSplit.find((s) => s.user_id === memberId);
     if (existing) {
-      if (localSplit.length === 1) return;
       setLocalSplit(localSplit.filter((s) => s.user_id !== memberId));
     } else {
       setLocalSplit([...localSplit, { user_id: memberId, amount: '', shares: 1 }]);
@@ -266,7 +280,12 @@ function SplitBetweenModal({ open, onClose, members, splitBetween, splitMode, on
         transition={{ type: 'spring', damping: 28, stiffness: 300 }}
       >
         <div className="modal-fullscreen-header">
-          <button className="back-btn" onClick={onClose} data-testid="split-modal-close">
+          <button 
+            className="back-btn" 
+            onClick={() => { if (localSplit.length > 0) handleDone(); }} 
+            data-testid="split-modal-close"
+            style={{ opacity: localSplit.length === 0 ? 0.5 : 1, cursor: localSplit.length === 0 ? 'not-allowed' : 'pointer' }}
+          >
             <ArrowLeft size={20} weight="bold" />
           </button>
           <div>
@@ -276,6 +295,13 @@ function SplitBetweenModal({ open, onClose, members, splitBetween, splitMode, on
         </div>
 
         <div className="modal-fullscreen-body">
+          {localSplit.length === 0 && (
+            <Callout className="mb-4 border border-red-200 bg-red-50 text-red-600 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-400">
+              <div className="flex items-start gap-2">
+                <span className="text-sm font-medium">Please select at least one person to split with.</span>
+              </div>
+            </Callout>
+          )}
           <div className="split-tab-nav mb-5" data-testid="split-tab-nav">
             {tabs.map((tab) => (
               <button
@@ -368,7 +394,12 @@ function SplitBetweenModal({ open, onClose, members, splitBetween, splitMode, on
         </div>
 
         <div className="modal-sticky-footer">
-          <AppButton onClick={handleDone} className="w-full justify-center" data-testid="split-done-btn">
+          <AppButton 
+            onClick={handleDone} 
+            className="w-full justify-center" 
+            disabled={localSplit.length === 0}
+            data-testid="split-done-btn"
+          >
             Done
           </AppButton>
         </div>
@@ -592,11 +623,7 @@ function NewExpenseRedesign({ onLogout }) {
       const member = currentGroup?.members?.find((m) => m.id === paidBy[0].user_id);
       return member?.name || 'someone';
     }
-    const names = paidBy.map((p) => {
-      if (p.user_id === currentUser?.id) return 'you';
-      return currentGroup?.members?.find((m) => m.id === p.user_id)?.name || '?';
-    });
-    return names.slice(0, 2).join(', ') + (names.length > 2 ? ` +${names.length - 2}` : '');
+    return 'multiple';
   };
 
   const getSplitLabel = () => {

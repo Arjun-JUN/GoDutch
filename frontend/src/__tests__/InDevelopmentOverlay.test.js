@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { describe, it, expect } from 'vitest';
-import InDevelopmentOverlay from '../components/InDevelopmentOverlay';
+import InDevelopmentOverlay from '../slate/components/InDevelopmentOverlay';
 
 /**
  * Unit tests for InDevelopmentOverlay component.

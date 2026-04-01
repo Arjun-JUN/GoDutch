@@ -4,8 +4,8 @@ import axios from 'axios';
 import { toast } from 'sonner';
 import { API, getAuthHeader, getCurrentUser } from '../App';
 import { isEdgeAIReady, smartSplitEdge, scanReceiptEdge } from '../utils/edgeAI';
-import { Camera, Microphone, Lightning, Sparkle, User as UserIcon } from '@phosphor-icons/react';
-import Header from '../components/Header';
+import { Camera, Microphone, Lightning, Sparkle, User as UserIcon } from '@/slate/icons';
+import { Header } from '@/slate';
 
 const CATEGORIES = [
   'Food & Dining',

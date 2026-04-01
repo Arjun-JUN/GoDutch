@@ -3,10 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { API, getAuthHeader, getCurrentUser } from '../App';
-import { ArrowsLeftRight, Check, CurrencyInr, QrCode } from '@phosphor-icons/react';
-import Header from '../components/Header';
-
-import InDevelopmentOverlay from '../components/InDevelopmentOverlay';
+import { ArrowsLeftRight, Check, CurrencyInr, QrCode } from '@/slate/icons';
+import { Header, InDevelopmentOverlay } from '@/slate';
 
 function SettlementsPage({ onLogout }) {
   const [groups, setGroups] = useState([]);

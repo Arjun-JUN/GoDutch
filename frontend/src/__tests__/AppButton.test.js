@@ -9,7 +9,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { AppButton } from '../components/app/AppButton';
+import { AppButton } from '../slate/components/AppButton';
 
 describe('AppButton', () => {
   test('renders children text', () => {

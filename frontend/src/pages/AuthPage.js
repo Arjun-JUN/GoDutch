@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { API } from '../App';
-import { EnvelopeSimple, Lock, User } from '@phosphor-icons/react';
+import { EnvelopeSimple, Lock, User } from '@/slate/icons';
 
 function AuthPage({ onAuthSuccess }) {
   const [isLogin, setIsLogin] = useState(true);

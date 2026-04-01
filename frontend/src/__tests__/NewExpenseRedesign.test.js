@@ -19,7 +19,7 @@ jest.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
 }));
 
-jest.mock('../components/Header', () => () => <div data-testid="header" />);
+jest.mock('../slate/components/Header', () => () => <div data-testid="header" />);
 
 jest.mock('../App', () => ({
   API: 'http://localhost/api',

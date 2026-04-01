@@ -11,11 +11,8 @@ import {
   Receipt as ReceiptIcon,
   ArrowsDownUp,
   Wallet
-} from '@phosphor-icons/react';
-import Header from '../components/Header';
-import { AppButton, AppShell, AppSurface, Callout, EmptyState, IconBadge, PageContent, PageHero } from '../components/app';
-
-import InDevelopmentOverlay from '../components/InDevelopmentOverlay';
+} from '@/slate/icons';
+import { Header, InDevelopmentOverlay, AppButton, AppShell, AppSurface, Callout, EmptyState, IconBadge, PageContent, PageHero } from '@/slate';
 
 function UPIHome({ onLogout }) {
   const [balance, setBalance] = useState(0);

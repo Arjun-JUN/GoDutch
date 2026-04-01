@@ -12,7 +12,7 @@ import UPIHome from '../pages/UPIHome';
 
 // Mock external dependencies
 vi.mock('axios');
-vi.mock('../components/Header', () => () => <div data-testid="header" />);
+vi.mock('../slate/components/Header', () => () => <div data-testid="header" />);
 vi.mock('../App', () => ({
   API: 'http://localhost/api',
   getAuthHeader: () => ({ Authorization: 'Bearer test-token' }),

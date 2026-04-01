@@ -12,7 +12,7 @@ import {
   PageContent,
   PageHero,
   PageBackButton,
-} from '../components/app/AppShell';
+} from '../slate/components/AppShell';
 
 // ── AppShell ──────────────────────────────────────────────────────────────────
 

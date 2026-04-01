@@ -3,9 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { API, getAuthHeader } from '../App';
-import { Users, Plus, X } from '@phosphor-icons/react';
-import Header from '../components/Header';
-import { AppButton, AppInput, AppModal, AppShell, EmptyState, Field, MemberBadge, ModalHeader, PageContent, PageHero } from '../components/app';
+import { Users, Plus, X } from '@/slate/icons';
+import { Header, AppButton, AppInput, AppModal, AppShell, EmptyState, Field, MemberBadge, ModalHeader, PageContent, PageHero } from '@/slate';
 
 function GroupsPage({ onLogout }) {
   const navigate = useNavigate();

@@ -22,9 +22,9 @@ import {
   Trash,
   Users,
   X,
-} from '@phosphor-icons/react';
-import Header from '../components/Header';
+} from '@/slate/icons';
 import {
+  Header,
   AppButton,
   AppInput,
   AppModal,
@@ -39,7 +39,7 @@ import {
   PageBackButton,
   PageContent,
   PageHero,
-} from '../components/app';
+} from '@/slate';
 
 const CATEGORIES = [
   'Food & Dining',

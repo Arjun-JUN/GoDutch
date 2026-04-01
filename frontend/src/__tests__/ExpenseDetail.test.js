@@ -30,7 +30,7 @@ jest.mock('react-router-dom', () => ({
 }));
 
 // Stub Header to remove auth/nav dependencies
-jest.mock('../components/Header', () => () => <div data-testid="header" />);
+jest.mock('../slate/components/Header', () => () => <div data-testid="header" />);
 
 // Default: Alice is logged in (creator)
 jest.mock('../App', () => ({

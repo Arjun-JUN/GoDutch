@@ -6,7 +6,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { Field, AppInput, AppSelect, AppTextarea } from '../components/app/AppField';
+import { Field, AppInput, AppSelect, AppTextarea } from '../slate/components/AppField';
 
 // ── Field ─────────────────────────────────────────────────────────────────────
 
