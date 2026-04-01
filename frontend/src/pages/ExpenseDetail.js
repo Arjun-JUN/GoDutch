@@ -70,6 +70,7 @@ function ExpenseDetail({ onLogout }) {
   const [category, setCategory] = useState('Food & Dining');
   const [notes, setNotes] = useState('');
   const [splitType, setSplitType] = useState('equal');
+  const [items, setItems] = useState([]);
 
   const loadExpense = useCallback(async () => {
     try {
@@ -100,7 +101,67 @@ function ExpenseDetail({ onLogout }) {
     setCategory(expense.category || 'Food & Dining');
     setNotes(expense.notes || '');
     setSplitType(expense.split_type);
+    setItems(expense.items || []);
     setEditing(true);
+  };
+
+  const addItem = () => {
+    setItems([...items, { name: '', price: '', category: 'Other', assigned_to: [] }]);
+  };
+
+  const removeItem = (index) => {
+    setItems(items.filter((_, i) => i !== index));
+  };
+
+  const updateItem = (index, field, value) => {
+    const updated = [...items];
+    updated[index][field] = value;
+    setItems(updated);
+  };
+
+  const toggleMemberAssignment = (itemIndex, memberId) => {
+    const updated = [...items];
+    const assignedTo = updated[itemIndex].assigned_to || [];
+    if (assignedTo.includes(memberId)) {
+      updated[itemIndex].assigned_to = assignedTo.filter((id) => id !== memberId);
+    } else {
+      updated[itemIndex].assigned_to = [...assignedTo, memberId];
+    }
+    setItems(updated);
+  };
+
+  const calculateSplit = () => {
+    if (!group) return [];
+    const members = group.members;
+
+    if (splitType === 'item-based') {
+      const memberTotals = {};
+      members.forEach((m) => (memberTotals[m.id] = 0));
+      items.forEach((item) => {
+        const price = parseFloat(item.price) || 0;
+        const assignedTo = item.assigned_to || [];
+        if (assignedTo.length > 0) {
+          const perPerson = price / assignedTo.length;
+          assignedTo.forEach((mid) => (memberTotals[mid] += perPerson));
+        } else {
+          const perPerson = price / members.length;
+          members.forEach((m) => (memberTotals[m.id] += perPerson));
+        }
+      });
+      return members.map((m) => ({
+        user_id: m.id,
+        user_name: m.name,
+        amount: parseFloat(memberTotals[m.id].toFixed(2)),
+      }));
+    }
+
+    const total = parseFloat(totalAmount) || 0;
+    const perPerson = members.length > 0 ? total / members.length : 0;
+    return members.map((m) => ({
+      user_id: m.id,
+      user_name: m.name,
+      amount: parseFloat(perPerson.toFixed(2)),
+    }));
   };
 
   const cancelEditing = () => {
@@ -118,6 +179,11 @@ function ExpenseDetail({ onLogout }) {
         category,
         notes: notes || null,
         split_type: splitType,
+        items: items.map((i) => ({
+          ...i,
+          price: parseFloat(i.price),
+        })),
+        split_details: calculateSplit(),
       };
       const res = await axios.put(`${API}/expenses/${expenseId}`, payload, {
         headers: getAuthHeader(),
@@ -291,6 +357,81 @@ function ExpenseDetail({ onLogout }) {
                   placeholder="Add any notes..."
                 />
               </Field>
+
+              <div className="space-y-3">
+                <label className="text-xs font-bold uppercase tracking-wider text-[var(--app-muted)]">
+                  Items
+                </label>
+                {items.map((item, index) => (
+                  <div
+                    key={index}
+                    className="rounded-[1.25rem] border border-[var(--app-soft-strong)] p-3"
+                    data-testid={`edit-item-${index}`}
+                  >
+                    <div className="flex gap-2 mb-2">
+                      <AppInput
+                        data-testid={`edit-item-name-${index}`}
+                        type="text"
+                        value={item.name}
+                        onChange={(e) => updateItem(index, 'name', e.target.value)}
+                        className="flex-1"
+                        placeholder="Item name"
+                      />
+                      <AppInput
+                        data-testid={`edit-item-price-${index}`}
+                        type="number"
+                        step="0.01"
+                        value={item.price}
+                        onChange={(e) => updateItem(index, 'price', e.target.value)}
+                        className="w-24"
+                        placeholder="Price"
+                      />
+                      {items.length > 1 && (
+                        <AppButton
+                          type="button"
+                          variant="secondary"
+                          onClick={() => removeItem(index)}
+                          className="!px-3"
+                        >
+                          ×
+                        </AppButton>
+                      )}
+                    </div>
+
+                    {splitType === 'item-based' && group && (
+                      <div className="mt-2">
+                        <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-[var(--app-muted)]">
+                          Assign to:
+                        </p>
+                        <div className="flex flex-wrap gap-1">
+                          {group.members.map((member) => (
+                            <button
+                              key={member.id}
+                              type="button"
+                              onClick={() => toggleMemberAssignment(index, member.id)}
+                              className={`rounded-full px-2 py-1 text-[10px] font-bold transition-all border ${
+                                (item.assigned_to || []).includes(member.id)
+                                  ? 'bg-[var(--app-primary-soft)] text-[var(--app-primary-strong)] border-[var(--app-primary)]'
+                                  : 'bg-[var(--app-soft)] text-[var(--app-muted)] border-transparent'
+                              }`}
+                            >
+                              {member.name}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+                <AppButton
+                  type="button"
+                  variant="secondary"
+                  onClick={addItem}
+                  className="w-full text-xs"
+                >
+                  + Add Item
+                </AppButton>
+              </div>
 
               <div className="flex gap-3 pt-1">
                 <AppButton

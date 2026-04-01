@@ -11,6 +11,11 @@ export default defineConfig(({ mode }) => {
         '@': path.resolve(__dirname, './src'),
       },
     },
+    test: {
+      globals: true,
+      environment: 'jsdom',
+      include: ['src/__tests__/**/*.{test,spec}.js'],
+    },
     server: {
       port: 3000,
     },

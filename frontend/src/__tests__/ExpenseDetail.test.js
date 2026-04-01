@@ -63,7 +63,16 @@ const EXPENSE = {
   created_at: '2024-06-01T10:00:00Z',
 };
 
-const GROUPS = [{ id: 'grp-1', name: 'Friends', members: [] }];
+const GROUPS = [
+  {
+    id: 'grp-1',
+    name: 'Friends',
+    members: [
+      { id: 'user-alice', name: 'Alice' },
+      { id: 'user-bob', name: 'Bob' },
+    ],
+  },
+];
 
 // ── Helper ────────────────────────────────────────────────────────────────────
 
@@ -239,6 +248,68 @@ describe('ExpenseDetail — edit mode', () => {
     );
     await waitFor(() =>
       expect(screen.queryByTestId('edit-form')).not.toBeInTheDocument()
+    );
+  });
+
+  test('items are pre-filled in edit form', async () => {
+    await waitFor(() => screen.getByTestId('edit-expense-btn'));
+    fireEvent.click(screen.getByTestId('edit-expense-btn'));
+
+    expect(screen.getByTestId('edit-item-0')).toBeInTheDocument();
+    expect(screen.getByTestId('edit-item-name-0')).toHaveValue('Pasta');
+    expect(screen.getByTestId('edit-item-name-1')).toHaveValue('Salad');
+  });
+
+  test('adding and removing items in edit form', async () => {
+    await waitFor(() => screen.getByTestId('edit-expense-btn'));
+    fireEvent.click(screen.getByTestId('edit-expense-btn'));
+
+    // Current items count is 2
+    expect(screen.getAllByTestId(/edit-item-\d+/).length).toBe(2);
+
+    // Add an item
+    fireEvent.click(screen.getByText(/\+ Add Item/i));
+    expect(screen.getAllByTestId(/edit-item-\d+/).length).toBe(3);
+
+    // Remove the first item
+    const removeBtns = screen.getAllByRole('button', { name: /×/i });
+    fireEvent.click(removeBtns[0]);
+    expect(screen.getAllByTestId(/edit-item-\d+/).length).toBe(2);
+  });
+
+  test('saving includes updated items and split details in payload', async () => {
+    const updated = { ...EXPENSE, items: [{ name: 'Pizza', price: 100, category: 'Food', assigned_to: [] }] };
+    axios.put.mockResolvedValue({ data: updated });
+
+    await waitFor(() => screen.getByTestId('edit-expense-btn'));
+    fireEvent.click(screen.getByTestId('edit-expense-btn'));
+
+    // Change first item
+    fireEvent.change(screen.getByTestId('edit-item-name-0'), { target: { value: 'Pizza' } });
+    fireEvent.change(screen.getByTestId('edit-item-price-0'), { target: { value: '100' } });
+
+    // Remove the second item
+    const removeBtns = screen.getAllByRole('button', { name: /×/i });
+    fireEvent.click(removeBtns[1]);
+
+    fireEvent.change(screen.getByTestId('edit-total'), { target: { value: '100' } });
+    fireEvent.click(screen.getByTestId('save-expense-btn'));
+
+    await waitFor(() =>
+      expect(axios.put).toHaveBeenCalledWith(
+        expect.stringContaining('/expenses/exp-1'),
+        expect.objectContaining({
+          items: expect.arrayContaining([
+            expect.objectContaining({ name: 'Pizza', price: 100 })
+          ]),
+          // Since it's an equal split of 100 for 2 users, it should be 50 each.
+          split_details: expect.arrayContaining([
+            expect.objectContaining({ user_id: 'user-alice', amount: 50 }),
+            expect.objectContaining({ user_id: 'user-bob', amount: 50 }),
+          ])
+        }),
+        expect.any(Object)
+      )
     );
   });
 });
