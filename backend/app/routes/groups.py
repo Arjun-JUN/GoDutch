@@ -4,6 +4,7 @@ from typing import List
 from fastapi import APIRouter, HTTPException, Depends, status
 from app.database import db
 from app.models.group import Group, GroupCreate
+from app.models.expense import Expense
 from app.dependencies import verify_token
 
 router = APIRouter(prefix="/groups", tags=["Groups"])
@@ -57,3 +58,14 @@ async def get_group(group_id: str, current_user: dict = Depends(verify_token)):
     if not group:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found or access denied")
     return Group(**group)
+
+@router.get("/{group_id}/expenses", response_model=List[Expense])
+async def get_group_expenses(group_id: str, current_user: dict = Depends(verify_token)):
+    # Verify group membership first
+    group = await db.groups.find_one({"id": group_id, "members.id": current_user['user_id']}, {"_id": 0})
+    if not group:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found or access denied")
+    
+    # Get expenses for the group and sort by date descending
+    expenses = await db.expenses.find({"group_id": group_id}, {"_id": 0}).sort("date", -1).to_list(1000)
+    return expenses

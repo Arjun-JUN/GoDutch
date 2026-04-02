@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../lib/api';
 import { 
@@ -614,7 +615,7 @@ function NewExpenseRedesign() {
       if (await isEdgeAIReady()) {
         data = await scanReceiptEdge(file);
       } else {
-        data = await api.post('/ocr/scan', { image_base64: base64, mime_type: file.type || 'image/jpeg' });
+        data = await api.post('/ai/ocr/scan', { image_base64: base64, mime_type: file.type || 'image/jpeg' });
       }
 
       setDescription(data.merchant || '');

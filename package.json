@@ -8,6 +8,11 @@
   },
   "scripts": {
     "dev": "concurrently \"cd backend && python -m uvicorn app.main:app --reload --port 8000\" \"cd frontend && pnpm start\""
+  },
+  "packageManager": "pnpm@10.28.0",
+  "pnpm": {
+    "allowedBuildScripts": [
+      "esbuild"
+    ]
   }
-
 }

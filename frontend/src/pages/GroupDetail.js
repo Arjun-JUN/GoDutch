@@ -82,7 +82,7 @@ function GroupDetail() {
 
   return (
     <AppShell>
-      <Header onLogout={onLogout} />
+      <Header />
 
       <PageContent>
         <PageBackButton data-testid="back-button" onClick={() => navigate('/groups')}>
