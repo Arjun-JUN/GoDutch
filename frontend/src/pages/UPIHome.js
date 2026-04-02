@@ -24,27 +24,50 @@ function UPIHome() {
   const { user } = useAuth();
 
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [accounts, transactions] = await Promise.all([
-          api.get('/upi/accounts'),
-          api.get('/upi/transactions?limit=5')
-        ]);
+    // For development: Skip real API calls to /upi/accounts and /upi/transactions
+    // as they are returning 401 and the UPI feature is still in development.
+    const loadMockData = () => {
+      const mockAccount = {
+        id: 'mock-primary-account',
+        bank_name: 'HDFC Bank',
+        upi_id: `${user?.name?.toLowerCase().replace(/\s+/g, '') || 'user'}@okaxis`,
+        balance: 24850.42,
+        is_primary: true
+      };
 
-        const primaryAccount = accounts.find((acc) => acc.is_primary);
-        if (primaryAccount) {
-          setAccount(primaryAccount);
-          setBalance(primaryAccount.balance);
+      const mockTransactions = [
+        {
+          id: 'upitx_1',
+          from_user_id: user?.id,
+          to_upi_id: 'starbucks@coffee',
+          amount: 450.00,
+          created_at: new Date().toISOString()
+        },
+        {
+          id: 'upitx_2',
+          from_user_id: 'someone-else',
+          from_upi_id: 'rent@payments',
+          to_upi_id: 'you@okaxis',
+          amount: 12500.00,
+          created_at: new Date(Date.now() - 86400000).toISOString()
+        },
+        {
+          id: 'upitx_3',
+          from_user_id: user?.id,
+          to_upi_id: 'swiggy@delivery',
+          amount: 842.50,
+          created_at: new Date(Date.now() - 172800000).toISOString()
         }
+      ];
 
-        setRecentTransactions(transactions);
-      } finally {
-        setLoading(false);
-      }
+      setAccount(mockAccount);
+      setBalance(mockAccount.balance);
+      setRecentTransactions(mockTransactions);
+      setLoading(false);
     };
 
-    loadData();
-  }, []);
+    loadMockData();
+  }, [user]);
 
   const quickActions = [
     {
