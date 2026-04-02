@@ -23,6 +23,10 @@ jobs:
         run: pnpm -C frontend install
       - name: Run Lint
         run: pnpm -C frontend lint
+      - name: 'notify vercel'
+        uses: 'vercel/repository-dispatch/actions/status@v1'
+        with:
+          name: Vercel - go-dutch: lint
 
   frontend-build:
     runs-on: ubuntu-latest
