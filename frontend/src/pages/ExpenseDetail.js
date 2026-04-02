@@ -7,6 +7,8 @@ import { CATEGORIES, CATEGORY_ICONS } from '../lib/constants';
 import { calculateSplitDetails } from '../utils/calculateShare';
 import {
   CalendarBlank,
+  DotsThreeCircle,
+  Note,
   PencilSimple,
   Receipt,
   Trash,
