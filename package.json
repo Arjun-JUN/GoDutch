@@ -7,7 +7,7 @@
     "eslint": "8.57.1"
   },
   "scripts": {
-    "dev": "concurrently \"cd backend && python -m uvicorn server:app --reload --port 8000\" \"cd frontend && npm start\""
+    "dev": "concurrently \"cd backend && python -m uvicorn app.main:app --reload --port 8000\" \"cd frontend && pnpm start\""
   }
 
 }

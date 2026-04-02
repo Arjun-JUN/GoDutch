@@ -1,135 +1,89 @@
 # GoDutch
 
-GoDutch is a split-expense app with:
+GoDutch is a premium split-expense application with a focus on high-fidelity UI and seamless ledger management.
 
-- A `FastAPI` backend in `backend/`
-- A `React` frontend in `frontend/`
-- A local `MongoDB` database
+- **Backend**: `FastAPI` (Python 3.11+) located in `backend/`
+- **Frontend**: `React` (Vite, Slate UI) located in `frontend/`
+- **Database**: `MongoDB` (Local or Atlas)
 
 ## Prerequisites
 
-Install these first:
+- **Python 3.11+**
+- **Node.js 18+** & **pnpm** (Recommended)
+- **MongoDB** running on `localhost:27017`
 
-- Python 3.11+
-- Node.js 18+ and npm
-- MongoDB running locally on `mongodb://localhost:27017`
+## Quick Start
 
-## Run The App
-
-You need to run the backend and frontend in two separate terminals.
-
-### 1. Start MongoDB
-
-Make sure your local MongoDB server is running before starting the app.
-
-To verify MongoDB is running on Windows:
+The fastest way to get the entire stack (Backend + Frontend) running is from the root directory:
 
 ```powershell
+# 1. Install dependencies
+pnpm install
+
+# 2. Start the integrated dev server
+pnpm dev
+```
+
+*Note: If you don't have pnpm installed, you can use `npm install` and `npm run dev` from the root, but pnpm is strictly recommended for frontend performance.*
+
+---
+
+## Detailed Component Setup
+
+### 1. Database (MongoDB)
+Ensure MongoDB is active on your system. On Windows:
+```powershell
+# Verify service status
 Get-Service | Where-Object { $_.Name -like '*Mongo*' }
-```
-
-If MongoDB is running as a Windows service, its `Status` should be `Running`.
-
-You can also confirm that MongoDB is listening on the default port:
-
-```powershell
-Test-NetConnection localhost -Port 27017
-```
-
-If `TcpTestSucceeded` is `True`, MongoDB is reachable on `localhost:27017`.
-
-If MongoDB is installed as a service but is stopped, start it with:
-
-```powershell
+# If stopped, start it
 Start-Service MongoDB
 ```
 
-### 2. Start the backend
+### 2. Backend Architecture
+The backend has been refactored into a structured FastAPI package.
 
-Open a terminal in the project root and run these commands:
-
+**Manual Setup:**
 ```powershell
 cd backend
 python -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-python -m uvicorn server:app --reload --host 0.0.0.0 --port 8000
+python -m uvicorn app.main:app --reload --port 8000
 ```
 
-Important: if you run `pip install -r requirements.txt` from the project root, it will fail because `requirements.txt` lives inside `backend/`.
-
-Backend will be available at:
-
-- `http://localhost:8000`
-- Swagger docs: `http://localhost:8000/docs`
-
-### 3. Configure backend environment
-
-Create `backend/.env` with these values:
-
+**Environment (`backend/.env`):**
 ```env
 MONGO_URL=mongodb://localhost:27017
 DB_NAME=godutch
-JWT_SECRET=your-local-secret
+JWT_SECRET=your-secure-secret
 CORS_ORIGINS=http://localhost:3000
-GEMINI_API_KEY=
+GEMINI_API_KEY=your_key_here
 ```
 
-Notes:
+### 3. Frontend (Slate Design System)
+The frontend uses the **Slate** design system for a premium look and feel.
 
-- `GEMINI_API_KEY` is only needed for AI-powered features like OCR and smart split.
-- Keep real secrets out of source control.
-
-### 4. Start the frontend
-
-Open a second terminal in the project root and run these commands:
-
+**Manual Setup:**
 ```powershell
 cd frontend
-npm install
-npm start
+pnpm install
+pnpm dev
 ```
 
-Frontend will be available at:
-
-- `http://localhost:3000`
-
-### 5. Configure frontend environment
-
-Create `frontend/.env` with:
-
+**Environment (`frontend/.env`):**
 ```env
 REACT_APP_BACKEND_URL=http://localhost:8000
 ```
 
-## Quick Start Summary
+---
 
-Terminal 1:
-
-```powershell
-cd backend
-python -m venv .venv
-.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-python -m uvicorn server:app --reload --host 0.0.0.0 --port 8000
-```
-
-Terminal 2:
-
-```powershell
-cd frontend
-npm install
-npm start
-```
-
-Then open `http://localhost:3000`.
+## Core Features
+- **Smart Settlements**: Real-time balance calculations across groups.
+- **UPI Integration**: Linked bank accounts and payment flows.
+- **AI Receipts**: OCR-powered expense extraction (requires `GEMINI_API_KEY`).
+- **Reports**: Deep spend analysis and group trends.
 
 ## Troubleshooting
-
-- If the frontend cannot reach the backend, check that `frontend/.env` points to `http://localhost:8000`.
-- If the backend fails on startup, confirm MongoDB is running and `backend/.env` exists.
-- If PowerShell blocks the virtual environment activation, run:
-
-```powershell
-Set-ExecutionPolicy -Scope Process Bypass
-```
+- **Invalid hook call**: Ensure all dependencies are installed via `pnpm` and check for missing React imports in new components.
+- **Backend 500 Errors**: Verify MongoDB is reachable and your `.env` variables (especially `JWT_SECRET`) are set.
+- **CORS Issues**: Ensure `CORS_ORIGINS` in the backend matches your frontend URL (default `http://localhost:3000`).

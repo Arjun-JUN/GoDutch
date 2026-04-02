@@ -2,22 +2,21 @@
 
 ## Architecture
 
-- **Backend**: FastAPI + MongoDB (Motor async). `backend/server.py` is the single-file API.
-- **Frontend**: React 19 + Vite + Tailwind + Radix UI + framer-motion.
+- **Backend**: FastAPI structured package. Entry point: `backend/app/main.py`.
+- **Frontend**: React 18+ + Vite + Slate Design System + framer-motion.
 - **Auth**: JWT (30-day expiry). `verify_token` dependency on every protected route.
 - **AI**: Gemini API for receipt OCR (`/api/ocr/scan`) and smart split (`/api/ai/smart-split`).
-- **DB Seeding**: `backend/seed.py` populates dev data on startup.
+- **DB Seeding**: `backend/seed.py` populates dev data. Run separately if needed.
 
 ## Running locally
 
-To start both Backend and Frontend + automatically open the browser:
+To start both Backend and Frontend integrated:
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
-Note: Frontend is configured to auto-open `http://localhost:3000` via `vite --open`.
-
+Note: This uses `concurrently` from the root to start the FastAPI server (port 8000) and the Vite frontend (port 3000).
 
 ## Tests
 
@@ -29,11 +28,11 @@ pytest                       # all tests
 pytest tests/unit/ -x        # unit only, stop on first fail
 
 # Frontend
-cd frontend && npx vitest run
+cd frontend && pnpm test
 ```
 
 - Backend tests use `mongomock-motor` (no real DB needed).
-- Frontend mocks framer-motion for jsdom compatibility.
+- Frontend tests use Vitest and mock framer-motion for jsdom compatibility.
 
 ## Design
 
@@ -41,7 +40,9 @@ Follow [`DESIGN_GUIDELINES.md`](./DESIGN_GUIDELINES.md) strictly: tonal topograp
 
 ## Status
 
-**Phase: PQ Fixes (Milestone 3).** MVP and hosting are done.
+**Phase: Tech Debt Remediation & UI Polish.**
+The project has been migrated to `pnpm` and the backend has been modularized.
+All UI components use the **Slate** library in `src/slate`.
 
 Open bugs — see [`PQ_BUGS_LOG.md`](./PQ_BUGS_LOG.md):
 - **B003**: Any user can settle for anyone (auth gap).

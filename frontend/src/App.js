@@ -51,9 +51,9 @@ function App() {
             <Route path="/docs/slate" element={<SlateDocs />} />
             <Route path="/" element={<Navigate to="/dashboard" />} />
           </Routes>
+          <Analytics />
         </BrowserRouter>
       </AuthProvider>
-      <Analytics />
     </div>
   );
 }

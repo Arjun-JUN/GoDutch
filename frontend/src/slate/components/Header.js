@@ -1,4 +1,16 @@
-import { AuthProvider, useAuth } from '../../contexts/AuthContext';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { motion, useReducedMotion } from 'framer-motion';
+import { useAuth } from '../../contexts/AuthContext';
+import { 
+  ArrowsLeftRight, 
+  CurrencyInr, 
+  House, 
+  Plus, 
+  Receipt, 
+  SignOut, 
+  Users 
+} from '@/slate/icons';
+import { AppButton, IconBadge } from './index';
 
 function Header() {
   const navigate = useNavigate();
