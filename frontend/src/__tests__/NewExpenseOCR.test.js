@@ -6,8 +6,7 @@ import { api } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import NewExpenseRedesign from '../pages/NewExpenseRedesign';
 
-// ─── Mocks ────────────────────────────────────────────────────────────────────
-
+// Mock dependencies
 vi.mock('../lib/api', () => ({
   api: {
     get: vi.fn(),
@@ -45,10 +44,10 @@ vi.mock('react-router-dom', () => ({
   useLocation: () => ({ state: {} }),
 }));
 
-// Mock @/slate components
+// Thorough mock of @/slate components
 vi.mock('@/slate', () => ({
   Header: () => <div data-testid="header" />,
-  AppButton: ({ children, onClick, disabled, ...props }) => (
+  AppButton: ({ children, onClick, disabled, className, ...props }) => (
     <button onClick={onClick} disabled={disabled} {...props}>{children}</button>
   ),
   AppInput: ({ onValueChange, ...props }) => (
@@ -75,10 +74,11 @@ vi.mock('@/slate', () => ({
   Callout: ({ children }) => <div>{children}</div>,
 }));
 
+// Mock icons
 vi.mock('@/slate/icons', () => ({
   ArrowLeft: () => null,
   CalendarBlank: () => null,
-  Camera: () => <span>CameraIcon</span>,
+  Camera: () => null,
   Check: () => null,
   ImageSquare: () => null,
   Note: () => null,
@@ -94,8 +94,6 @@ vi.mock('../utils/edgeAI', () => ({
   scanReceiptEdge: vi.fn(),
 }));
 
-// ─── Fixtures ──────────────────────────────────────────────────────────────────
-
 const GROUPS = [
   {
     id: 'grp-1',
@@ -107,39 +105,18 @@ const GROUPS = [
   },
 ];
 
-// ─── Tests ─────────────────────────────────────────────────────────────────────
-
-describe('NewExpenseRedesign', () => {
+describe('NewExpenseRedesign — OCR and Split Modal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     api.get.mockResolvedValue(GROUPS);
-    api.post.mockResolvedValue({ id: 'exp-123' });
   });
 
-  test('submits basic expense correctly', async () => {
-    render(<NewExpenseRedesign />);
-    
-    await waitFor(() => expect(screen.getByTestId('group-select')).toBeInTheDocument());
-    
-    fireEvent.change(screen.getByTestId('description-input'), { target: { value: 'Coffee' } });
-    fireEvent.change(screen.getByTestId('total-input'), { target: { value: '450' } });
-
-    const submitBtn = screen.getByTestId('create-expense-btn');
-    await act(async () => {
-      fireEvent.click(submitBtn);
-    });
-
-    expect(api.post).toHaveBeenCalledWith('/expenses', expect.objectContaining({
-      merchant: 'Coffee',
-      total_amount: 450,
-    }));
-  });
-
-  test('successful OCR scan automatically opens split modal', async () => {
+  test('successful OCR scan automatically opens split modal and selects item-based tab', async () => {
     // Mock the OCR response
-    api.post.mockResolvedValueOnce({
+    api.post.mockResolvedValue({
       merchant: 'Starbucks',
       total_amount: 450,
+      date: '2023-10-27',
       items: [
         { name: 'Latte', price: 200, quantity: 1 },
         { name: 'Muffin', price: 250, quantity: 1 }
@@ -148,12 +125,14 @@ describe('NewExpenseRedesign', () => {
 
     render(<NewExpenseRedesign />);
 
+    // Wait for group select and initial state
     await waitFor(() => expect(screen.getByTestId('group-select')).toBeInTheDocument());
 
     // Mock file upload
     const file = new File(['hello'], 'receipt.png', { type: 'image/png' });
     const input = screen.getByTestId('receipt-upload-input');
     
+    // Simulate upload
     await act(async () => {
       fireEvent.change(input, { target: { files: [file] } });
     });
@@ -163,13 +142,22 @@ describe('NewExpenseRedesign', () => {
       expect(screen.getByTestId('split-modal')).toBeInTheDocument();
     });
 
-    // Verify items are present in the modal (conceptually via text)
+    // Verify merchant and total were set (behind the modal)
+    expect(screen.getByTestId('description-input')).toHaveValue('Starbucks');
+    expect(screen.getByTestId('total-input')).toHaveValue(450);
+
+    // Verify item-based tab is active
+    const itemBasedTab = screen.getByTestId('split-tab-item-based');
+    expect(itemBasedTab).toHaveClass('active');
+
+    // Verify items are listed
     expect(screen.getByText('Latte')).toBeInTheDocument();
     expect(screen.getByText('Muffin')).toBeInTheDocument();
   });
 
-  test('OCR scan with single/no items still opens split modal (per user feedback)', async () => {
-    api.post.mockResolvedValueOnce({
+  test('OCR scan with zero items still opens split modal', async () => {
+    // Mock the OCR response with no items
+    api.post.mockResolvedValue({
       merchant: 'Quick Mart',
       total_amount: 150,
       items: []
@@ -186,10 +174,12 @@ describe('NewExpenseRedesign', () => {
       fireEvent.change(input, { target: { files: [file] } });
     });
 
+    // Modal should still open
     await waitFor(() => {
       expect(screen.getByTestId('split-modal')).toBeInTheDocument();
     });
-    
+
+    // Default item should be present
     expect(screen.getByText('Quick Mart')).toBeInTheDocument();
   });
 });

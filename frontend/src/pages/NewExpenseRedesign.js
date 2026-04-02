@@ -176,8 +176,9 @@ function SplitBetweenModal({ open, onClose, members, splitBetween, splitMode, on
     if (open) {
       setLocalSplit(splitBetween);
       setLocalMode(splitMode);
+      if (items) setLocalItems(items);
     }
-  }, [open, splitBetween, splitMode]);
+  }, [open, splitBetween, splitMode, items]);
 
   const toggleMember = (memberId) => {
     const existing = localSplit.find((s) => s.user_id === memberId);
@@ -220,6 +221,7 @@ function SplitBetweenModal({ open, onClose, members, splitBetween, splitMode, on
     <AnimatePresence>
       <motion.div
         className="modal-fullscreen"
+        data-testid="split-modal"
         initial={{ y: '100%' }}
         animate={{ y: 0 }}
         exit={{ y: '100%' }}
@@ -249,17 +251,20 @@ function SplitBetweenModal({ open, onClose, members, splitBetween, splitMode, on
             </Callout>
           )}
           <div className="split-tab-nav mb-5" data-testid="split-tab-nav">
-            {tabs.map((tab) => (
-              <button
-                key={tab}
-                className={`split-tab-item ${localMode === tab.toLowerCase().replace(' ', '') ? 'active' : ''}`}
-                onClick={() => setLocalMode(tab.toLowerCase().replace(' ', ''))}
-                data-testid={`split-tab-${tab.toLowerCase().replace(' ', '')}`}
-                type="button"
-              >
-                {tab}
-              </button>
-            ))}
+            {tabs.map((tab) => {
+              const modeValue = tab === 'By line item' ? 'item-based' : tab.toLowerCase().replace(' ', '');
+              return (
+                <button
+                  key={tab}
+                  className={`split-tab-item ${localMode === modeValue ? 'active' : ''}`}
+                  onClick={() => setLocalMode(modeValue)}
+                  data-testid={`split-tab-${modeValue}`}
+                  type="button"
+                >
+                  {tab}
+                </button>
+              );
+            })}
           </div>
 
           <motion.div
@@ -276,7 +281,7 @@ function SplitBetweenModal({ open, onClose, members, splitBetween, splitMode, on
               }
             }}
           >
-            {localMode === 'bylineitem' ? (
+            {localMode === 'item-based' ? (
               <ItemSplitView 
                 items={localItems}
                 onItemsChange={setLocalItems}
@@ -602,7 +607,7 @@ function NewExpenseRedesign() {
     if (splitMode === 'equally') return 'equally';
     if (splitMode === 'unequally') return 'unequally';
     if (splitMode === 'byshares') return 'by shares';
-    if (splitMode === 'bylineitem') return 'by line item';
+    if (splitMode === 'item-based') return 'by line item';
     return 'equally';
   };
 
@@ -623,11 +628,13 @@ function NewExpenseRedesign() {
       setDescription(data.merchant || '');
       if (data.date) setDate(data.date);
       setTotalAmount(String(data.total_amount || ''));
-      if (data.items) {
+      if (data.items && data.items.length > 0) {
         setItems(data.items.map(i => ({ ...i, assigned_to: [], split_type: 'equal' })));
       } else {
         setItems([{ name: data.merchant || 'Expense', price: data.total_amount || 0, quantity: 1, category: 'General', assigned_to: [], split_type: 'equal' }]);
       }
+      setSplitMode('item-based');
+      setShowSplitModal(true);
       toast.success('Receipt scanned successfully!');
     } catch (error) {
       const errorMsg = error.message || 'Scan failed';
@@ -688,7 +695,7 @@ function NewExpenseRedesign() {
         merchant: description.trim(),
         date,
         total_amount: parseFloat(totalAmount),
-        items: splitMode === 'bylineitem' ? items : [{ name: description.trim(), price: parseFloat(totalAmount), quantity: 1, category: autoCategory, assigned_to: [] }],
+        items: splitMode === 'item-based' ? items : [{ name: description.trim(), price: parseFloat(totalAmount), quantity: 1, category: autoCategory, assigned_to: [] }],
         split_type: splitTypeMap[splitMode] || 'equal',
         split_details: splitDetails,
         receipt_image: receiptImage,
