@@ -3,7 +3,10 @@
  * Replaces Axios for better security and native robustness.
  */
 
-const API_BASE = (import.meta.env?.VITE_API_BASE || 'http://localhost:8000') + '/api';
+const API_BASE = (
+  process.env?.REACT_APP_BACKEND_URL || 
+  'http://localhost:8000'
+) + '/api';
 
 const getAuthToken = () => localStorage.getItem('token');
 
