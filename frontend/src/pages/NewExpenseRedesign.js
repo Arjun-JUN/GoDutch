@@ -531,6 +531,24 @@ function NewExpenseRedesign() {
   // File input ref
   const fileInputRef = useRef(null);
 
+  const initSplitForGroup = useCallback(
+    (group) => {
+      if (!group) return;
+      const userId = currentUser?.id;
+
+      // Default: current user pays full
+      setPaidBy([{ user_id: userId, amount: '' }]);
+
+      // Default: all members split equally
+      setSplitBetween(
+        group.members.map((m) => ({ user_id: m.id, amount: '', shares: 1 }))
+      );
+      setItems([{ name: 'Default Item', price: 0, quantity: 1, category: 'General', assigned_to: [], split_type: 'equal' }]);
+      setSplitMode('equally');
+    },
+    [currentUser?.id]
+  );
+
   const loadGroups = useCallback(async () => {
     try {
       const groupsData = await api.get('/groups');
@@ -555,23 +573,6 @@ function NewExpenseRedesign() {
     loadGroups();
   }, [loadGroups]);
 
-  const initSplitForGroup = useCallback(
-    (group) => {
-      if (!group) return;
-      const userId = currentUser?.id;
-
-      // Default: current user pays full
-      setPaidBy([{ user_id: userId, amount: '' }]);
-
-      // Default: all members split equally
-      setSplitBetween(
-        group.members.map((m) => ({ user_id: m.id, amount: '', shares: 1 }))
-      );
-      setItems([{ name: 'Default Item', price: 0, quantity: 1, category: 'General', assigned_to: [], split_type: 'equal' }]);
-      setSplitMode('equally');
-    },
-    [currentUser?.id]
-  );
 
   // When group changes, reinitialize splits
   const handleGroupChange = (groupId) => {
