@@ -376,7 +376,7 @@ async def login(credentials: UserLogin):
     user = User(id=user_doc['id'], email=user_doc['email'], name=user_doc['name'], created_at=user_doc['created_at'])
     return TokenResponse(token=token, user=user)
 
-@api_router.post("/ocr/scan", response_model=OCRResult)
+@api_router.post("/ai/ocr/scan", response_model=OCRResult)
 async def scan_receipt(request: OCRRequest, current_user: dict = Depends(verify_token)):
     try:
         base64.b64decode(request.image_base64, validate=True)
