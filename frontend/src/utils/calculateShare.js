@@ -54,7 +54,7 @@ export const calculateSplitDetails = ({
   }
 
   // ─── Item-Based Split ───
-  if (splitMode === 'item-based') {
+  if (splitMode === 'item-based' || splitMode === 'item_based') {
     const memberTotals = {};
     members.forEach((m) => (memberTotals[m.id] = 0));
     
@@ -63,14 +63,31 @@ export const calculateSplitDetails = ({
       const qty = parseInt(item.quantity) || 1;
       const subtotal = price * qty;
       const assignedTo = item.assigned_to || [];
+      const itemSplitType = item.split_type || 'equal';
       
       if (assignedTo.length > 0) {
-        const perPerson = subtotal / assignedTo.length;
-        assignedTo.forEach((mid) => {
-          if (memberTotals[mid] !== undefined) memberTotals[mid] += perPerson;
-        });
+        if (itemSplitType === 'unequal' || itemSplitType === 'custom') {
+          // Item-level unequal split
+          const customAmounts = item.custom_amounts || {};
+          let totalAssigned = 0;
+          assignedTo.forEach((mid) => {
+            const amt = parseFloat(customAmounts[mid]) || 0;
+            if (memberTotals[mid] !== undefined) {
+              memberTotals[mid] += amt;
+              totalAssigned += amt;
+            }
+          });
+          // If total custom amounts < subtotal, split the remainder? 
+          // For now, assume user enters full amount or handle as is.
+        } else {
+          // Item-level equal split
+          const perPerson = subtotal / assignedTo.length;
+          assignedTo.forEach((mid) => {
+            if (memberTotals[mid] !== undefined) memberTotals[mid] += perPerson;
+          });
+        }
       } else {
-        // If nobody assigned, split across all members
+        // If nobody assigned, split across all members equally
         const perPerson = subtotal / members.length;
         members.forEach((m) => (memberTotals[m.id] += perPerson));
       }

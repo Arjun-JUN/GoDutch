@@ -6,7 +6,8 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { Field, AppInput, AppSelect, AppTextarea } from '../slate/components/AppField';
+import { Field, AppInput, AppTextarea } from '../slate/components/AppField';
+import { AppSelect } from '../slate/components/AppSelect';
 
 // ── Field ─────────────────────────────────────────────────────────────────────
 
@@ -109,55 +110,27 @@ describe('AppInput', () => {
 // ── AppSelect ─────────────────────────────────────────────────────────────────
 
 describe('AppSelect', () => {
-  test('renders a select element', () => {
+  test('renders the trigger with placeholder', () => {
     render(
-      <AppSelect>
-        <option value="a">Option A</option>
-      </AppSelect>
+      <AppSelect placeholder="Select category" options={[{ label: 'A', value: 'a' }]} />
     );
-    expect(screen.getByRole('combobox')).toBeInTheDocument();
+    expect(screen.getByText('Select category')).toBeInTheDocument();
   });
 
-  test('renders options as children', () => {
+  test('renders the label when provided', () => {
     render(
-      <AppSelect>
-        <option value="cat1">Category 1</option>
-        <option value="cat2">Category 2</option>
-      </AppSelect>
+      <AppSelect label="Category" placeholder="Select" options={[{ label: 'A', value: 'a' }]} />
     );
-    expect(screen.getByText('Category 1')).toBeInTheDocument();
-    expect(screen.getByText('Category 2')).toBeInTheDocument();
+    expect(screen.getByText('Category')).toBeInTheDocument();
   });
 
-  test('calls onChange when selection changes', () => {
-    const handleChange = jest.fn();
-    render(
-      <AppSelect onChange={handleChange}>
-        <option value="a">A</option>
-        <option value="b">B</option>
-      </AppSelect>
-    );
-    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'b' } });
-    expect(handleChange).toHaveBeenCalled();
-  });
-
-  test('has app-input class', () => {
-    render(
-      <AppSelect>
-        <option value="x">X</option>
-      </AppSelect>
-    );
-    expect(screen.getByRole('combobox')).toHaveClass('app-input');
-  });
-
-  test('forwards ref', () => {
+  test('forwards ref to trigger button', () => {
     const ref = React.createRef();
     render(
-      <AppSelect ref={ref}>
-        <option value="x">X</option>
-      </AppSelect>
+      <AppSelect ref={ref} options={[{ label: 'A', value: 'a' }]} />
     );
-    expect(ref.current.tagName).toBe('SELECT');
+    expect(ref.current).not.toBeNull();
+    expect(ref.current.tagName).toBe('BUTTON');
   });
 });
 

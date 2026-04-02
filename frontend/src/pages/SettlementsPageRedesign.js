@@ -107,20 +107,17 @@ function SettlementsPageRedesign() {
             )}
           />
 
-          <div className="mb-5 md:mb-6">
-            <Field label="Select Group">
-              <AppSelect
-                data-testid="group-select"
-                value={selectedGroup}
-                onChange={(e) => setSelectedGroup(e.target.value)}
-                className="w-full md:max-w-md text-sm md:text-base"
-              >
-                {groups.map((group) => (
-                  <option key={group.id} value={group.id}>{group.name}</option>
-                ))}
-              </AppSelect>
-            </Field>
-          </div>
+          <AppSelect
+            label="Select Group"
+            value={selectedGroup}
+            onValueChange={setSelectedGroup}
+            options={groups.map((group) => ({
+              label: group.name,
+              value: group.id,
+            }))}
+            className="mb-5 md:mb-6 w-full md:max-w-md"
+            data-testid="group-select"
+          />
 
           <AppSurface className="p-5 md:p-6">
             <div className="mb-5 flex items-center gap-3">

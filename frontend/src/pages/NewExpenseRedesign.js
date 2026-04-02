@@ -36,6 +36,7 @@ import {
   X,
 } from '@/slate/icons';
 import { Header, AppButton, AppInput, AppSelect, AppShell, AppSurface, PageContent, Callout } from '@/slate';
+import { ItemSplitView } from './ItemSplitView';
 
 
 /* ─── Sub-components ─── */
@@ -179,9 +180,10 @@ function PaidByModal({ open, onClose, members, paidBy, onPaidByChange, totalAmou
   );
 }
 
-function SplitBetweenModal({ open, onClose, members, splitBetween, splitMode, onSplitChange, onSplitModeChange, totalAmount, currencySymbol }) {
+function SplitBetweenModal({ open, onClose, members, splitBetween, splitMode, onSplitChange, onSplitModeChange, totalAmount, currencySymbol, items, onItemsChange }) {
   const [localSplit, setLocalSplit] = useState(splitBetween);
   const [localMode, setLocalMode] = useState(splitMode);
+  const [localItems, setLocalItems] = useState(items || []);
 
   useEffect(() => {
     if (open) {
@@ -206,6 +208,7 @@ function SplitBetweenModal({ open, onClose, members, splitBetween, splitMode, on
   const handleDone = () => {
     onSplitChange(localSplit);
     onSplitModeChange(localMode);
+    if (onItemsChange && localItems) onItemsChange(localItems);
     onClose();
   };
 
@@ -224,7 +227,7 @@ function SplitBetweenModal({ open, onClose, members, splitBetween, splitMode, on
   // For shares
   const totalShares = localSplit.reduce((s, p) => s + (parseInt(p.shares) || 1), 0);
 
-  const tabs = ['Equally', 'Unequally', 'By shares'];
+  const tabs = ['Equally', 'Unequally', 'By shares', 'By line item'];
 
   return (
     <AnimatePresence>
@@ -286,7 +289,16 @@ function SplitBetweenModal({ open, onClose, members, splitBetween, splitMode, on
               }
             }}
           >
-            <div className="member-select-list">
+            {localMode === 'bylineitem' ? (
+              <ItemSplitView 
+                items={localItems}
+                onItemsChange={setLocalItems}
+                members={members}
+                currencySymbol={currencySymbol}
+                totalAmount={totalAmount}
+              />
+            ) : (
+              <div className="member-select-list">
               {members.map((member) => {
                 const isSelected = localSplit.some((s) => s.user_id === member.id);
                 const splitEntry = localSplit.find((s) => s.user_id === member.id);
@@ -345,20 +357,19 @@ function SplitBetweenModal({ open, onClose, members, splitBetween, splitMode, on
                 );
               })}
             </div>
-
-            {localMode === 'unequally' && (
-              <div className={`amount-remaining ${remaining < -0.01 ? 'over' : ''}`}>
-                <span className="label">Remaining</span>
-                <span className="value">
-                  {currencySymbol}{Math.abs(remaining).toFixed(2)}{remaining < -0.01 ? ' over' : ''}
-                </span>
-              </div>
             )}
 
-            {localMode === 'byshares' && (
-              <div className="amount-remaining">
-                <span className="label">Total shares</span>
-                <span className="value">{totalShares}</span>
+            {(localMode === 'unequally' || localMode === 'byshares') && (
+              <div className={`amount-remaining ${localMode === 'unequally' && remaining < -0.01 ? 'over' : ''}`}>
+                <span className="label">
+                  {localMode === 'unequally' ? 'Remaining' : 'Total shares'}
+                </span>
+                <span className="value">
+                  {localMode === 'unequally' 
+                    ? `${currencySymbol}${Math.abs(remaining).toFixed(2)}${remaining < -0.01 ? ' over' : ''}`
+                    : totalShares
+                  }
+                </span>
               </div>
             )}
           </motion.div>
@@ -516,6 +527,7 @@ function NewExpenseRedesign() {
   const [paidBy, setPaidBy] = useState([]);
   const [splitBetween, setSplitBetween] = useState([]);
   const [splitMode, setSplitMode] = useState('equally');
+  const [items, setItems] = useState([]);
 
   // Modals
   const [showPaidByModal, setShowPaidByModal] = useState(false);
@@ -568,6 +580,7 @@ function NewExpenseRedesign() {
       setSplitBetween(
         group.members.map((m) => ({ user_id: m.id, amount: '', shares: 1 }))
       );
+      setItems([{ name: 'Default Item', price: 0, quantity: 1, category: 'General', assigned_to: [], split_type: 'equal' }]);
       setSplitMode('equally');
     },
     [currentUser?.id]
@@ -601,6 +614,7 @@ function NewExpenseRedesign() {
     if (splitMode === 'equally') return 'equally';
     if (splitMode === 'unequally') return 'unequally';
     if (splitMode === 'byshares') return 'by shares';
+    if (splitMode === 'bylineitem') return 'by line item';
     return 'equally';
   };
 
@@ -621,6 +635,11 @@ function NewExpenseRedesign() {
       setDescription(data.merchant || '');
       if (data.date) setDate(data.date);
       setTotalAmount(String(data.total_amount || ''));
+      if (data.items) {
+        setItems(data.items.map(i => ({ ...i, assigned_to: [], split_type: 'equal' })));
+      } else {
+        setItems([{ name: data.merchant || 'Expense', price: data.total_amount || 0, quantity: 1, category: 'General', assigned_to: [], split_type: 'equal' }]);
+      }
       toast.success('Receipt scanned successfully!');
     } catch (error) {
       const errorMsg = error.message || 'Scan failed';
@@ -672,6 +691,7 @@ function NewExpenseRedesign() {
         splitMode,
         members: currentGroup?.members || [],
         splitBetween,
+        items,
       });
       const splitTypeMap = { equally: 'equal', unequally: 'custom', byshares: 'custom' };
 
@@ -680,7 +700,7 @@ function NewExpenseRedesign() {
         merchant: description.trim(),
         date,
         total_amount: parseFloat(totalAmount),
-        items: [{ name: description.trim(), price: parseFloat(totalAmount), quantity: 1, category: autoCategory, assigned_to: [] }],
+        items: splitMode === 'bylineitem' ? items : [{ name: description.trim(), price: parseFloat(totalAmount), quantity: 1, category: autoCategory, assigned_to: [] }],
         split_type: splitTypeMap[splitMode] || 'equal',
         split_details: splitDetails,
         receipt_image: receiptImage,
@@ -719,35 +739,22 @@ function NewExpenseRedesign() {
             </h1>
           </div>
 
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-2 md:gap-4">
             {/* ─── Step 1: Group Selection ─── */}
-            <AppSurface className="mb-4 p-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-[var(--app-soft-strong)] text-[var(--app-primary-strong)]">
-                  <UsersThree size={20} weight="bold" />
-                </div>
-                <div className="relative flex-1">
-                  <select
-                    data-testid="group-select"
-                    value={selectedGroup}
-                    onChange={(e) => handleGroupChange(e.target.value)}
-                    required
-                    className="w-full appearance-none bg-transparent text-base font-extrabold tracking-tight text-[var(--app-foreground)] focus:outline-none cursor-pointer pr-7"
-                    style={{ WebkitAppearance: 'none', MozAppearance: 'none' }}
-                  >
-                    <option value="" disabled>Select a group</option>
-                    {groups.map((group) => (
-                      <option key={group.id} value={group.id}>
-                        {group.name}
-                      </option>
-                    ))}
-                  </select>
-                  <CaretDown size={16} weight="bold" className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--app-muted)]" />
-                </div>
-              </div>
-            </AppSurface>
+            <AppSelect
+              label="Group"
+              value={selectedGroup}
+              onValueChange={handleGroupChange}
+              options={groups.map((group) => ({
+                label: group.name,
+                value: group.id,
+              }))}
+              icon={UsersThree}
+              placeholder="Select a group"
+              className="mb-2 md:mb-4"
+              data-testid="group-select"
+            />
 
-            {/* ─── Step 2: Description + Amount (revealed after group) ─── */}
             <AnimatePresence>
               {groupSelected && (
                 <motion.div
@@ -757,7 +764,83 @@ function NewExpenseRedesign() {
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.28, ease: 'easeOut' }}
                 >
-                  <AppSurface className="mb-4 p-5">
+                  {/* ─── Step 2: Receipt Actions ─── */}
+                  <AppSurface className="mb-1.5 p-4 md:mb-3 md:p-5 relative overflow-hidden" hoverEffect={false}>
+                    <div className="flex items-center justify-between mb-2.5">
+                      <div className="flex items-center gap-2">
+                        <Receipt size={18} weight="bold" className="text-[var(--app-muted)]" />
+                        <label className="text-[11px] font-extrabold uppercase tracking-[0.1em] text-[var(--app-muted)]">Receipt</label>
+                      </div>
+                      <div className="flex items-center gap-1.5 rounded-full bg-[var(--app-soft-strong)] px-2.5 py-1 text-[9px] font-black uppercase tracking-widest text-[var(--app-primary-strong)] shadow-sm">
+                        <span className="relative flex h-1.5 w-1.5">
+                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--app-primary)] opacity-75"></span>
+                          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[var(--app-primary-strong)]"></span>
+                        </span>
+                        AI Smart Split
+                      </div>
+                    </div>
+
+                    {receiptImage ? (
+                      <div className="group relative mb-3 overflow-hidden rounded-2xl border border-[var(--app-border-soft)] bg-[var(--app-soft)]">
+                        <img
+                          src={receiptImage}
+                          alt="Receipt"
+                          className="mx-auto max-h-24 md:max-h-40 w-full object-contain transition-transform duration-500 group-hover:scale-105"
+                          data-testid="receipt-preview"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+                        <button
+                          type="button"
+                          className="absolute top-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-[var(--app-danger)] shadow-lg backdrop-blur-sm transition-all hover:scale-110 active:scale-95"
+                          onClick={() => setReceiptImage('')}
+                        >
+                          <X size={16} weight="bold" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="mb-3 rounded-xl bg-[linear-gradient(135deg,rgba(209,232,221,0.2)_0%,rgba(231,244,239,0.3)_100%)] p-3 border border-[var(--app-border-soft)]">
+                        <p className="text-[11px] leading-relaxed text-[var(--app-muted)] font-medium">
+                          <span className="text-[var(--app-primary-strong)] font-bold">Pro-tip:</span> Snap a photo to use <span className="bg-clip-text text-transparent bg-[linear-gradient(90deg,var(--app-primary)_0%,#6b8e23_100%)] font-extrabold uppercase tracking-tighter">AI Split</span>. Our engine itemizes everything for you automatically.
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="flex gap-2.5">
+                      <AppButton
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        className="flex-1 gap-2 font-bold shadow-sm"
+                        onClick={() => setShowCamera(true)}
+                        data-testid="camera-btn"
+                      >
+                        <Camera size={18} weight="bold" />
+                        Snap Bill
+                      </AppButton>
+                      <AppButton
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="flex-1 gap-2 font-bold border border-[var(--app-border-soft)]"
+                        onClick={() => fileInputRef.current?.click()}
+                        data-testid="upload-btn"
+                      >
+                        <ImageSquare size={18} weight="bold" />
+                        Upload
+                      </AppButton>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                        data-testid="receipt-upload-input"
+                      />
+                    </div>
+                  </AppSurface>
+
+                  {/* ─── Step 3: Description + Amount ─── */}
+                  <AppSurface className="mb-1.5 p-4 md:mb-3 md:p-5">
                     <div className="space-y-4">
                       {/* Description with auto-icon */}
                       <div>
@@ -799,12 +882,13 @@ function NewExpenseRedesign() {
                   </AppSurface>
 
                   {/* ─── Split Text ─── */}
-                  <AppSurface className="mb-4 p-5">
-                    <div className="expense-split-text" data-testid="split-text">
+                  {/* ─── Split Text ─── */}
+                  <AppSurface className="mb-2 p-3 md:mb-4 md:p-5">
+                    <div className="expense-split-text text-[13px] md:text-sm" data-testid="split-text">
                       <span>Paid by</span>
                       <button
                         type="button"
-                        className="expense-split-btn"
+                        className="expense-split-btn px-2 py-1 bg-white/50 rounded-lg hover:bg-white transition-colors"
                         onClick={() => setShowPaidByModal(true)}
                         data-testid="paidby-btn"
                       >
@@ -813,7 +897,7 @@ function NewExpenseRedesign() {
                       <span>and split</span>
                       <button
                         type="button"
-                        className="expense-split-btn"
+                        className="expense-split-btn px-2 py-1 bg-white/50 rounded-lg hover:bg-white transition-colors"
                         onClick={() => setShowSplitModal(true)}
                         data-testid="split-btn"
                       >
@@ -822,115 +906,66 @@ function NewExpenseRedesign() {
                     </div>
                   </AppSurface>
 
-                  {/* ─── Receipt Actions ─── */}
-                  <AppSurface className="mb-4 p-5">
-                    <label className="app-field-label">Receipt</label>
-
-                    {receiptImage ? (
-                      <div className="relative mb-3">
-                        <img
-                          src={receiptImage}
-                          alt="Receipt"
-                          className="mx-auto max-h-48 rounded-2xl object-contain"
-                          data-testid="receipt-preview"
-                        />
-                        <button
-                          type="button"
-                          className="absolute top-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white"
-                          onClick={() => setReceiptImage('')}
-                        >
-                          <X size={16} weight="bold" />
-                        </button>
-                      </div>
-                    ) : null}
-
-                    <div className="flex gap-3">
-                      <AppButton
-                        type="button"
-                        variant="secondary"
-                        className="flex-1 justify-center"
-                        onClick={() => setShowCamera(true)}
-                        data-testid="camera-btn"
-                      >
-                        <Camera size={20} weight="bold" />
-                        Take photo
-                      </AppButton>
-                      <AppButton
-                        type="button"
-                        variant="secondary"
-                        className="flex-1 justify-center"
-                        onClick={() => fileInputRef.current?.click()}
-                        data-testid="upload-btn"
-                      >
-                        <ImageSquare size={20} weight="bold" />
-                        Upload
-                      </AppButton>
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="hidden"
-                        data-testid="receipt-upload-input"
-                      />
-                    </div>
-                  </AppSurface>
 
                   {/* ─── Date & Notes (inline, minimal) ─── */}
-                  <div className="mb-5 flex items-center gap-3 px-1">
-                    {/* Date: inline with pencil edit */}
-                    <div className="flex items-center gap-2 text-sm text-[var(--app-muted)]">
-                      <CalendarBlank size={16} weight="bold" />
-                      {editingDate ? (
-                        <input
-                          data-testid="date-input"
-                          type="date"
-                          value={date}
-                          onChange={(e) => setDate(e.target.value)}
-                          onBlur={() => setEditingDate(false)}
-                          autoFocus
-                          className="bg-transparent text-sm font-bold text-[var(--app-foreground)] focus:outline-none border-b border-[var(--app-primary)] pb-0.5"
-                        />
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => setEditingDate(true)}
-                          className="flex items-center gap-1.5 font-bold text-[var(--app-foreground)] hover:text-[var(--app-primary)] transition-colors"
-                          data-testid="date-edit-btn"
-                        >
-                          {new Date(date + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                          <PencilSimple size={13} weight="bold" className="text-[var(--app-muted)]" />
-                        </button>
-                      )}
+                  <div className="mb-4 flex w-full items-center justify-center px-1">
+                    <div className="flex flex-1 justify-end">
+                      {/* Date: inline with pencil edit */}
+                      <div className="flex items-center gap-2 text-sm text-[var(--app-muted)]">
+                        {editingDate ? (
+                          <input
+                            data-testid="date-input"
+                            type="date"
+                            value={date}
+                            onChange={(e) => setDate(e.target.value)}
+                            onBlur={() => setEditingDate(false)}
+                            autoFocus
+                            className="bg-transparent text-sm font-bold text-[var(--app-foreground)] focus:outline-none border-b border-[var(--app-primary)] pb-0.5"
+                          />
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setEditingDate(true)}
+                            className="flex items-center gap-1.5 font-bold text-[var(--app-foreground)] hover:text-[var(--app-primary)] transition-colors whitespace-nowrap"
+                            data-testid="date-edit-btn"
+                          >
+                            <CalendarBlank size={16} weight="bold" className="text-[var(--app-muted)]" />
+                            {new Date(date + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            <PencilSimple size={13} weight="bold" className="text-[var(--app-muted)] opacity-50" />
+                          </button>
+                        )}
+                      </div>
                     </div>
 
-                    <span className="h-1 w-1 rounded-full bg-[var(--app-border)]" />
+                    <span className="mx-4 h-1 w-1 rounded-full bg-[var(--app-border)] opacity-60 flex-shrink-0" />
 
-                    {/* Notes: expandable */}
-                    {showNotes ? (
-                      <div className="flex-1">
-                        <input
-                          data-testid="notes-input"
-                          type="text"
-                          value={notes}
-                          onChange={(e) => setNotes(e.target.value)}
-                          onBlur={() => { if (!notes.trim()) setShowNotes(false); }}
-                          autoFocus
-                          placeholder="Add a note..."
-                          className="w-full bg-transparent text-sm font-semibold text-[var(--app-foreground)] focus:outline-none border-b border-[var(--app-primary)] pb-0.5 placeholder:text-[var(--app-muted)]"
-                        />
+                    <div className="flex flex-1 justify-start">
+                      {/* Notes: expandable */}
+                      <div className="flex items-center text-sm text-[var(--app-muted)]">
+                        {showNotes ? (
+                          <input
+                            data-testid="notes-input"
+                            type="text"
+                            value={notes}
+                            onChange={(e) => setNotes(e.target.value)}
+                            onBlur={() => { if (!notes.trim()) setShowNotes(false); }}
+                            autoFocus
+                            placeholder="Add a note..."
+                            className="min-w-[100px] bg-transparent text-sm font-semibold text-[var(--app-foreground)] focus:outline-none border-b border-[var(--app-primary)] pb-0.5 placeholder:text-[var(--app-muted)]"
+                          />
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setShowNotes(true)}
+                            className="flex items-center gap-1.5 font-bold text-[var(--app-muted)] hover:text-[var(--app-primary)] transition-colors whitespace-nowrap"
+                            data-testid="notes-add-btn"
+                          >
+                            <Note size={16} weight="bold" />
+                            Add note
+                          </button>
+                        )}
                       </div>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => setShowNotes(true)}
-                        className="flex items-center gap-1.5 text-sm font-bold text-[var(--app-muted)] hover:text-[var(--app-primary)] transition-colors"
-                        data-testid="notes-add-btn"
-                      >
-                        <Note size={16} weight="bold" />
-                        Add note
-                      </button>
-                    )}
+                    </div>
                   </div>
 
                   {/* ─── Submit ─── */}
@@ -938,11 +973,11 @@ function NewExpenseRedesign() {
                     data-testid="create-expense-btn"
                     type="submit"
                     disabled={loading}
-                    className="flex w-full items-center justify-center gap-2 mb-6"
+                    className="flex w-full items-center justify-center gap-2 mb-2 md:mb-6"
                   >
                     {loading ? (
                       <>
-                        <span className="spinner" />
+                        <span className="spinner h-4 w-4" />
                         <span>Creating...</span>
                       </>
                     ) : (
@@ -993,6 +1028,8 @@ function NewExpenseRedesign() {
         onSplitModeChange={setSplitMode}
         totalAmount={totalAmount}
         currencySymbol={currencySymbol}
+        items={items}
+        onItemsChange={setItems}
       />
 
       <ScanningOverlay open={scanning} receiptImage={receiptImage} />

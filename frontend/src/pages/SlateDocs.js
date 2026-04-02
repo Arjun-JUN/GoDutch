@@ -40,6 +40,7 @@ import {
 const SlateDocs = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showOverlay, setShowOverlay] = useState(false);
+  const [demoValue, setDemoValue] = useState('1');
 
   // Mock data for ExpenseCard
   const mockExpense = {
@@ -154,13 +155,18 @@ const SlateDocs = () => {
               </Field>
               
               <div className="grid md:grid-cols-2 gap-6">
-                <Field label="Select Menu">
-                  <AppSelect>
-                    <option>Option One</option>
-                    <option>Option Two</option>
-                    <option>Option Three</option>
-                  </AppSelect>
-                </Field>
+                <AppSelect
+                  label="Select Menu"
+                  value={demoValue}
+                  onValueChange={setDemoValue}
+                  options={[
+                    { label: 'High Priority', value: '1', icon: Check },
+                    { label: 'Receipt Attached', value: '2', icon: Receipt },
+                    { label: 'Personal Expense', value: '3', icon: User },
+                  ]}
+                  icon={Stack}
+                  placeholder="Choose an option..."
+                />
                 <Field label="Status Badge">
                   <div className="flex gap-2">
                     <MemberBadge>Normal Badge</MemberBadge>

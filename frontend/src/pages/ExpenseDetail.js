@@ -265,19 +265,17 @@ function ExpenseDetail() {
                     required
                   />
                 </Field>
-                <Field label="Category">
-                  <AppSelect
-                    data-testid="edit-category"
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                  >
-                    {CATEGORIES.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </AppSelect>
-                </Field>
+                <AppSelect
+                  label="Category"
+                  data-testid="edit-category"
+                  value={category}
+                  onValueChange={setCategory}
+                  options={CATEGORIES.map((c) => ({
+                    label: c,
+                    value: c,
+                    icon: CATEGORY_ICONS[c],
+                  }))}
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -303,17 +301,18 @@ function ExpenseDetail() {
                 </Field>
               </div>
 
-              <Field label="Split Type">
-                <AppSelect
-                  data-testid="edit-split-type"
-                  value={splitType}
-                  onChange={(e) => setSplitType(e.target.value)}
-                >
-                  <option value="equal">Equal Split</option>
-                  <option value="item-based">Item-Based</option>
-                  <option value="custom">Custom Split</option>
-                </AppSelect>
-              </Field>
+              <AppSelect
+                label="Split Type"
+                data-testid="edit-split-type"
+                value={splitType}
+                onValueChange={setSplitType}
+                options={[
+                  { label: 'Equal Split', value: 'equal' },
+                  { label: 'Item-Based', value: 'item-based' },
+                  { label: 'Custom Split', value: 'custom' },
+                ]}
+                className="mb-4"
+              />
 
               <Field label="Notes (Optional)">
                 <AppTextarea

@@ -14,6 +14,7 @@ export {
   Camera,
   Car,
   CaretDown,
+  CaretUp,
   ChartBar,
   ChartLineUp,
   Check,
