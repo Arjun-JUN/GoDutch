@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
+import { Analytics } from '@vercel/analytics/react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 import AuthPage from './pages/AuthPageRedesign';
@@ -52,6 +53,7 @@ function App() {
           </Routes>
         </BrowserRouter>
       </AuthProvider>
+      <Analytics />
     </div>
   );
 }
