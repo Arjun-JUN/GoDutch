@@ -1,9 +1,11 @@
 import base64
 import binascii
-from fastapi import APIRouter, HTTPException, Depends, status
+
+from fastapi import APIRouter, Depends, HTTPException, status
+
 from app.database import db
-from app.models.ai import OCRRequest, OCRResult, SmartSplitRequest, SmartSplitResponse
 from app.dependencies import verify_token
+from app.models.ai import OCRRequest, OCRResult, SmartSplitRequest, SmartSplitResponse
 from app.utils.ai_helpers import generate_structured_content
 from app.utils.errors import handle_server_error
 
@@ -46,7 +48,7 @@ async def scan_receipt(request: OCRRequest, current_user: dict = Depends(verify_
 
         return result
     except binascii.Error:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid receipt image data.")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid receipt image data.") from None
     except Exception as e:
         handle_server_error(e, "OCR", "OCR scanning failed. Please try again or enter details manually.")
 
@@ -56,7 +58,7 @@ async def smart_split(request: SmartSplitRequest, current_user: dict = Depends(v
         group = await db.groups.find_one({"id": request.group_id}, {"_id": 0})
         if not group:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found")
-        
+
         members_info = ", ".join([f"{m['name']} (id: {m['id']})" for m in group['members']])
         context = f"Expense context: {request.expense_context}" if request.expense_context else ""
 

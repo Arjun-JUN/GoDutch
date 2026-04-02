@@ -1,12 +1,13 @@
-from pydantic import BaseModel, Field, ConfigDict
-from typing import List, Optional
+
+from pydantic import BaseModel, ConfigDict, Field
+
 
 class ExpenseItem(BaseModel):
     name: str = Field(..., min_length=1)
     price: float = Field(..., ge=0)
     quantity: int = Field(1, gt=0)
     category: str = "Other"
-    assigned_to: List[str] = []
+    assigned_to: list[str] = []
 
 class SplitDetail(BaseModel):
     user_id: str
@@ -18,12 +19,12 @@ class ExpenseCreate(BaseModel):
     merchant: str = Field(..., min_length=1)
     date: str
     total_amount: float = Field(..., gt=0)
-    items: List[ExpenseItem]
+    items: list[ExpenseItem]
     split_type: str
-    split_details: List[SplitDetail]
-    receipt_image: Optional[str] = None
+    split_details: list[SplitDetail]
+    receipt_image: str | None = None
     category: str = "Food & Dining"
-    notes: Optional[str] = None
+    notes: str | None = None
 
 class Expense(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -33,20 +34,20 @@ class Expense(BaseModel):
     merchant: str
     date: str
     total_amount: float
-    items: List[ExpenseItem]
+    items: list[ExpenseItem]
     split_type: str
-    split_details: List[SplitDetail]
-    receipt_image: Optional[str] = None
+    split_details: list[SplitDetail]
+    receipt_image: str | None = None
     category: str = "Food & Dining"
-    notes: Optional[str] = None
+    notes: str | None = None
     created_at: str
 
 class ExpenseUpdate(BaseModel):
-    merchant: Optional[str] = None
-    date: Optional[str] = None
-    total_amount: Optional[float] = None
-    items: Optional[List[ExpenseItem]] = None
-    split_type: Optional[str] = None
-    split_details: Optional[List[SplitDetail]] = None
-    category: Optional[str] = None
-    notes: Optional[str] = None
+    merchant: str | None = None
+    date: str | None = None
+    total_amount: float | None = None
+    items: list[ExpenseItem] | None = None
+    split_type: str | None = None
+    split_details: list[SplitDetail] | None = None
+    category: str | None = None
+    notes: str | None = None

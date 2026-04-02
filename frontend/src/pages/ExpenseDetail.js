@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '../contexts/AuthContext';
@@ -6,21 +6,9 @@ import { api } from '../lib/api';
 import { CATEGORIES, CATEGORY_ICONS } from '../lib/constants';
 import { calculateSplitDetails } from '../utils/calculateShare';
 import {
-  Airplane,
   CalendarBlank,
-  Car,
-  CurrencyInr,
-  DotsThreeCircle,
-  ForkKnife,
-  Lightbulb,
-  Note,
   PencilSimple,
   Receipt,
-  ShoppingBag,
-  ShoppingCart,
-  Stethoscope,
-  Tag,
-  Ticket,
   Trash,
   Users,
   X,
@@ -183,7 +171,6 @@ function ExpenseDetail() {
     (s) => s.user_id === currentUser?.id,
   );
   const isMember = group?.members?.some(m => m.id === currentUser?.id);
-  const isCreator = expense?.created_by === currentUser?.id; // still helpful for labeling maybe?
 
   if (loading) {
     return (

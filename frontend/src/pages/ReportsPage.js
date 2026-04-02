@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { useAuth } from '../contexts/AuthContext';
 import { api } from '../lib/api';
 import { ChartBar, TrendUp, Users } from '@/slate/icons';
 import { Header, AppShell, AppSurface, Callout, EmptyState, IconBadge, PageBackButton, PageContent, PageHero, StatCard } from '@/slate';

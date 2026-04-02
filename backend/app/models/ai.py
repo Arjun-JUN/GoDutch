@@ -1,5 +1,6 @@
-from pydantic import BaseModel, Field, ConfigDict
-from typing import List, Optional, Dict
+
+from pydantic import BaseModel
+
 
 class OCRRequest(BaseModel):
     image_base64: str
@@ -14,14 +15,14 @@ class OCRResult(BaseModel):
     merchant: str
     date: str
     total_amount: float
-    items: List[OCRItem]
+    items: list[OCRItem]
 
 class SmartSplitRequest(BaseModel):
     group_id: str
     instruction: str
-    expense_context: Optional[Dict] = None
+    expense_context: dict | None = None
 
 class SmartSplitResponse(BaseModel):
-    split_plan: Dict
+    split_plan: dict
     clarification_needed: bool = False
-    clarification_question: Optional[str] = None
+    clarification_question: str | None = None

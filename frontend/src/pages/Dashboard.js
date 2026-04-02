@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../lib/api';
 import { ArrowsLeftRight, ChartLineUp, Plus, Receipt } from '@/slate/icons';
-import { Header, AppButton, AppShell, AppSurface, EmptyState, ExpenseCard, IconBadge, MemberBadge, PageContent, PageHero, StatCard } from '@/slate';
+import { Header, AppButton, AppShell, AppSurface, EmptyState, ExpenseCard, IconBadge, PageContent, PageHero, StatCard } from '@/slate';
 
 function Dashboard() {
   const [expenses, setExpenses] = useState([]);

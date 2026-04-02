@@ -1,7 +1,8 @@
-import json
 import pytest
 from pydantic import ValidationError
+
 from server import OCRItem, OCRResult
+
 
 def test_ocr_item_validation_success():
     data = {"name": "Burger", "price": 150.0, "quantity": 2}

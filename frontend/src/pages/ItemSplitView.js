@@ -11,7 +11,7 @@ import {
   CurrencyInr,
   Lightning
 } from '@/slate/icons';
-import { AppInput, AppButton } from '@/slate';
+import { AppInput } from '@/slate';
 import { smartSplitEdge } from '../utils/edgeAI';
 import { toast } from 'sonner';
 

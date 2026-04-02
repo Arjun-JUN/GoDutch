@@ -1,37 +1,24 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../lib/api';
 import { 
-  CATEGORIES, 
-  CATEGORY_ICONS, 
   getCurrencySymbol, 
   getIconForDescription 
 } from '../lib/constants';
 import { calculateSplitDetails } from '../utils/calculateShare';
-import { isEdgeAIReady, smartSplitEdge, scanReceiptEdge } from '../utils/edgeAI';
+import { isEdgeAIReady, scanReceiptEdge } from '../utils/edgeAI';
 import {
-  Airplane,
   ArrowLeft,
   CalendarBlank,
   Camera,
-  Car,
-  CaretDown,
   Check,
-  CurrencyInr,
-  DotsThreeCircle,
-  ForkKnife,
   ImageSquare,
-  Lightbulb,
   Note,
   PencilSimple,
   Receipt,
-  ShoppingBag,
-  ShoppingCart,
-  Stethoscope,
-  Ticket,
   UsersThree,
   X,
 } from '@/slate/icons';
@@ -544,12 +531,7 @@ function NewExpenseRedesign() {
   // File input ref
   const fileInputRef = useRef(null);
 
-  // ─── Load groups ───
-  useEffect(() => {
-    loadGroups();
-  }, []);
-
-  const loadGroups = async () => {
+  const loadGroups = useCallback(async () => {
     try {
       const groupsData = await api.get('/groups');
       setGroups(groupsData);
@@ -566,7 +548,12 @@ function NewExpenseRedesign() {
     } catch {
       toast.error('Failed to load groups');
     }
-  };
+  }, [location.state?.groupId, initSplitForGroup]);
+
+  // ─── Load groups ───
+  useEffect(() => {
+    loadGroups();
+  }, [loadGroups]);
 
   const initSplitForGroup = useCallback(
     (group) => {

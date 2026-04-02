@@ -1,7 +1,8 @@
-import uuid
-import bcrypt
-from datetime import datetime, timezone, timedelta
 import logging
+import uuid
+from datetime import UTC, datetime, timedelta
+
+import bcrypt
 
 logger = logging.getLogger(__name__)
 
@@ -16,19 +17,19 @@ async def seed_data(db):
     # 1. Create Users
     password = "password123"
     password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-    
+
     users_data = [
         {"id": str(uuid.uuid4()), "email": "arjun@example.com", "name": "Arjun", "password_hash": password_hash},
         {"id": str(uuid.uuid4()), "email": "sarah@example.com", "name": "Sarah", "password_hash": password_hash},
         {"id": str(uuid.uuid4()), "email": "rahul@example.com", "name": "Rahul", "password_hash": password_hash},
         {"id": str(uuid.uuid4()), "email": "mike@example.com", "name": "Mike", "password_hash": password_hash},
     ]
-    
+
     for u in users_data:
-        u["created_at"] = datetime.now(timezone.utc).isoformat()
-    
+        u["created_at"] = datetime.now(UTC).isoformat()
+
     await db.users.insert_many(users_data)
-    
+
     # Map names to IDs for easier reference
     u_map = {u["name"]: u["id"] for u in users_data}
     u_email_map = {u["name"]: u["email"] for u in users_data}
@@ -46,7 +47,7 @@ async def seed_data(db):
             ],
             "created_by": u_map["Arjun"],
             "currency": "INR",
-            "created_at": (datetime.now(timezone.utc) - timedelta(days=10)).isoformat()
+            "created_at": (datetime.now(UTC) - timedelta(days=10)).isoformat()
         },
         {
             "id": str(uuid.uuid4()),
@@ -57,12 +58,12 @@ async def seed_data(db):
             ],
             "created_by": u_map["Sarah"],
             "currency": "INR",
-            "created_at": (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
+            "created_at": (datetime.now(UTC) - timedelta(days=30)).isoformat()
         }
     ]
-    
+
     await db.groups.insert_many(groups_data)
-    
+
     g_goa = groups_data[0]["id"]
     g_flat = groups_data[1]["id"]
 
@@ -74,7 +75,7 @@ async def seed_data(db):
             "group_id": g_goa,
             "created_by": u_map["Arjun"],
             "merchant": "Indigo Airlines",
-            "date": (datetime.now(timezone.utc) - timedelta(days=9)).strftime("%Y-%m-%d"),
+            "date": (datetime.now(UTC) - timedelta(days=9)).strftime("%Y-%m-%d"),
             "total_amount": 12000.0,
             "category": "Travel",
             "items": [{"name": "Flight Tickets", "price": 12000.0, "category": "Travel", "assigned_to": []}],
@@ -85,14 +86,14 @@ async def seed_data(db):
                 {"user_id": u_map["Rahul"], "user_name": "Rahul", "amount": 3000.0},
                 {"user_id": u_map["Mike"], "user_name": "Mike", "amount": 3000.0},
             ],
-            "created_at": (datetime.now(timezone.utc) - timedelta(days=9)).isoformat()
+            "created_at": (datetime.now(UTC) - timedelta(days=9)).isoformat()
         },
         {
             "id": str(uuid.uuid4()),
             "group_id": g_goa,
             "created_by": u_map["Sarah"],
             "merchant": "Beach Shack - Curlies",
-            "date": (datetime.now(timezone.utc) - timedelta(days=8)).strftime("%Y-%m-%d"),
+            "date": (datetime.now(UTC) - timedelta(days=8)).strftime("%Y-%m-%d"),
             "total_amount": 4500.0,
             "category": "Food & Dining",
             "items": [
@@ -106,7 +107,7 @@ async def seed_data(db):
                 {"user_id": u_map["Rahul"], "user_name": "Rahul", "amount": 1125.0},
                 {"user_id": u_map["Mike"], "user_name": "Mike", "amount": 1125.0},
             ],
-            "created_at": (datetime.now(timezone.utc) - timedelta(days=8)).isoformat()
+            "created_at": (datetime.now(UTC) - timedelta(days=8)).isoformat()
         },
         # Flatmates Expenses
         {
@@ -114,7 +115,7 @@ async def seed_data(db):
             "group_id": g_flat,
             "created_by": u_map["Sarah"],
             "merchant": "BigBasket",
-            "date": (datetime.now(timezone.utc) - timedelta(days=5)).strftime("%Y-%m-%d"),
+            "date": (datetime.now(UTC) - timedelta(days=5)).strftime("%Y-%m-%d"),
             "total_amount": 2400.0,
             "category": "Groceries",
             "items": [{"name": "Monthly Groceries", "price": 2400.0, "category": "Groceries", "assigned_to": []}],
@@ -123,14 +124,14 @@ async def seed_data(db):
                 {"user_id": u_map["Arjun"], "user_name": "Arjun", "amount": 1200.0},
                 {"user_id": u_map["Sarah"], "user_name": "Sarah", "amount": 1200.0},
             ],
-            "created_at": (datetime.now(timezone.utc) - timedelta(days=5)).isoformat()
+            "created_at": (datetime.now(UTC) - timedelta(days=5)).isoformat()
         },
         {
             "id": str(uuid.uuid4()),
             "group_id": g_flat,
             "created_by": u_map["Arjun"],
             "merchant": "Bescom",
-            "date": (datetime.now(timezone.utc) - timedelta(days=2)).strftime("%Y-%m-%d"),
+            "date": (datetime.now(UTC) - timedelta(days=2)).strftime("%Y-%m-%d"),
             "total_amount": 1800.0,
             "category": "Utilities",
             "items": [{"name": "Electricity Bill", "price": 1800.0, "category": "Utilities", "assigned_to": []}],
@@ -139,10 +140,10 @@ async def seed_data(db):
                 {"user_id": u_map["Arjun"], "user_name": "Arjun", "amount": 900.0},
                 {"user_id": u_map["Sarah"], "user_name": "Sarah", "amount": 900.0},
             ],
-            "created_at": (datetime.now(timezone.utc) - timedelta(days=2)).isoformat()
+            "created_at": (datetime.now(UTC) - timedelta(days=2)).isoformat()
         }
     ]
-    
+
     await db.expenses.insert_many(expenses_data)
 
     # 4. Create Bank Accounts
@@ -157,7 +158,7 @@ async def seed_data(db):
             "upi_id": "arjun@hdfc",
             "balance": 15000.0,
             "is_primary": True,
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": datetime.now(UTC).isoformat()
         },
         {
             "id": str(uuid.uuid4()),
@@ -169,7 +170,7 @@ async def seed_data(db):
             "upi_id": "sarah@icici",
             "balance": 25000.0,
             "is_primary": True,
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": datetime.now(UTC).isoformat()
         },
         {
             "id": str(uuid.uuid4()),
@@ -181,10 +182,10 @@ async def seed_data(db):
             "upi_id": "rahul@sbi",
             "balance": 8000.0,
             "is_primary": True,
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": datetime.now(UTC).isoformat()
         }
     ]
-    
+
     await db.bank_accounts.insert_many(accounts_data)
 
     # 5. Create some dummy transactions
@@ -200,7 +201,7 @@ async def seed_data(db):
             "status": "success",
             "note": "Lunch yesterday",
             "reference_id": f"UPI{uuid.uuid4().hex[:12].upper()}",
-            "created_at": (datetime.now(timezone.utc) - timedelta(hours=5)).isoformat()
+            "created_at": (datetime.now(UTC) - timedelta(hours=5)).isoformat()
         },
         {
             "id": str(uuid.uuid4()),
@@ -213,10 +214,10 @@ async def seed_data(db):
             "status": "success",
             "note": "Prepaid - 9876543210 - Airtel",
             "reference_id": f"RECH{uuid.uuid4().hex[:12].upper()}",
-            "created_at": (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
+            "created_at": (datetime.now(UTC) - timedelta(days=1)).isoformat()
         }
     ]
-    
+
     await db.transactions.insert_many(transactions_data)
 
     logger.info("Seeding complete!")

@@ -1,10 +1,11 @@
-import os
-import requests
 import json
+import os
+from pathlib import Path
+
+import requests
+from dotenv import load_dotenv
 from fastapi import HTTPException, status
 from starlette.concurrency import run_in_threadpool
-from dotenv import load_dotenv
-from pathlib import Path
 
 # Load environment variables
 ROOT_DIR = Path(__file__).parent.parent.parent
@@ -26,7 +27,7 @@ def _extract_json_block(text: str):
 async def generate_structured_content(parts, response_model):
     if not GEMINI_API_KEY:
         raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, 
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Gemini API key not configured."
         )
 
