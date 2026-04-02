@@ -1,6 +1,10 @@
 import os
 
+<<<<<<< HEAD
 from fastapi import APIRouter, Depends, HTTPException, status
+=======
+from fastapi import APIRouter, HTTPException, status
+>>>>>>> 0ca7015 (fix: resolve CI linting errors across frontend and backend)
 
 from app.database import db
 from app.dependencies import verify_token

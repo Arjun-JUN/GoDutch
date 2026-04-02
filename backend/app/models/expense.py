@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import re
 from typing import Literal
 
@@ -9,6 +10,11 @@ VALID_CATEGORIES = Literal[
     "Food & Dining", "Transportation", "Entertainment", "Shopping",
     "Groceries", "Utilities", "Healthcare", "Travel", "Other"
 ]
+=======
+
+from pydantic import BaseModel, ConfigDict, Field
+
+>>>>>>> 0ca7015 (fix: resolve CI linting errors across frontend and backend)
 
 class ExpenseItem(BaseModel):
     name: str = Field(..., min_length=1, max_length=200)
@@ -26,6 +32,7 @@ class ExpenseCreate(BaseModel):
     group_id: str
     merchant: str = Field(..., min_length=1, max_length=200)
     date: str
+<<<<<<< HEAD
     total_amount: float = Field(..., gt=0, le=10_000_000)
     items: list[ExpenseItem] = Field(..., min_length=1)
     split_type: VALID_SPLIT_TYPES
@@ -40,6 +47,15 @@ class ExpenseCreate(BaseModel):
         if v and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", v):
             raise ValueError("date must be in YYYY-MM-DD format")
         return v
+=======
+    total_amount: float = Field(..., gt=0)
+    items: list[ExpenseItem]
+    split_type: str
+    split_details: list[SplitDetail]
+    receipt_image: str | None = None
+    category: str = "Food & Dining"
+    notes: str | None = None
+>>>>>>> 0ca7015 (fix: resolve CI linting errors across frontend and backend)
 
 class Expense(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -58,6 +74,7 @@ class Expense(BaseModel):
     created_at: str
 
 class ExpenseUpdate(BaseModel):
+<<<<<<< HEAD
     merchant: str | None = Field(default=None, max_length=200)
     date: str | None = None
     total_amount: float | None = None
@@ -73,3 +90,13 @@ class ExpenseUpdate(BaseModel):
         if v and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", v):
             raise ValueError("date must be in YYYY-MM-DD format")
         return v
+=======
+    merchant: str | None = None
+    date: str | None = None
+    total_amount: float | None = None
+    items: list[ExpenseItem] | None = None
+    split_type: str | None = None
+    split_details: list[SplitDetail] | None = None
+    category: str | None = None
+    notes: str | None = None
+>>>>>>> 0ca7015 (fix: resolve CI linting errors across frontend and backend)

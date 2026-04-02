@@ -1,5 +1,9 @@
 
+<<<<<<< HEAD
 from pydantic import BaseModel, Field
+=======
+from pydantic import BaseModel
+>>>>>>> 0ca7015 (fix: resolve CI linting errors across frontend and backend)
 
 
 class OCRRequest(BaseModel):
@@ -19,7 +23,11 @@ class OCRResult(BaseModel):
 
 class SmartSplitRequest(BaseModel):
     group_id: str
+<<<<<<< HEAD
     instruction: str = Field(..., min_length=1, max_length=2000)
+=======
+    instruction: str
+>>>>>>> 0ca7015 (fix: resolve CI linting errors across frontend and backend)
     expense_context: dict | None = None
 
 class SmartSplitResponse(BaseModel):

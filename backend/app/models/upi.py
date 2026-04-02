@@ -1,12 +1,20 @@
 
+<<<<<<< HEAD
 from pydantic import BaseModel, ConfigDict, Field, field_serializer
+=======
+from pydantic import BaseModel, ConfigDict, Field
+>>>>>>> 0ca7015 (fix: resolve CI linting errors across frontend and backend)
 
 
 class UPIPaymentRequest(BaseModel):
     upi_id: str = Field(..., pattern=r"^[\w.-]+@[\w.-]+$")
     amount: float = Field(..., gt=0, le=1_000_000)
     settlement_id: str
+<<<<<<< HEAD
     note: str | None = Field(default=None, max_length=200)
+=======
+    note: str | None = None
+>>>>>>> 0ca7015 (fix: resolve CI linting errors across frontend and backend)
 
 class BankAccount(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -75,7 +83,11 @@ class MoneyRequest(BaseModel):
 
 class MoneyRequestCreate(BaseModel):
     to_upi_id: str = Field(..., pattern=r"^[\w.-]+@[\w.-]+$")
+<<<<<<< HEAD
     amount: float = Field(..., gt=0, le=1_000_000)
+=======
+    amount: float = Field(..., gt=0)
+>>>>>>> 0ca7015 (fix: resolve CI linting errors across frontend and backend)
     note: str | None = None
 
 class BillPayment(BaseModel):

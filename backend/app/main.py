@@ -5,7 +5,11 @@ from fastapi import APIRouter, FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
 from app.database import client, db
+<<<<<<< HEAD
 from app.routes import ai, auth, expenses, groups, settlements, upi
+=======
+from app.routes import ai, auth, dev, expenses, groups, settlements, upi
+>>>>>>> 0ca7015 (fix: resolve CI linting errors across frontend and backend)
 from seed import seed_data
 
 # Configure logging

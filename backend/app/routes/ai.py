@@ -59,7 +59,11 @@ async def smart_split(request: SmartSplitRequest, current_user: dict = Depends(v
             {"id": request.group_id, "members.id": current_user['user_id']}, {"_id": 0}
         )
         if not group:
+<<<<<<< HEAD
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found or access denied")
+=======
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found")
+>>>>>>> 0ca7015 (fix: resolve CI linting errors across frontend and backend)
 
         members_info = ", ".join([f"{m['name']} (id: {m['id']})" for m in group['members']])
         context = f"Expense context: {request.expense_context}" if request.expense_context else ""
