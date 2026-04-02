@@ -1,9 +1,11 @@
-import os
 import logging
-from fastapi import FastAPI, APIRouter
+import os
+
+from fastapi import APIRouter, FastAPI
 from starlette.middleware.cors import CORSMiddleware
+
 from app.database import client, db
-from app.routes import auth, groups, expenses, upi, ai, settlements, dev
+from app.routes import ai, auth, dev, expenses, groups, settlements, upi
 from seed import seed_data
 
 # Configure logging
@@ -44,8 +46,8 @@ async def shutdown_db_client():
 
 # CORS Middleware configuration
 cors_origins = [
-    origin.strip() 
-    for origin in os.environ.get('CORS_ORIGINS', 'http://localhost:3000').split(',') 
+    origin.strip()
+    for origin in os.environ.get('CORS_ORIGINS', 'http://localhost:3000').split(',')
     if origin.strip()
 ]
 

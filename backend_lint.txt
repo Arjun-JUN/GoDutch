@@ -1,0 +1,4354 @@
+﻿I001 [*] Import block is un-sorted or un-formatted
+ --> backend\app\database.py:1:1
+  |
+1 | / import os
+2 | | from motor.motor_asyncio import AsyncIOMotorClient
+3 | | from dotenv import load_dotenv
+4 | | from pathlib import Path
+  | |________________________^
+5 |
+6 |   # Load environment variables
+  |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> backend\app\dependencies.py:1:1
+  |
+1 | / import os
+2 | | import jwt
+3 | | from typing import Optional
+4 | | from fastapi import Header, HTTPException, status
+5 | | from dotenv import load_dotenv
+6 | | from pathlib import Path
+  | |________________________^
+7 |
+8 |   # Load environment variables
+  |
+help: Organize imports
+
+UP045 [*] Use `X | None` for type annotations
+  --> backend\app\dependencies.py:16:33
+   |
+14 |     raise RuntimeError("JWT_SECRET environment variable is missing. Cannot start securely.")
+15 |
+16 | def verify_token(authorization: Optional[str] = Header(None)):
+   |                                 ^^^^^^^^^^^^^
+17 |     if not authorization or not authorization.startswith('Bearer '):
+18 |         raise HTTPException(
+   |
+help: Convert to `X | None`
+
+W291 [*] Trailing whitespace
+  --> backend\app\dependencies.py:19:54
+   |
+17 |     if not authorization or not authorization.startswith('Bearer '):
+18 |         raise HTTPException(
+19 |             status_code=status.HTTP_401_UNAUTHORIZED, 
+   |                                                      ^
+20 |             detail="Missing or invalid token"
+21 |         )
+   |
+help: Remove trailing whitespace
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\dependencies.py:22:1
+   |
+20 |             detail="Missing or invalid token"
+21 |         )
+22 |     
+   | ^^^^
+23 |     token = authorization.replace('Bearer ', '')
+24 |     try:
+   |
+help: Remove whitespace from blank line
+
+B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+  --> backend\app\dependencies.py:28:9
+   |
+26 |         return payload
+27 |     except jwt.ExpiredSignatureError:
+28 |         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired")
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+29 |     except jwt.InvalidTokenError:
+30 |         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+   |
+
+B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+  --> backend\app\dependencies.py:30:9
+   |
+28 |         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired")
+29 |     except jwt.InvalidTokenError:
+30 |         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> backend\app\main.py:1:1
+  |
+1 | / import os
+2 | | import logging
+3 | | from fastapi import FastAPI, APIRouter
+4 | | from starlette.middleware.cors import CORSMiddleware
+5 | | from app.database import client, db
+6 | | from app.routes import auth, groups, expenses, upi, ai, settlements, dev
+7 | | from seed import seed_data
+  | |__________________________^
+8 |
+9 |   # Configure logging
+  |
+help: Organize imports
+
+W291 [*] Trailing whitespace
+  --> backend\app\main.py:47:19
+   |
+45 | # CORS Middleware configuration
+46 | cors_origins = [
+47 |     origin.strip() 
+   |                   ^
+48 |     for origin in os.environ.get('CORS_ORIGINS', 'http://localhost:3000').split(',') 
+49 |     if origin.strip()
+   |
+help: Remove trailing whitespace
+
+W291 [*] Trailing whitespace
+  --> backend\app\main.py:48:85
+   |
+46 | cors_origins = [
+47 |     origin.strip() 
+48 |     for origin in os.environ.get('CORS_ORIGINS', 'http://localhost:3000').split(',') 
+   |                                                                                     ^
+49 |     if origin.strip()
+50 | ]
+   |
+help: Remove trailing whitespace
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> backend\app\models\ai.py:1:1
+  |
+1 | / from pydantic import BaseModel, Field, ConfigDict
+2 | | from typing import List, Optional, Dict
+  | |_______________________________________^
+3 |
+4 |   class OCRRequest(BaseModel):
+  |
+help: Organize imports
+
+F401 [*] `pydantic.Field` imported but unused
+ --> backend\app\models\ai.py:1:33
+  |
+1 | from pydantic import BaseModel, Field, ConfigDict
+  |                                 ^^^^^
+2 | from typing import List, Optional, Dict
+  |
+help: Remove unused import
+
+F401 [*] `pydantic.ConfigDict` imported but unused
+ --> backend\app\models\ai.py:1:40
+  |
+1 | from pydantic import BaseModel, Field, ConfigDict
+  |                                        ^^^^^^^^^^
+2 | from typing import List, Optional, Dict
+  |
+help: Remove unused import
+
+UP035 `typing.List` is deprecated, use `list` instead
+ --> backend\app\models\ai.py:2:1
+  |
+1 | from pydantic import BaseModel, Field, ConfigDict
+2 | from typing import List, Optional, Dict
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+3 |
+4 | class OCRRequest(BaseModel):
+  |
+
+UP035 `typing.Dict` is deprecated, use `dict` instead
+ --> backend\app\models\ai.py:2:1
+  |
+1 | from pydantic import BaseModel, Field, ConfigDict
+2 | from typing import List, Optional, Dict
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+3 |
+4 | class OCRRequest(BaseModel):
+  |
+
+UP006 [*] Use `list` instead of `List` for type annotation
+  --> backend\app\models\ai.py:17:12
+   |
+15 |     date: str
+16 |     total_amount: float
+17 |     items: List[OCRItem]
+   |            ^^^^
+18 |
+19 | class SmartSplitRequest(BaseModel):
+   |
+help: Replace with `list`
+
+UP045 [*] Use `X | None` for type annotations
+  --> backend\app\models\ai.py:22:22
+   |
+20 |     group_id: str
+21 |     instruction: str
+22 |     expense_context: Optional[Dict] = None
+   |                      ^^^^^^^^^^^^^^
+23 |
+24 | class SmartSplitResponse(BaseModel):
+   |
+help: Convert to `X | None`
+
+UP006 [*] Use `dict` instead of `Dict` for type annotation
+  --> backend\app\models\ai.py:22:31
+   |
+20 |     group_id: str
+21 |     instruction: str
+22 |     expense_context: Optional[Dict] = None
+   |                               ^^^^
+23 |
+24 | class SmartSplitResponse(BaseModel):
+   |
+help: Replace with `dict`
+
+UP006 [*] Use `dict` instead of `Dict` for type annotation
+  --> backend\app\models\ai.py:25:17
+   |
+24 | class SmartSplitResponse(BaseModel):
+25 |     split_plan: Dict
+   |                 ^^^^
+26 |     clarification_needed: bool = False
+27 |     clarification_question: Optional[str] = None
+   |
+help: Replace with `dict`
+
+UP045 [*] Use `X | None` for type annotations
+  --> backend\app\models\ai.py:27:29
+   |
+25 |     split_plan: Dict
+26 |     clarification_needed: bool = False
+27 |     clarification_question: Optional[str] = None
+   |                             ^^^^^^^^^^^^^
+   |
+help: Convert to `X | None`
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> backend\app\models\auth.py:1:1
+  |
+1 | from pydantic import BaseModel, Field, EmailStr, ConfigDict
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2 |
+3 | class UserRegister(BaseModel):
+  |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> backend\app\models\expense.py:1:1
+  |
+1 | / from pydantic import BaseModel, Field, ConfigDict
+2 | | from typing import List, Optional
+  | |_________________________________^
+3 |
+4 |   class ExpenseItem(BaseModel):
+  |
+help: Organize imports
+
+UP035 `typing.List` is deprecated, use `list` instead
+ --> backend\app\models\expense.py:2:1
+  |
+1 | from pydantic import BaseModel, Field, ConfigDict
+2 | from typing import List, Optional
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+3 |
+4 | class ExpenseItem(BaseModel):
+  |
+
+UP006 [*] Use `list` instead of `List` for type annotation
+  --> backend\app\models\expense.py:9:18
+   |
+ 7 |     quantity: int = Field(1, gt=0)
+ 8 |     category: str = "Other"
+ 9 |     assigned_to: List[str] = []
+   |                  ^^^^
+10 |
+11 | class SplitDetail(BaseModel):
+   |
+help: Replace with `list`
+
+UP006 [*] Use `list` instead of `List` for type annotation
+  --> backend\app\models\expense.py:21:12
+   |
+19 |     date: str
+20 |     total_amount: float = Field(..., gt=0)
+21 |     items: List[ExpenseItem]
+   |            ^^^^
+22 |     split_type: str
+23 |     split_details: List[SplitDetail]
+   |
+help: Replace with `list`
+
+UP006 [*] Use `list` instead of `List` for type annotation
+  --> backend\app\models\expense.py:23:20
+   |
+21 |     items: List[ExpenseItem]
+22 |     split_type: str
+23 |     split_details: List[SplitDetail]
+   |                    ^^^^
+24 |     receipt_image: Optional[str] = None
+25 |     category: str = "Food & Dining"
+   |
+help: Replace with `list`
+
+UP045 [*] Use `X | None` for type annotations
+  --> backend\app\models\expense.py:24:20
+   |
+22 |     split_type: str
+23 |     split_details: List[SplitDetail]
+24 |     receipt_image: Optional[str] = None
+   |                    ^^^^^^^^^^^^^
+25 |     category: str = "Food & Dining"
+26 |     notes: Optional[str] = None
+   |
+help: Convert to `X | None`
+
+UP045 [*] Use `X | None` for type annotations
+  --> backend\app\models\expense.py:26:12
+   |
+24 |     receipt_image: Optional[str] = None
+25 |     category: str = "Food & Dining"
+26 |     notes: Optional[str] = None
+   |            ^^^^^^^^^^^^^
+27 |
+28 | class Expense(BaseModel):
+   |
+help: Convert to `X | None`
+
+UP006 [*] Use `list` instead of `List` for type annotation
+  --> backend\app\models\expense.py:36:12
+   |
+34 |     date: str
+35 |     total_amount: float
+36 |     items: List[ExpenseItem]
+   |            ^^^^
+37 |     split_type: str
+38 |     split_details: List[SplitDetail]
+   |
+help: Replace with `list`
+
+UP006 [*] Use `list` instead of `List` for type annotation
+  --> backend\app\models\expense.py:38:20
+   |
+36 |     items: List[ExpenseItem]
+37 |     split_type: str
+38 |     split_details: List[SplitDetail]
+   |                    ^^^^
+39 |     receipt_image: Optional[str] = None
+40 |     category: str = "Food & Dining"
+   |
+help: Replace with `list`
+
+UP045 [*] Use `X | None` for type annotations
+  --> backend\app\models\expense.py:39:20
+   |
+37 |     split_type: str
+38 |     split_details: List[SplitDetail]
+39 |     receipt_image: Optional[str] = None
+   |                    ^^^^^^^^^^^^^
+40 |     category: str = "Food & Dining"
+41 |     notes: Optional[str] = None
+   |
+help: Convert to `X | None`
+
+UP045 [*] Use `X | None` for type annotations
+  --> backend\app\models\expense.py:41:12
+   |
+39 |     receipt_image: Optional[str] = None
+40 |     category: str = "Food & Dining"
+41 |     notes: Optional[str] = None
+   |            ^^^^^^^^^^^^^
+42 |     created_at: str
+   |
+help: Convert to `X | None`
+
+UP045 [*] Use `X | None` for type annotations
+  --> backend\app\models\expense.py:45:15
+   |
+44 | class ExpenseUpdate(BaseModel):
+45 |     merchant: Optional[str] = None
+   |               ^^^^^^^^^^^^^
+46 |     date: Optional[str] = None
+47 |     total_amount: Optional[float] = None
+   |
+help: Convert to `X | None`
+
+UP045 [*] Use `X | None` for type annotations
+  --> backend\app\models\expense.py:46:11
+   |
+44 | class ExpenseUpdate(BaseModel):
+45 |     merchant: Optional[str] = None
+46 |     date: Optional[str] = None
+   |           ^^^^^^^^^^^^^
+47 |     total_amount: Optional[float] = None
+48 |     items: Optional[List[ExpenseItem]] = None
+   |
+help: Convert to `X | None`
+
+UP045 [*] Use `X | None` for type annotations
+  --> backend\app\models\expense.py:47:19
+   |
+45 |     merchant: Optional[str] = None
+46 |     date: Optional[str] = None
+47 |     total_amount: Optional[float] = None
+   |                   ^^^^^^^^^^^^^^^
+48 |     items: Optional[List[ExpenseItem]] = None
+49 |     split_type: Optional[str] = None
+   |
+help: Convert to `X | None`
+
+UP045 [*] Use `X | None` for type annotations
+  --> backend\app\models\expense.py:48:12
+   |
+46 |     date: Optional[str] = None
+47 |     total_amount: Optional[float] = None
+48 |     items: Optional[List[ExpenseItem]] = None
+   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+49 |     split_type: Optional[str] = None
+50 |     split_details: Optional[List[SplitDetail]] = None
+   |
+help: Convert to `X | None`
+
+UP006 [*] Use `list` instead of `List` for type annotation
+  --> backend\app\models\expense.py:48:21
+   |
+46 |     date: Optional[str] = None
+47 |     total_amount: Optional[float] = None
+48 |     items: Optional[List[ExpenseItem]] = None
+   |                     ^^^^
+49 |     split_type: Optional[str] = None
+50 |     split_details: Optional[List[SplitDetail]] = None
+   |
+help: Replace with `list`
+
+UP045 [*] Use `X | None` for type annotations
+  --> backend\app\models\expense.py:49:17
+   |
+47 |     total_amount: Optional[float] = None
+48 |     items: Optional[List[ExpenseItem]] = None
+49 |     split_type: Optional[str] = None
+   |                 ^^^^^^^^^^^^^
+50 |     split_details: Optional[List[SplitDetail]] = None
+51 |     category: Optional[str] = None
+   |
+help: Convert to `X | None`
+
+UP045 [*] Use `X | None` for type annotations
+  --> backend\app\models\expense.py:50:20
+   |
+48 |     items: Optional[List[ExpenseItem]] = None
+49 |     split_type: Optional[str] = None
+50 |     split_details: Optional[List[SplitDetail]] = None
+   |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+51 |     category: Optional[str] = None
+52 |     notes: Optional[str] = None
+   |
+help: Convert to `X | None`
+
+UP006 [*] Use `list` instead of `List` for type annotation
+  --> backend\app\models\expense.py:50:29
+   |
+48 |     items: Optional[List[ExpenseItem]] = None
+49 |     split_type: Optional[str] = None
+50 |     split_details: Optional[List[SplitDetail]] = None
+   |                             ^^^^
+51 |     category: Optional[str] = None
+52 |     notes: Optional[str] = None
+   |
+help: Replace with `list`
+
+UP045 [*] Use `X | None` for type annotations
+  --> backend\app\models\expense.py:51:15
+   |
+49 |     split_type: Optional[str] = None
+50 |     split_details: Optional[List[SplitDetail]] = None
+51 |     category: Optional[str] = None
+   |               ^^^^^^^^^^^^^
+52 |     notes: Optional[str] = None
+   |
+help: Convert to `X | None`
+
+UP045 [*] Use `X | None` for type annotations
+  --> backend\app\models\expense.py:52:12
+   |
+50 |     split_details: Optional[List[SplitDetail]] = None
+51 |     category: Optional[str] = None
+52 |     notes: Optional[str] = None
+   |            ^^^^^^^^^^^^^
+   |
+help: Convert to `X | None`
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> backend\app\models\group.py:1:1
+  |
+1 | / from pydantic import BaseModel, Field, EmailStr, ConfigDict
+2 | | from typing import List, Dict
+  | |_____________________________^
+3 |
+4 |   class GroupCreate(BaseModel):
+  |
+help: Organize imports
+
+UP035 `typing.List` is deprecated, use `list` instead
+ --> backend\app\models\group.py:2:1
+  |
+1 | from pydantic import BaseModel, Field, EmailStr, ConfigDict
+2 | from typing import List, Dict
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+3 |
+4 | class GroupCreate(BaseModel):
+  |
+
+UP035 `typing.Dict` is deprecated, use `dict` instead
+ --> backend\app\models\group.py:2:1
+  |
+1 | from pydantic import BaseModel, Field, EmailStr, ConfigDict
+2 | from typing import List, Dict
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+3 |
+4 | class GroupCreate(BaseModel):
+  |
+
+UP006 [*] Use `list` instead of `List` for type annotation
+ --> backend\app\models\group.py:6:20
+  |
+4 | class GroupCreate(BaseModel):
+5 |     name: str = Field(..., min_length=2)
+6 |     member_emails: List[EmailStr]
+  |                    ^^^^
+7 |     currency: str = "INR"
+  |
+help: Replace with `list`
+
+UP006 [*] Use `list` instead of `List` for type annotation
+  --> backend\app\models\group.py:13:14
+   |
+11 |     id: str
+12 |     name: str
+13 |     members: List[Dict]
+   |              ^^^^
+14 |     currency: str = "INR"
+15 |     created_by: str
+   |
+help: Replace with `list`
+
+UP006 [*] Use `dict` instead of `Dict` for type annotation
+  --> backend\app\models\group.py:13:19
+   |
+11 |     id: str
+12 |     name: str
+13 |     members: List[Dict]
+   |                   ^^^^
+14 |     currency: str = "INR"
+15 |     created_by: str
+   |
+help: Replace with `dict`
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> backend\app\models\settlements.py:1:1
+  |
+1 | from pydantic import BaseModel, ConfigDict
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2 |
+3 | class SettlementItem(BaseModel):
+  |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> backend\app\models\upi.py:1:1
+  |
+1 | / from pydantic import BaseModel, Field, ConfigDict
+2 | | from typing import List, Optional
+  | |_________________________________^
+3 |
+4 |   class UPIPaymentRequest(BaseModel):
+  |
+help: Organize imports
+
+UP035 `typing.List` is deprecated, use `list` instead
+ --> backend\app\models\upi.py:2:1
+  |
+1 | from pydantic import BaseModel, Field, ConfigDict
+2 | from typing import List, Optional
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+3 |
+4 | class UPIPaymentRequest(BaseModel):
+  |
+
+F401 [*] `typing.List` imported but unused
+ --> backend\app\models\upi.py:2:20
+  |
+1 | from pydantic import BaseModel, Field, ConfigDict
+2 | from typing import List, Optional
+  |                    ^^^^
+3 |
+4 | class UPIPaymentRequest(BaseModel):
+  |
+help: Remove unused import: `typing.List`
+
+UP045 [*] Use `X | None` for type annotations
+  --> backend\app\models\upi.py:8:11
+   |
+ 6 |     amount: float = Field(..., gt=0)
+ 7 |     settlement_id: str
+ 8 |     note: Optional[str] = None
+   |           ^^^^^^^^^^^^^
+ 9 |
+10 | class BankAccount(BaseModel):
+   |
+help: Convert to `X | None`
+
+UP045 [*] Use `X | None` for type annotations
+  --> backend\app\models\upi.py:35:17
+   |
+33 |     from_user_id: str
+34 |     from_upi_id: str
+35 |     to_user_id: Optional[str] = None
+   |                 ^^^^^^^^^^^^^
+36 |     to_upi_id: str
+37 |     amount: float
+   |
+help: Convert to `X | None`
+
+UP045 [*] Use `X | None` for type annotations
+  --> backend\app\models\upi.py:40:11
+   |
+38 |     transaction_type: str
+39 |     status: str
+40 |     note: Optional[str] = None
+   |           ^^^^^^^^^^^^^
+41 |     reference_id: str
+42 |     created_at: str
+   |
+help: Convert to `X | None`
+
+UP045 [*] Use `X | None` for type annotations
+  --> backend\app\models\upi.py:48:11
+   |
+46 |     amount: float = Field(..., gt=0)
+47 |     transaction_type: str = "payment"
+48 |     note: Optional[str] = None
+   |           ^^^^^^^^^^^^^
+49 |
+50 | class MoneyRequest(BaseModel):
+   |
+help: Convert to `X | None`
+
+UP045 [*] Use `X | None` for type annotations
+  --> backend\app\models\upi.py:58:11
+   |
+56 |     to_upi_id: str
+57 |     amount: float
+58 |     note: Optional[str] = None
+   |           ^^^^^^^^^^^^^
+59 |     status: str
+60 |     created_at: str
+   |
+help: Convert to `X | None`
+
+UP045 [*] Use `X | None` for type annotations
+  --> backend\app\models\upi.py:65:11
+   |
+63 |     to_upi_id: str = Field(..., pattern=r"^[\w.-]+@[\w.-]+$")
+64 |     amount: float = Field(..., gt=0)
+65 |     note: Optional[str] = None
+   |           ^^^^^^^^^^^^^
+66 |
+67 | class BillPayment(BaseModel):
+   |
+help: Convert to `X | None`
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> backend\app\routes\ai.py:1:1
+   |
+ 1 | / import base64
+ 2 | | import binascii
+ 3 | | from fastapi import APIRouter, HTTPException, Depends, status
+ 4 | | from app.database import db
+ 5 | | from app.models.ai import OCRRequest, OCRResult, SmartSplitRequest, SmartSplitResponse
+ 6 | | from app.dependencies import verify_token
+ 7 | | from app.utils.ai_helpers import generate_structured_content
+ 8 | | from app.utils.errors import handle_server_error
+   | |________________________________________________^
+ 9 |
+10 |   router = APIRouter(prefix="/ai", tags=["AI"])
+   |
+help: Organize imports
+
+B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+  --> backend\app\routes\ai.py:49:9
+   |
+47 |         return result
+48 |     except binascii.Error:
+49 |         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid receipt image data.")
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+50 |     except Exception as e:
+51 |         handle_server_error(e, "OCR", "OCR scanning failed. Please try again or enter details manually.")
+   |
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\ai.py:59:1
+   |
+57 |         if not group:
+58 |             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found")
+59 |         
+   | ^^^^^^^^
+60 |         members_info = ", ".join([f"{m['name']} (id: {m['id']})" for m in group['members']])
+61 |         context = f"Expense context: {request.expense_context}" if request.expense_context else ""
+   |
+help: Remove whitespace from blank line
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> backend\app\routes\auth.py:1:1
+   |
+ 1 | / import jwt
+ 2 | | import bcrypt
+ 3 | | import uuid
+ 4 | | from datetime import datetime, timezone, timedelta
+ 5 | | from fastapi import APIRouter, HTTPException, status
+ 6 | | from app.database import db
+ 7 | | from app.models.auth import UserRegister, UserLogin, TokenResponse, User
+ 8 | | from app.dependencies import JWT_SECRET
+   | |_______________________________________^
+ 9 |
+10 |   router = APIRouter(prefix="/auth", tags=["Auth"])
+   |
+help: Organize imports
+
+W291 [*] Trailing whitespace
+  --> backend\app\routes\auth.py:17:53
+   |
+15 |     if existing:
+16 |         raise HTTPException(
+17 |             status_code=status.HTTP_400_BAD_REQUEST, 
+   |                                                     ^
+18 |             detail="Email already registered"
+19 |         )
+   |
+help: Remove trailing whitespace
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\auth.py:20:1
+   |
+18 |             detail="Email already registered"
+19 |         )
+20 |     
+   | ^^^^
+21 |     password_hash = bcrypt.hashpw(
+22 |         user_data.password.encode('utf-8'), 
+   |
+help: Remove whitespace from blank line
+
+W291 [*] Trailing whitespace
+  --> backend\app\routes\auth.py:22:44
+   |
+21 |     password_hash = bcrypt.hashpw(
+22 |         user_data.password.encode('utf-8'), 
+   |                                            ^
+23 |         bcrypt.gensalt()
+24 |     ).decode('utf-8')
+   |
+help: Remove trailing whitespace
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\auth.py:25:1
+   |
+23 |         bcrypt.gensalt()
+24 |     ).decode('utf-8')
+25 |     
+   | ^^^^
+26 |     user_id = str(uuid.uuid4())
+27 |     user_doc = {
+   |
+help: Remove whitespace from blank line
+
+UP017 [*] Use `datetime.UTC` alias
+  --> backend\app\routes\auth.py:32:36
+   |
+30 |         "password_hash": password_hash,
+31 |         "name": user_data.name,
+32 |         "created_at": datetime.now(timezone.utc).isoformat()
+   |                                    ^^^^^^^^^^^^
+33 |     }
+   |
+help: Convert to `datetime.UTC` alias
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\auth.py:34:1
+   |
+32 |         "created_at": datetime.now(timezone.utc).isoformat()
+33 |     }
+34 |     
+   | ^^^^
+35 |     await db.users.insert_one(user_doc)
+   |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\auth.py:36:1
+   |
+35 |     await db.users.insert_one(user_doc)
+36 |     
+   | ^^^^
+37 |     token = jwt.encode(
+38 |         {
+   |
+help: Remove whitespace from blank line
+
+W291 [*] Trailing whitespace
+  --> backend\app\routes\auth.py:39:32
+   |
+37 |     token = jwt.encode(
+38 |         {
+39 |             "user_id": user_id, 
+   |                                ^
+40 |             "email": user_data.email, 
+41 |             "exp": datetime.now(timezone.utc) + timedelta(days=30)
+   |
+help: Remove trailing whitespace
+
+W291 [*] Trailing whitespace
+  --> backend\app\routes\auth.py:40:38
+   |
+38 |         {
+39 |             "user_id": user_id, 
+40 |             "email": user_data.email, 
+   |                                      ^
+41 |             "exp": datetime.now(timezone.utc) + timedelta(days=30)
+42 |         },
+   |
+help: Remove trailing whitespace
+
+UP017 [*] Use `datetime.UTC` alias
+  --> backend\app\routes\auth.py:41:33
+   |
+39 |             "user_id": user_id, 
+40 |             "email": user_data.email, 
+41 |             "exp": datetime.now(timezone.utc) + timedelta(days=30)
+   |                                 ^^^^^^^^^^^^
+42 |         },
+43 |         JWT_SECRET,
+   |
+help: Convert to `datetime.UTC` alias
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\auth.py:46:1
+   |
+44 |         algorithm='HS256'
+45 |     )
+46 |     
+   | ^^^^
+47 |     user = User(
+48 |         id=user_id, 
+   |
+help: Remove whitespace from blank line
+
+W291 [*] Trailing whitespace
+  --> backend\app\routes\auth.py:48:20
+   |
+47 |     user = User(
+48 |         id=user_id, 
+   |                    ^
+49 |         email=user_data.email, 
+50 |         name=user_data.name, 
+   |
+help: Remove trailing whitespace
+
+W291 [*] Trailing whitespace
+  --> backend\app\routes\auth.py:49:31
+   |
+47 |     user = User(
+48 |         id=user_id, 
+49 |         email=user_data.email, 
+   |                               ^
+50 |         name=user_data.name, 
+51 |         created_at=user_doc["created_at"]
+   |
+help: Remove trailing whitespace
+
+W291 [*] Trailing whitespace
+  --> backend\app\routes\auth.py:50:29
+   |
+48 |         id=user_id, 
+49 |         email=user_data.email, 
+50 |         name=user_data.name, 
+   |                             ^
+51 |         created_at=user_doc["created_at"]
+52 |     )
+   |
+help: Remove trailing whitespace
+
+W291 [*] Trailing whitespace
+  --> backend\app\routes\auth.py:60:54
+   |
+58 |     if not user_doc:
+59 |         raise HTTPException(
+60 |             status_code=status.HTTP_401_UNAUTHORIZED, 
+   |                                                      ^
+61 |             detail="Invalid credentials"
+62 |         )
+   |
+help: Remove trailing whitespace
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\auth.py:63:1
+   |
+61 |             detail="Invalid credentials"
+62 |         )
+63 |     
+   | ^^^^
+64 |     if not bcrypt.checkpw(
+65 |         credentials.password.encode('utf-8'), 
+   |
+help: Remove whitespace from blank line
+
+W291 [*] Trailing whitespace
+  --> backend\app\routes\auth.py:65:46
+   |
+64 |     if not bcrypt.checkpw(
+65 |         credentials.password.encode('utf-8'), 
+   |                                              ^
+66 |         user_doc['password_hash'].encode('utf-8')
+67 |     ):
+   |
+help: Remove trailing whitespace
+
+W291 [*] Trailing whitespace
+  --> backend\app\routes\auth.py:69:54
+   |
+67 |     ):
+68 |         raise HTTPException(
+69 |             status_code=status.HTTP_401_UNAUTHORIZED, 
+   |                                                      ^
+70 |             detail="Invalid credentials"
+71 |         )
+   |
+help: Remove trailing whitespace
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\auth.py:72:1
+   |
+70 |             detail="Invalid credentials"
+71 |         )
+72 |     
+   | ^^^^
+73 |     token = jwt.encode(
+74 |         {
+   |
+help: Remove whitespace from blank line
+
+W291 [*] Trailing whitespace
+  --> backend\app\routes\auth.py:75:39
+   |
+73 |     token = jwt.encode(
+74 |         {
+75 |             "user_id": user_doc['id'], 
+   |                                       ^
+76 |             "email": user_doc['email'], 
+77 |             "exp": datetime.now(timezone.utc) + timedelta(days=30)
+   |
+help: Remove trailing whitespace
+
+W291 [*] Trailing whitespace
+  --> backend\app\routes\auth.py:76:40
+   |
+74 |         {
+75 |             "user_id": user_doc['id'], 
+76 |             "email": user_doc['email'], 
+   |                                        ^
+77 |             "exp": datetime.now(timezone.utc) + timedelta(days=30)
+78 |         },
+   |
+help: Remove trailing whitespace
+
+UP017 [*] Use `datetime.UTC` alias
+  --> backend\app\routes\auth.py:77:33
+   |
+75 |             "user_id": user_doc['id'], 
+76 |             "email": user_doc['email'], 
+77 |             "exp": datetime.now(timezone.utc) + timedelta(days=30)
+   |                                 ^^^^^^^^^^^^
+78 |         },
+79 |         JWT_SECRET,
+   |
+help: Convert to `datetime.UTC` alias
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\auth.py:82:1
+   |
+80 |         algorithm='HS256'
+81 |     )
+82 |     
+   | ^^^^
+83 |     user = User(
+84 |         id=user_doc['id'], 
+   |
+help: Remove whitespace from blank line
+
+W291 [*] Trailing whitespace
+  --> backend\app\routes\auth.py:84:27
+   |
+83 |     user = User(
+84 |         id=user_doc['id'], 
+   |                           ^
+85 |         email=user_doc['email'], 
+86 |         name=user_doc['name'], 
+   |
+help: Remove trailing whitespace
+
+W291 [*] Trailing whitespace
+  --> backend\app\routes\auth.py:85:33
+   |
+83 |     user = User(
+84 |         id=user_doc['id'], 
+85 |         email=user_doc['email'], 
+   |                                 ^
+86 |         name=user_doc['name'], 
+87 |         created_at=user_doc['created_at']
+   |
+help: Remove trailing whitespace
+
+W291 [*] Trailing whitespace
+  --> backend\app\routes\auth.py:86:31
+   |
+84 |         id=user_doc['id'], 
+85 |         email=user_doc['email'], 
+86 |         name=user_doc['name'], 
+   |                               ^
+87 |         created_at=user_doc['created_at']
+88 |     )
+   |
+help: Remove trailing whitespace
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> backend\app\routes\dev.py:1:1
+  |
+1 | / import os
+2 | | from fastapi import APIRouter, HTTPException, status
+3 | | from app.database import db
+4 | | from seed import seed_data
+  | |__________________________^
+5 |
+6 |   router = APIRouter(prefix="/dev", tags=["Dev"])
+  |
+help: Organize imports
+
+W291 [*] Trailing whitespace
+  --> backend\app\routes\dev.py:12:51
+   |
+10 |     if os.getenv("ENV", "development") != "development":
+11 |         raise HTTPException(
+12 |             status_code=status.HTTP_403_FORBIDDEN, 
+   |                                                   ^
+13 |             detail="Reset not allowed in production"
+14 |         )
+   |
+help: Remove trailing whitespace
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\dev.py:15:1
+   |
+13 |             detail="Reset not allowed in production"
+14 |         )
+15 |     
+   | ^^^^
+16 |     await db.users.delete_many({})
+17 |     await db.groups.delete_many({})
+   |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\dev.py:23:1
+   |
+21 |     await db.money_requests.delete_many({})
+22 |     await db.payments.delete_many({})
+23 |     
+   | ^^^^
+24 |     await seed_data(db)
+25 |     return {"status": "success", "message": "Database reset and seeded with fresh fake data"}
+   |
+help: Remove whitespace from blank line
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> backend\app\routes\expenses.py:1:1
+   |
+ 1 | / import uuid
+ 2 | | import os
+ 3 | | from datetime import datetime, timezone
+ 4 | | from typing import List
+ 5 | | from fastapi import APIRouter, HTTPException, Depends, status
+ 6 | | from app.database import db
+ 7 | | from app.models.expense import Expense, ExpenseCreate, ExpenseUpdate
+ 8 | | from app.dependencies import verify_token
+ 9 | | from app.utils.errors import handle_server_error
+   | |________________________________________________^
+10 |
+11 |   router = APIRouter(prefix="/expenses", tags=["Expenses"])
+   |
+help: Organize imports
+
+F401 [*] `os` imported but unused
+ --> backend\app\routes\expenses.py:2:8
+  |
+1 | import uuid
+2 | import os
+  |        ^^
+3 | from datetime import datetime, timezone
+4 | from typing import List
+  |
+help: Remove unused import: `os`
+
+UP035 `typing.List` is deprecated, use `list` instead
+ --> backend\app\routes\expenses.py:4:1
+  |
+2 | import os
+3 | from datetime import datetime, timezone
+4 | from typing import List
+  | ^^^^^^^^^^^^^^^^^^^^^^^
+5 | from fastapi import APIRouter, HTTPException, Depends, status
+6 | from app.database import db
+  |
+
+F401 [*] `typing.List` imported but unused
+ --> backend\app\routes\expenses.py:4:20
+  |
+2 | import os
+3 | from datetime import datetime, timezone
+4 | from typing import List
+  |                    ^^^^
+5 | from fastapi import APIRouter, HTTPException, Depends, status
+6 | from app.database import db
+  |
+help: Remove unused import: `typing.List`
+
+F401 [*] `app.utils.errors.handle_server_error` imported but unused
+  --> backend\app\routes\expenses.py:9:30
+   |
+ 7 | from app.models.expense import Expense, ExpenseCreate, ExpenseUpdate
+ 8 | from app.dependencies import verify_token
+ 9 | from app.utils.errors import handle_server_error
+   |                              ^^^^^^^^^^^^^^^^^^^
+10 |
+11 | router = APIRouter(prefix="/expenses", tags=["Expenses"])
+   |
+help: Remove unused import: `app.utils.errors.handle_server_error`
+
+UP017 [*] Use `datetime.UTC` alias
+  --> backend\app\routes\expenses.py:29:36
+   |
+27 |         "category": expense_data.category,
+28 |         "notes": expense_data.notes,
+29 |         "created_at": datetime.now(timezone.utc).isoformat()
+   |                                    ^^^^^^^^^^^^
+30 |     }
+   |
+help: Convert to `datetime.UTC` alias
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\expenses.py:31:1
+   |
+29 |         "created_at": datetime.now(timezone.utc).isoformat()
+30 |     }
+31 |     
+   | ^^^^
+32 |     await db.expenses.insert_one(expense_doc)
+   |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\expenses.py:33:1
+   |
+32 |     await db.expenses.insert_one(expense_doc)
+33 |     
+   | ^^^^
+34 |     await db.expense_logs.insert_one({
+35 |         "id": str(uuid.uuid4()),
+   |
+help: Remove whitespace from blank line
+
+UP017 [*] Use `datetime.UTC` alias
+  --> backend\app\routes\expenses.py:39:35
+   |
+37 |         "action": "added",
+38 |         "user_id": current_user['user_id'],
+39 |         "timestamp": datetime.now(timezone.utc).isoformat()
+   |                                   ^^^^^^^^^^^^
+40 |     })
+   |
+help: Convert to `datetime.UTC` alias
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\expenses.py:41:1
+   |
+39 |         "timestamp": datetime.now(timezone.utc).isoformat()
+40 |     })
+41 |     
+   | ^^^^
+42 |     return Expense(**expense_doc)
+   |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\expenses.py:68:1
+   |
+66 |     if not expense:
+67 |         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Expense not found")
+68 |     
+   | ^^^^
+69 |     group = await db.groups.find_one({"id": expense["group_id"], "members.id": current_user['user_id']}, {"_id": 0})
+70 |     if not group:
+   |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\expenses.py:72:1
+   |
+70 |     if not group:
+71 |         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only group members can edit this expense")
+72 |     
+   | ^^^^
+73 |     update_fields = {}
+74 |     for field, value in update_data.model_dump(exclude_none=True).items():
+   |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\expenses.py:81:1
+   |
+79 |         else:
+80 |             update_fields[field] = value
+81 |             
+   | ^^^^^^^^^^^^
+82 |     if update_fields:
+83 |         await db.expenses.update_one({"id": expense_id}, {"$set": update_fields})
+   |
+help: Remove whitespace from blank line
+
+UP017 [*] Use `datetime.UTC` alias
+  --> backend\app\routes\expenses.py:89:39
+   |
+87 |             "action": "edited",
+88 |             "user_id": current_user['user_id'],
+89 |             "timestamp": datetime.now(timezone.utc).isoformat()
+   |                                       ^^^^^^^^^^^^
+90 |         })
+91 |     updated = await db.expenses.find_one({"id": expense_id}, {"_id": 0})
+   |
+help: Convert to `datetime.UTC` alias
+
+W293 [*] Blank line contains whitespace
+   --> backend\app\routes\expenses.py:99:1
+    |
+ 97 |     if not expense:
+ 98 |         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Expense not found")
+ 99 |     
+    | ^^^^
+100 |     group = await db.groups.find_one({"id": expense["group_id"], "members.id": current_user['user_id']}, {"_id": 0})
+101 |     if not group:
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\app\routes\expenses.py:103:1
+    |
+101 |     if not group:
+102 |         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only group members can delete this expense")
+103 |         
+    | ^^^^^^^^
+104 |     await db.expense_logs.insert_one({
+105 |         "id": str(uuid.uuid4()),
+    |
+help: Remove whitespace from blank line
+
+UP017 [*] Use `datetime.UTC` alias
+   --> backend\app\routes\expenses.py:109:35
+    |
+107 |         "action": "deleted",
+108 |         "user_id": current_user['user_id'],
+109 |         "timestamp": datetime.now(timezone.utc).isoformat()
+    |                                   ^^^^^^^^^^^^
+110 |     })
+111 |     await db.expenses.delete_one({"id": expense_id})
+    |
+help: Convert to `datetime.UTC` alias
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> backend\app\routes\groups.py:1:1
+   |
+ 1 | / import uuid
+ 2 | | from datetime import datetime, timezone
+ 3 | | from typing import List
+ 4 | | from fastapi import APIRouter, HTTPException, Depends, status
+ 5 | | from app.database import db
+ 6 | | from app.models.group import Group, GroupCreate
+ 7 | | from app.models.expense import Expense
+ 8 | | from app.dependencies import verify_token
+   | |_________________________________________^
+ 9 |
+10 |   router = APIRouter(prefix="/groups", tags=["Groups"])
+   |
+help: Organize imports
+
+UP035 `typing.List` is deprecated, use `list` instead
+ --> backend\app\routes\groups.py:3:1
+  |
+1 | import uuid
+2 | from datetime import datetime, timezone
+3 | from typing import List
+  | ^^^^^^^^^^^^^^^^^^^^^^^
+4 | from fastapi import APIRouter, HTTPException, Depends, status
+5 | from app.database import db
+  |
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\groups.py:15:1
+   |
+13 | async def create_group(group_data: GroupCreate, current_user: dict = Depends(verify_token)):
+14 |     member_users = await db.users.find({"email": {"$in": group_data.member_emails}}, {"_id": 0}).to_list(100)
+15 |     
+   | ^^^^
+16 |     current_user_doc = await db.users.find_one({"id": current_user['user_id']}, {"_id": 0})
+17 |     if not current_user_doc:
+   |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\groups.py:19:1
+   |
+17 |     if not current_user_doc:
+18 |         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Current user not found")
+19 |     
+   | ^^^^
+20 |     current_user_in_list = any(u['email'] == current_user_doc['email'] for u in member_users)
+   |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\groups.py:21:1
+   |
+20 |     current_user_in_list = any(u['email'] == current_user_doc['email'] for u in member_users)
+21 |     
+   | ^^^^
+22 |     if not current_user_in_list:
+23 |         member_users.append(current_user_doc)
+   |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\groups.py:24:1
+   |
+22 |     if not current_user_in_list:
+23 |         member_users.append(current_user_doc)
+24 |     
+   | ^^^^
+25 |     if len(member_users) < len(group_data.member_emails) + (0 if current_user_in_list else 1):
+26 |         raise HTTPException(
+   |
+help: Remove whitespace from blank line
+
+W291 [*] Trailing whitespace
+  --> backend\app\routes\groups.py:27:53
+   |
+25 |     if len(member_users) < len(group_data.member_emails) + (0 if current_user_in_list else 1):
+26 |         raise HTTPException(
+27 |             status_code=status.HTTP_400_BAD_REQUEST, 
+   |                                                     ^
+28 |             detail="Some member emails not found"
+29 |         )
+   |
+help: Remove trailing whitespace
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\groups.py:30:1
+   |
+28 |             detail="Some member emails not found"
+29 |         )
+30 |     
+   | ^^^^
+31 |     members = [{"id": u['id'], "email": u['email'], "name": u['name']} for u in member_users]
+   |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\groups.py:32:1
+   |
+31 |     members = [{"id": u['id'], "email": u['email'], "name": u['name']} for u in member_users]
+32 |     
+   | ^^^^
+33 |     group_id = str(uuid.uuid4())
+34 |     group_doc = {
+   |
+help: Remove whitespace from blank line
+
+UP017 [*] Use `datetime.UTC` alias
+  --> backend\app\routes\groups.py:40:36
+   |
+38 |         "currency": group_data.currency,
+39 |         "created_by": current_user['user_id'],
+40 |         "created_at": datetime.now(timezone.utc).isoformat()
+   |                                    ^^^^^^^^^^^^
+41 |     }
+   |
+help: Convert to `datetime.UTC` alias
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\groups.py:42:1
+   |
+40 |         "created_at": datetime.now(timezone.utc).isoformat()
+41 |     }
+42 |     
+   | ^^^^
+43 |     await db.groups.insert_one(group_doc)
+   |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\groups.py:44:1
+   |
+43 |     await db.groups.insert_one(group_doc)
+44 |     
+   | ^^^^
+45 |     return Group(**group_doc)
+   |
+help: Remove whitespace from blank line
+
+UP006 [*] Use `list` instead of `List` for type annotation
+  --> backend\app\routes\groups.py:47:32
+   |
+45 |     return Group(**group_doc)
+46 |
+47 | @router.get("", response_model=List[Group])
+   |                                ^^^^
+48 | async def get_groups(current_user: dict = Depends(verify_token)):
+49 |     groups = await db.groups.find(
+   |
+help: Replace with `list`
+
+UP006 [*] Use `list` instead of `List` for type annotation
+  --> backend\app\routes\groups.py:62:52
+   |
+60 |     return Group(**group)
+61 |
+62 | @router.get("/{group_id}/expenses", response_model=List[Expense])
+   |                                                    ^^^^
+63 | async def get_group_expenses(group_id: str, current_user: dict = Depends(verify_token)):
+64 |     # Verify group membership first
+   |
+help: Replace with `list`
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\groups.py:68:1
+   |
+66 |     if not group:
+67 |         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found or access denied")
+68 |     
+   | ^^^^
+69 |     # Get expenses for the group and sort by date descending
+70 |     expenses = await db.expenses.find({"group_id": group_id}, {"_id": 0}).sort("date", -1).to_list(1000)
+   |
+help: Remove whitespace from blank line
+
+UP035 `typing.List` is deprecated, use `list` instead
+ --> backend\app\routes\settlements.py:1:1
+  |
+1 | from typing import List
+  | ^^^^^^^^^^^^^^^^^^^^^^^
+2 | from fastapi import APIRouter, HTTPException, Depends, status
+3 | from app.database import db
+  |
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> backend\app\routes\settlements.py:1:1
+  |
+1 | / from typing import List
+2 | | from fastapi import APIRouter, HTTPException, Depends, status
+3 | | from app.database import db
+4 | | from app.models.settlements import SettlementItem, MarkPaidRequest
+5 | | from app.dependencies import verify_token
+6 | | from app.utils.errors import handle_server_error
+  | |________________________________________________^
+7 |
+8 |   router = APIRouter(prefix="/groups", tags=["Settlements"])
+  |
+help: Organize imports
+
+F401 [*] `app.models.settlements.MarkPaidRequest` imported but unused
+ --> backend\app\routes\settlements.py:4:52
+  |
+2 | from fastapi import APIRouter, HTTPException, Depends, status
+3 | from app.database import db
+4 | from app.models.settlements import SettlementItem, MarkPaidRequest
+  |                                                    ^^^^^^^^^^^^^^^
+5 | from app.dependencies import verify_token
+6 | from app.utils.errors import handle_server_error
+  |
+help: Remove unused import: `app.models.settlements.MarkPaidRequest`
+
+UP006 [*] Use `list` instead of `List` for type annotation
+  --> backend\app\routes\settlements.py:10:55
+   |
+ 8 | router = APIRouter(prefix="/groups", tags=["Settlements"])
+ 9 |
+10 | @router.get("/{group_id}/settlements", response_model=List[SettlementItem])
+   |                                                       ^^^^
+11 | async def get_settlements(group_id: str, current_user: dict = Depends(verify_token)):
+12 |     group = await db.groups.find_one({"id": group_id, "members.id": current_user['user_id']}, {"_id": 0})
+   |
+help: Replace with `list`
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\settlements.py:15:1
+   |
+13 |     if not group:
+14 |         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found or access denied")
+15 |     
+   | ^^^^
+16 |     expenses = await db.expenses.find({"group_id": group_id}, {"_id": 0}).to_list(1000)
+   |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\settlements.py:17:1
+   |
+16 |     expenses = await db.expenses.find({"group_id": group_id}, {"_id": 0}).to_list(1000)
+17 |     
+   | ^^^^
+18 |     balances = {}
+19 |     for member in group['members']:
+   |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\settlements.py:21:1
+   |
+19 |     for member in group['members']:
+20 |         balances[member['id']] = {"name": member['name'], "balance": 0.0}
+21 |     
+   | ^^^^
+22 |     for expense in expenses:
+23 |         paid_by = expense['created_by']
+   |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\settlements.py:28:1
+   |
+26 |                 balances[split['user_id']]['balance'] -= split['amount']
+27 |                 balances[paid_by]['balance'] += split['amount']
+28 |     
+   | ^^^^
+29 |     settlements = []
+30 |     debtors = [(uid, data) for uid, data in balances.items() if data['balance'] < -0.01]
+   |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\settlements.py:32:1
+   |
+30 |     debtors = [(uid, data) for uid, data in balances.items() if data['balance'] < -0.01]
+31 |     creditors = [(uid, data) for uid, data in balances.items() if data['balance'] > 0.01]
+32 |     
+   | ^^^^
+33 |     for debtor_id, debtor_data in debtors:
+34 |         for creditor_id, creditor_data in creditors:
+   |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\settlements.py:37:1
+   |
+35 |             if abs(debtor_data['balance']) < 0.01 or creditor_data['balance'] < 0.01:
+36 |                 continue
+37 |             
+   | ^^^^^^^^^^^^
+38 |             amount = min(abs(debtor_data['balance']), creditor_data['balance'])
+39 |             settlements.append(SettlementItem(
+   |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\settlements.py:46:1
+   |
+44 |                 amount=round(amount, 2)
+45 |             ))
+46 |             
+   | ^^^^^^^^^^^^
+47 |             debtor_data['balance'] += amount
+48 |             creditor_data['balance'] -= amount
+   |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\settlements.py:49:1
+   |
+47 |             debtor_data['balance'] += amount
+48 |             creditor_data['balance'] -= amount
+49 |     
+   | ^^^^
+50 |     return settlements
+   |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\settlements.py:58:1
+   |
+56 |         if not group:
+57 |             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found")
+58 |         
+   | ^^^^^^^^
+59 |         expenses = await db.expenses.find({"group_id": group_id}, {"_id": 0}).to_list(1000)
+   |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\settlements.py:60:1
+   |
+59 |         expenses = await db.expenses.find({"group_id": group_id}, {"_id": 0}).to_list(1000)
+60 |         
+   | ^^^^^^^^
+61 |         total_spent = sum(e['total_amount'] for e in expenses)
+   |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\settlements.py:62:1
+   |
+61 |         total_spent = sum(e['total_amount'] for e in expenses)
+62 |         
+   | ^^^^^^^^
+63 |         category_breakdown = {}
+64 |         for expense in expenses:
+   |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\settlements.py:67:1
+   |
+65 |             category = expense.get('category', 'Other')
+66 |             category_breakdown[category] = category_breakdown.get(category, 0) + expense['total_amount']
+67 |         
+   | ^^^^^^^^
+68 |         user_spending = {}
+69 |         for expense in expenses:
+   |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\settlements.py:76:1
+   |
+74 |                     user_spending[uid] = {"name": uname, "amount": 0}
+75 |                 user_spending[uid]['amount'] += split['amount']
+76 |         
+   | ^^^^^^^^
+77 |         monthly_trend = {}
+78 |         for expense in expenses:
+   |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\settlements.py:81:1
+   |
+79 |             month = expense['date'][:7]
+80 |             monthly_trend[month] = monthly_trend.get(month, 0) + expense['total_amount']
+81 |         
+   | ^^^^^^^^
+82 |         return {
+83 |             "total_expenses": len(expenses),
+   |
+help: Remove whitespace from blank line
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> backend\app\routes\upi.py:1:1
+   |
+ 1 | / import uuid
+ 2 | | from datetime import datetime, timezone
+ 3 | | from typing import List
+ 4 | | from fastapi import APIRouter, HTTPException, Depends, status
+ 5 | | from app.database import db
+ 6 | | from app.models.upi import (
+ 7 | |     UPIPaymentRequest, BankAccount, BankAccountCreate, Transaction,
+ 8 | |     TransactionCreate, MoneyRequest, MoneyRequestCreate, BillPayment, RechargeRequest
+ 9 | | )
+10 | | from app.dependencies import verify_token
+11 | | from app.utils.errors import handle_server_error
+   | |________________________________________________^
+12 |
+13 |   router = APIRouter(prefix="/upi", tags=["UPI"])
+   |
+help: Organize imports
+
+UP035 `typing.List` is deprecated, use `list` instead
+ --> backend\app\routes\upi.py:3:1
+  |
+1 | import uuid
+2 | from datetime import datetime, timezone
+3 | from typing import List
+  | ^^^^^^^^^^^^^^^^^^^^^^^
+4 | from fastapi import APIRouter, HTTPException, Depends, status
+5 | from app.database import db
+  |
+
+W291 [*] Trailing whitespace
+  --> backend\app\routes\upi.py:23:59
+   |
+21 |             if debtor_id != current_user['user_id']:
+22 |                 raise HTTPException(
+23 |                     status_code=status.HTTP_403_FORBIDDEN, 
+   |                                                           ^
+24 |                     detail="You can only initiate payments for your own debts"
+25 |                 )
+   |
+help: Remove trailing whitespace
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\upi.py:29:1
+   |
+27 |         payment_id = str(uuid.uuid4())
+28 |         upi_url = f"upi://pay?pa={payment.upi_id}&pn=goDutch&am={payment.amount}&cu=INR&tn={payment.note or 'Settlement'}"
+29 |         
+   | ^^^^^^^^
+30 |         payment_doc = {
+31 |             "id": payment_id,
+   |
+help: Remove whitespace from blank line
+
+UP017 [*] Use `datetime.UTC` alias
+  --> backend\app\routes\upi.py:39:40
+   |
+37 |             "status": "initiated",
+38 |             "upi_url": upi_url,
+39 |             "created_at": datetime.now(timezone.utc).isoformat()
+   |                                        ^^^^^^^^^^^^
+40 |         }
+   |
+help: Convert to `datetime.UTC` alias
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\upi.py:41:1
+   |
+39 |             "created_at": datetime.now(timezone.utc).isoformat()
+40 |         }
+41 |         
+   | ^^^^^^^^
+42 |         await db.payments.insert_one(payment_doc)
+   |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\upi.py:43:1
+   |
+42 |         await db.payments.insert_one(payment_doc)
+43 |         
+   | ^^^^^^^^
+44 |         return {
+45 |             "payment_id": payment_id,
+   |
+help: Remove whitespace from blank line
+
+W291 [*] Trailing whitespace
+  --> backend\app\routes\upi.py:57:76
+   |
+55 |     try:
+56 |         existing = await db.bank_accounts.find_one(
+57 |             {"user_id": current_user['user_id'], "upi_id": account.upi_id}, 
+   |                                                                            ^
+58 |             {"_id": 0}
+59 |         )
+   |
+help: Remove trailing whitespace
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\upi.py:62:1
+   |
+60 |         if existing:
+61 |             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="UPI ID already linked")
+62 |         
+   | ^^^^^^^^
+63 |         account_id = str(uuid.uuid4())
+64 |         is_primary = await db.bank_accounts.count_documents({"user_id": current_user['user_id']}) == 0
+   |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\upi.py:65:1
+   |
+63 |         account_id = str(uuid.uuid4())
+64 |         is_primary = await db.bank_accounts.count_documents({"user_id": current_user['user_id']}) == 0
+65 |         
+   | ^^^^^^^^
+66 |         account_doc = {
+67 |             "id": account_id,
+   |
+help: Remove whitespace from blank line
+
+UP017 [*] Use `datetime.UTC` alias
+  --> backend\app\routes\upi.py:76:40
+   |
+74 |             "balance": 10000.00,
+75 |             "is_primary": is_primary,
+76 |             "created_at": datetime.now(timezone.utc).isoformat()
+   |                                        ^^^^^^^^^^^^
+77 |         }
+   |
+help: Convert to `datetime.UTC` alias
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\upi.py:78:1
+   |
+76 |             "created_at": datetime.now(timezone.utc).isoformat()
+77 |         }
+78 |         
+   | ^^^^^^^^
+79 |         await db.bank_accounts.insert_one(account_doc)
+80 |         return BankAccount(**account_doc)
+   |
+help: Remove whitespace from blank line
+
+UP006 [*] Use `list` instead of `List` for type annotation
+  --> backend\app\routes\upi.py:84:41
+   |
+82 |         handle_server_error(e, "Add Account", "Failed to add account")
+83 |
+84 | @router.get("/accounts", response_model=List[BankAccount])
+   |                                         ^^^^
+85 | async def get_bank_accounts(current_user: dict = Depends(verify_token)):
+86 |     accounts = await db.bank_accounts.find({"user_id": current_user['user_id']}, {"_id": 0}).to_list(100)
+   |
+help: Replace with `list`
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\upi.py:95:1
+   |
+93 |         if not account:
+94 |             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No bank account linked")
+95 |         
+   | ^^^^^^^^
+96 |         if account['balance'] < transaction.amount:
+97 |             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Insufficient balance")
+   |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\routes\upi.py:98:1
+   |
+96 |         if account['balance'] < transaction.amount:
+97 |             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Insufficient balance")
+98 |         
+   | ^^^^^^^^
+99 |         recipient_account = await db.bank_accounts.find_one({"upi_id": transaction.to_upi_id}, {"_id": 0})
+   |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\app\routes\upi.py:100:1
+    |
+ 99 |         recipient_account = await db.bank_accounts.find_one({"upi_id": transaction.to_upi_id}, {"_id": 0})
+100 |         
+    | ^^^^^^^^
+101 |         transaction_id = str(uuid.uuid4())
+102 |         reference_id = f"UPI{uuid.uuid4().hex[:12].upper()}"
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\app\routes\upi.py:103:1
+    |
+101 |         transaction_id = str(uuid.uuid4())
+102 |         reference_id = f"UPI{uuid.uuid4().hex[:12].upper()}"
+103 |         
+    | ^^^^^^^^
+104 |         transaction_doc = {
+105 |             "id": transaction_id,
+    |
+help: Remove whitespace from blank line
+
+UP017 [*] Use `datetime.UTC` alias
+   --> backend\app\routes\upi.py:115:40
+    |
+113 |             "note": transaction.note,
+114 |             "reference_id": reference_id,
+115 |             "created_at": datetime.now(timezone.utc).isoformat()
+    |                                        ^^^^^^^^^^^^
+116 |         }
+    |
+help: Convert to `datetime.UTC` alias
+
+W293 [*] Blank line contains whitespace
+   --> backend\app\routes\upi.py:117:1
+    |
+115 |             "created_at": datetime.now(timezone.utc).isoformat()
+116 |         }
+117 |         
+    | ^^^^^^^^
+118 |         await db.transactions.insert_one(transaction_doc)
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\app\routes\upi.py:119:1
+    |
+118 |         await db.transactions.insert_one(transaction_doc)
+119 |         
+    | ^^^^^^^^
+120 |         await db.bank_accounts.update_one(
+121 |             {"id": account['id']},
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\app\routes\upi.py:124:1
+    |
+122 |             {"$inc": {"balance": -transaction.amount}}
+123 |         )
+124 |         
+    | ^^^^^^^^
+125 |         if recipient_account:
+126 |             await db.bank_accounts.update_one(
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\app\routes\upi.py:130:1
+    |
+128 |                 {"$inc": {"balance": transaction.amount}}
+129 |             )
+130 |         
+    | ^^^^^^^^
+131 |         return Transaction(**transaction_doc)
+132 |     except Exception as e:
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\app\routes\upi.py:141:1
+    |
+139 |         if not account:
+140 |             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No bank account linked")
+141 |         
+    | ^^^^^^^^
+142 |         recipient_account = await db.bank_accounts.find_one({"upi_id": request.to_upi_id}, {"_id": 0})
+143 |         if not recipient_account:
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\app\routes\upi.py:145:1
+    |
+143 |         if not recipient_account:
+144 |             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="UPI ID not found")
+145 |         
+    | ^^^^^^^^
+146 |         request_id = str(uuid.uuid4())
+147 |         request_doc = {
+    |
+help: Remove whitespace from blank line
+
+UP017 [*] Use `datetime.UTC` alias
+   --> backend\app\routes\upi.py:156:40
+    |
+154 |             "note": request.note,
+155 |             "status": "pending",
+156 |             "created_at": datetime.now(timezone.utc).isoformat()
+    |                                        ^^^^^^^^^^^^
+157 |         }
+    |
+help: Convert to `datetime.UTC` alias
+
+W293 [*] Blank line contains whitespace
+   --> backend\app\routes\upi.py:158:1
+    |
+156 |             "created_at": datetime.now(timezone.utc).isoformat()
+157 |         }
+158 |         
+    | ^^^^^^^^
+159 |         await db.money_requests.insert_one(request_doc)
+160 |         return MoneyRequest(**request_doc)
+    |
+help: Remove whitespace from blank line
+
+UP006 [*] Use `list` instead of `List` for type annotation
+   --> backend\app\routes\upi.py:164:41
+    |
+162 |         handle_server_error(e, "Request Money", "Request failed")
+163 |
+164 | @router.get("/requests", response_model=List[MoneyRequest])
+    |                                         ^^^^
+165 | async def get_money_requests(current_user: dict = Depends(verify_token)):
+166 |     requests_list = await db.money_requests.find(
+    |
+help: Replace with `list`
+
+W293 [*] Blank line contains whitespace
+   --> backend\app\routes\upi.py:178:1
+    |
+176 |         if not money_request:
+177 |             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Request not found")
+178 |         
+    | ^^^^^^^^
+179 |         if money_request['status'] != 'pending':
+180 |             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Request already processed")
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\app\routes\upi.py:181:1
+    |
+179 |         if money_request['status'] != 'pending':
+180 |             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Request already processed")
+181 |         
+    | ^^^^^^^^
+182 |         account = await db.bank_accounts.find_one({"user_id": current_user['user_id'], "is_primary": True}, {"_id": 0})
+183 |         if not account or account['balance'] < money_request['amount']:
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\app\routes\upi.py:185:1
+    |
+183 |         if not account or account['balance'] < money_request['amount']:
+184 |             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Insufficient balance")
+185 |         
+    | ^^^^^^^^
+186 |         transaction_id = str(uuid.uuid4())
+187 |         transaction_doc = {
+    |
+help: Remove whitespace from blank line
+
+UP017 [*] Use `datetime.UTC` alias
+   --> backend\app\routes\upi.py:198:40
+    |
+196 |             "note": f"Payment for request: {money_request.get('note', '')}",
+197 |             "reference_id": f"UPI{uuid.uuid4().hex[:12].upper()}",
+198 |             "created_at": datetime.now(timezone.utc).isoformat()
+    |                                        ^^^^^^^^^^^^
+199 |         }
+    |
+help: Convert to `datetime.UTC` alias
+
+W293 [*] Blank line contains whitespace
+   --> backend\app\routes\upi.py:200:1
+    |
+198 |             "created_at": datetime.now(timezone.utc).isoformat()
+199 |         }
+200 |         
+    | ^^^^^^^^
+201 |         await db.transactions.insert_one(transaction_doc)
+202 |         await db.bank_accounts.update_one({"user_id": current_user['user_id'], "is_primary": True}, {"$inc": {"balance": -money_requeΓÇª
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\app\routes\upi.py:205:1
+    |
+203 |         await db.bank_accounts.update_one({"user_id": money_request['from_user_id'], "is_primary": True}, {"$inc": {"balance": money_ΓÇª
+204 |         await db.money_requests.update_one({"id": request_id}, {"$set": {"status": "accepted"}})
+205 |         
+    | ^^^^^^^^
+206 |         return {"status": "success", "transaction_id": transaction_id}
+207 |     except Exception as e:
+    |
+help: Remove whitespace from blank line
+
+UP006 [*] Use `list` instead of `List` for type annotation
+   --> backend\app\routes\upi.py:210:45
+    |
+208 |         handle_server_error(e, "Accept Request", "Failed to accept request")
+209 |
+210 | @router.get("/transactions", response_model=List[Transaction])
+    |                                             ^^^^
+211 | async def get_transactions(current_user: dict = Depends(verify_token), limit: int = 50):
+212 |     transactions = await db.transactions.find(
+    |
+help: Replace with `list`
+
+W293 [*] Blank line contains whitespace
+   --> backend\app\routes\upi.py:224:1
+    |
+222 |         if not account or account['balance'] < bill.amount:
+223 |             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Insufficient balance")
+224 |         
+    | ^^^^^^^^
+225 |         transaction_id = str(uuid.uuid4())
+226 |         reference_id = f"BILL{uuid.uuid4().hex[:12].upper()}"
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\app\routes\upi.py:227:1
+    |
+225 |         transaction_id = str(uuid.uuid4())
+226 |         reference_id = f"BILL{uuid.uuid4().hex[:12].upper()}"
+227 |         
+    | ^^^^^^^^
+228 |         transaction_doc = {
+229 |             "id": transaction_id,
+    |
+help: Remove whitespace from blank line
+
+UP017 [*] Use `datetime.UTC` alias
+   --> backend\app\routes\upi.py:239:40
+    |
+237 |             "note": f"{bill.category} - {bill.biller_name} - {bill.bill_number}",
+238 |             "reference_id": reference_id,
+239 |             "created_at": datetime.now(timezone.utc).isoformat()
+    |                                        ^^^^^^^^^^^^
+240 |         }
+    |
+help: Convert to `datetime.UTC` alias
+
+W293 [*] Blank line contains whitespace
+   --> backend\app\routes\upi.py:241:1
+    |
+239 |             "created_at": datetime.now(timezone.utc).isoformat()
+240 |         }
+241 |         
+    | ^^^^^^^^
+242 |         await db.transactions.insert_one(transaction_doc)
+243 |         await db.bank_accounts.update_one({"id": account['id']}, {"$inc": {"balance": -bill.amount}})
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\app\routes\upi.py:254:1
+    |
+252 |         if not account or account['balance'] < recharge.amount:
+253 |             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Insufficient balance")
+254 |         
+    | ^^^^^^^^
+255 |         transaction_id = str(uuid.uuid4())
+256 |         reference_id = f"RECH{uuid.uuid4().hex[:12].upper()}"
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\app\routes\upi.py:257:1
+    |
+255 |         transaction_id = str(uuid.uuid4())
+256 |         reference_id = f"RECH{uuid.uuid4().hex[:12].upper()}"
+257 |         
+    | ^^^^^^^^
+258 |         transaction_doc = {
+259 |             "id": transaction_id,
+    |
+help: Remove whitespace from blank line
+
+UP017 [*] Use `datetime.UTC` alias
+   --> backend\app\routes\upi.py:269:40
+    |
+267 |             "note": f"{recharge.recharge_type} - {recharge.mobile_number} - {recharge.operator}",
+268 |             "reference_id": reference_id,
+269 |             "created_at": datetime.now(timezone.utc).isoformat()
+    |                                        ^^^^^^^^^^^^
+270 |         }
+    |
+help: Convert to `datetime.UTC` alias
+
+W293 [*] Blank line contains whitespace
+   --> backend\app\routes\upi.py:271:1
+    |
+269 |             "created_at": datetime.now(timezone.utc).isoformat()
+270 |         }
+271 |         
+    | ^^^^^^^^
+272 |         await db.transactions.insert_one(transaction_doc)
+273 |         await db.bank_accounts.update_one({"id": account['id']}, {"$inc": {"balance": -recharge.amount}})
+    |
+help: Remove whitespace from blank line
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> backend\app\utils\ai_helpers.py:1:1
+  |
+1 | / import os
+2 | | import requests
+3 | | import json
+4 | | from fastapi import HTTPException, status
+5 | | from starlette.concurrency import run_in_threadpool
+6 | | from dotenv import load_dotenv
+7 | | from pathlib import Path
+  | |________________________^
+8 |
+9 |   # Load environment variables
+  |
+help: Organize imports
+
+W291 [*] Trailing whitespace
+  --> backend\app\utils\ai_helpers.py:29:61
+   |
+27 |     if not GEMINI_API_KEY:
+28 |         raise HTTPException(
+29 |             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, 
+   |                                                             ^
+30 |             detail="Gemini API key not configured."
+31 |         )
+   |
+help: Remove trailing whitespace
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> backend\app\utils\errors.py:1:1
+  |
+1 | / import logging
+2 | | from fastapi import HTTPException, status
+  | |_________________________________________^
+3 |
+4 |   def handle_server_error(e: Exception, context: str, default_detail: str):
+  |
+help: Organize imports
+
+W293 [*] Blank line contains whitespace
+ --> backend\app\utils\errors.py:7:1
+  |
+5 |     if isinstance(e, HTTPException):
+6 |         raise e
+7 |     
+  | ^^^^
+8 |     error_msg = str(e)
+9 |     logging.error(f"{context} error: {error_msg}")
+  |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\utils\errors.py:10:1
+   |
+ 8 |     error_msg = str(e)
+ 9 |     logging.error(f"{context} error: {error_msg}")
+10 |     
+   | ^^^^
+11 |     # Handle quota/billing-specific AI errors
+12 |     if "budget" in error_msg.lower() or "exceeded" in error_msg.lower():
+   |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+  --> backend\app\utils\errors.py:17:1
+   |
+15 |             detail="Upstream AI service is temporarily unavailable due to quota or billing limits."
+16 |         )
+17 |     
+   | ^^^^
+18 |     raise HTTPException(
+19 |         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+   |
+help: Remove whitespace from blank line
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> backend\seed.py:1:1
+  |
+1 | / import uuid
+2 | | import bcrypt
+3 | | from datetime import datetime, timezone, timedelta
+4 | | import logging
+  | |______________^
+5 |
+6 |   logger = logging.getLogger(__name__)
+  |
+help: Organize imports
+
+W293 [*] Blank line contains whitespace
+  --> backend\seed.py:19:1
+   |
+17 |     password = "password123"
+18 |     password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+19 |     
+   | ^^^^
+20 |     users_data = [
+21 |         {"id": str(uuid.uuid4()), "email": "arjun@example.com", "name": "Arjun", "password_hash": password_hash},
+   |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+  --> backend\seed.py:26:1
+   |
+24 |         {"id": str(uuid.uuid4()), "email": "mike@example.com", "name": "Mike", "password_hash": password_hash},
+25 |     ]
+26 |     
+   | ^^^^
+27 |     for u in users_data:
+28 |         u["created_at"] = datetime.now(timezone.utc).isoformat()
+   |
+help: Remove whitespace from blank line
+
+UP017 [*] Use `datetime.UTC` alias
+  --> backend\seed.py:28:40
+   |
+27 |     for u in users_data:
+28 |         u["created_at"] = datetime.now(timezone.utc).isoformat()
+   |                                        ^^^^^^^^^^^^
+29 |     
+30 |     await db.users.insert_many(users_data)
+   |
+help: Convert to `datetime.UTC` alias
+
+W293 [*] Blank line contains whitespace
+  --> backend\seed.py:29:1
+   |
+27 |     for u in users_data:
+28 |         u["created_at"] = datetime.now(timezone.utc).isoformat()
+29 |     
+   | ^^^^
+30 |     await db.users.insert_many(users_data)
+   |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+  --> backend\seed.py:31:1
+   |
+30 |     await db.users.insert_many(users_data)
+31 |     
+   | ^^^^
+32 |     # Map names to IDs for easier reference
+33 |     u_map = {u["name"]: u["id"] for u in users_data}
+   |
+help: Remove whitespace from blank line
+
+UP017 [*] Use `datetime.UTC` alias
+  --> backend\seed.py:49:41
+   |
+47 |             "created_by": u_map["Arjun"],
+48 |             "currency": "INR",
+49 |             "created_at": (datetime.now(timezone.utc) - timedelta(days=10)).isoformat()
+   |                                         ^^^^^^^^^^^^
+50 |         },
+51 |         {
+   |
+help: Convert to `datetime.UTC` alias
+
+UP017 [*] Use `datetime.UTC` alias
+  --> backend\seed.py:60:41
+   |
+58 |             "created_by": u_map["Sarah"],
+59 |             "currency": "INR",
+60 |             "created_at": (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
+   |                                         ^^^^^^^^^^^^
+61 |         }
+62 |     ]
+   |
+help: Convert to `datetime.UTC` alias
+
+W293 [*] Blank line contains whitespace
+  --> backend\seed.py:63:1
+   |
+61 |         }
+62 |     ]
+63 |     
+   | ^^^^
+64 |     await db.groups.insert_many(groups_data)
+   |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+  --> backend\seed.py:65:1
+   |
+64 |     await db.groups.insert_many(groups_data)
+65 |     
+   | ^^^^
+66 |     g_goa = groups_data[0]["id"]
+67 |     g_flat = groups_data[1]["id"]
+   |
+help: Remove whitespace from blank line
+
+UP017 [*] Use `datetime.UTC` alias
+  --> backend\seed.py:77:35
+   |
+75 |             "created_by": u_map["Arjun"],
+76 |             "merchant": "Indigo Airlines",
+77 |             "date": (datetime.now(timezone.utc) - timedelta(days=9)).strftime("%Y-%m-%d"),
+   |                                   ^^^^^^^^^^^^
+78 |             "total_amount": 12000.0,
+79 |             "category": "Travel",
+   |
+help: Convert to `datetime.UTC` alias
+
+UP017 [*] Use `datetime.UTC` alias
+  --> backend\seed.py:88:41
+   |
+86 |                 {"user_id": u_map["Mike"], "user_name": "Mike", "amount": 3000.0},
+87 |             ],
+88 |             "created_at": (datetime.now(timezone.utc) - timedelta(days=9)).isoformat()
+   |                                         ^^^^^^^^^^^^
+89 |         },
+90 |         {
+   |
+help: Convert to `datetime.UTC` alias
+
+UP017 [*] Use `datetime.UTC` alias
+  --> backend\seed.py:95:35
+   |
+93 |             "created_by": u_map["Sarah"],
+94 |             "merchant": "Beach Shack - Curlies",
+95 |             "date": (datetime.now(timezone.utc) - timedelta(days=8)).strftime("%Y-%m-%d"),
+   |                                   ^^^^^^^^^^^^
+96 |             "total_amount": 4500.0,
+97 |             "category": "Food & Dining",
+   |
+help: Convert to `datetime.UTC` alias
+
+UP017 [*] Use `datetime.UTC` alias
+   --> backend\seed.py:109:41
+    |
+107 |                 {"user_id": u_map["Mike"], "user_name": "Mike", "amount": 1125.0},
+108 |             ],
+109 |             "created_at": (datetime.now(timezone.utc) - timedelta(days=8)).isoformat()
+    |                                         ^^^^^^^^^^^^
+110 |         },
+111 |         # Flatmates Expenses
+    |
+help: Convert to `datetime.UTC` alias
+
+UP017 [*] Use `datetime.UTC` alias
+   --> backend\seed.py:117:35
+    |
+115 |             "created_by": u_map["Sarah"],
+116 |             "merchant": "BigBasket",
+117 |             "date": (datetime.now(timezone.utc) - timedelta(days=5)).strftime("%Y-%m-%d"),
+    |                                   ^^^^^^^^^^^^
+118 |             "total_amount": 2400.0,
+119 |             "category": "Groceries",
+    |
+help: Convert to `datetime.UTC` alias
+
+UP017 [*] Use `datetime.UTC` alias
+   --> backend\seed.py:126:41
+    |
+124 |                 {"user_id": u_map["Sarah"], "user_name": "Sarah", "amount": 1200.0},
+125 |             ],
+126 |             "created_at": (datetime.now(timezone.utc) - timedelta(days=5)).isoformat()
+    |                                         ^^^^^^^^^^^^
+127 |         },
+128 |         {
+    |
+help: Convert to `datetime.UTC` alias
+
+UP017 [*] Use `datetime.UTC` alias
+   --> backend\seed.py:133:35
+    |
+131 |             "created_by": u_map["Arjun"],
+132 |             "merchant": "Bescom",
+133 |             "date": (datetime.now(timezone.utc) - timedelta(days=2)).strftime("%Y-%m-%d"),
+    |                                   ^^^^^^^^^^^^
+134 |             "total_amount": 1800.0,
+135 |             "category": "Utilities",
+    |
+help: Convert to `datetime.UTC` alias
+
+UP017 [*] Use `datetime.UTC` alias
+   --> backend\seed.py:142:41
+    |
+140 |                 {"user_id": u_map["Sarah"], "user_name": "Sarah", "amount": 900.0},
+141 |             ],
+142 |             "created_at": (datetime.now(timezone.utc) - timedelta(days=2)).isoformat()
+    |                                         ^^^^^^^^^^^^
+143 |         }
+144 |     ]
+    |
+help: Convert to `datetime.UTC` alias
+
+W293 [*] Blank line contains whitespace
+   --> backend\seed.py:145:1
+    |
+143 |         }
+144 |     ]
+145 |     
+    | ^^^^
+146 |     await db.expenses.insert_many(expenses_data)
+    |
+help: Remove whitespace from blank line
+
+UP017 [*] Use `datetime.UTC` alias
+   --> backend\seed.py:160:40
+    |
+158 |             "balance": 15000.0,
+159 |             "is_primary": True,
+160 |             "created_at": datetime.now(timezone.utc).isoformat()
+    |                                        ^^^^^^^^^^^^
+161 |         },
+162 |         {
+    |
+help: Convert to `datetime.UTC` alias
+
+UP017 [*] Use `datetime.UTC` alias
+   --> backend\seed.py:172:40
+    |
+170 |             "balance": 25000.0,
+171 |             "is_primary": True,
+172 |             "created_at": datetime.now(timezone.utc).isoformat()
+    |                                        ^^^^^^^^^^^^
+173 |         },
+174 |         {
+    |
+help: Convert to `datetime.UTC` alias
+
+UP017 [*] Use `datetime.UTC` alias
+   --> backend\seed.py:184:40
+    |
+182 |             "balance": 8000.0,
+183 |             "is_primary": True,
+184 |             "created_at": datetime.now(timezone.utc).isoformat()
+    |                                        ^^^^^^^^^^^^
+185 |         }
+186 |     ]
+    |
+help: Convert to `datetime.UTC` alias
+
+W293 [*] Blank line contains whitespace
+   --> backend\seed.py:187:1
+    |
+185 |         }
+186 |     ]
+187 |     
+    | ^^^^
+188 |     await db.bank_accounts.insert_many(accounts_data)
+    |
+help: Remove whitespace from blank line
+
+UP017 [*] Use `datetime.UTC` alias
+   --> backend\seed.py:203:41
+    |
+201 |             "note": "Lunch yesterday",
+202 |             "reference_id": f"UPI{uuid.uuid4().hex[:12].upper()}",
+203 |             "created_at": (datetime.now(timezone.utc) - timedelta(hours=5)).isoformat()
+    |                                         ^^^^^^^^^^^^
+204 |         },
+205 |         {
+    |
+help: Convert to `datetime.UTC` alias
+
+UP017 [*] Use `datetime.UTC` alias
+   --> backend\seed.py:216:41
+    |
+214 |             "note": "Prepaid - 9876543210 - Airtel",
+215 |             "reference_id": f"RECH{uuid.uuid4().hex[:12].upper()}",
+216 |             "created_at": (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
+    |                                         ^^^^^^^^^^^^
+217 |         }
+218 |     ]
+    |
+help: Convert to `datetime.UTC` alias
+
+W293 [*] Blank line contains whitespace
+   --> backend\seed.py:219:1
+    |
+217 |         }
+218 |     ]
+219 |     
+    | ^^^^
+220 |     await db.transactions.insert_many(transactions_data)
+    |
+help: Remove whitespace from blank line
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> backend\server.py:1:1
+   |
+ 1 | / from fastapi import FastAPI, APIRouter, HTTPException, Depends, Header, status
+ 2 | | from dotenv import load_dotenv
+ 3 | | from starlette.middleware.cors import CORSMiddleware
+ 4 | | from starlette.concurrency import run_in_threadpool
+ 5 | | from motor.motor_asyncio import AsyncIOMotorClient
+ 6 | | import os
+ 7 | | import logging
+ 8 | | import binascii
+ 9 | | from pathlib import Path
+10 | | from pydantic import BaseModel, Field, EmailStr, ConfigDict
+11 | | from typing import List, Optional, Dict
+12 | | import uuid
+13 | | from datetime import datetime, timezone, timedelta
+14 | | import jwt
+15 | | import bcrypt
+16 | | import base64
+17 | | import requests
+18 | | from seed import seed_data
+   | |__________________________^
+   |
+help: Organize imports
+
+UP035 `typing.List` is deprecated, use `list` instead
+  --> backend\server.py:11:1
+   |
+ 9 | from pathlib import Path
+10 | from pydantic import BaseModel, Field, EmailStr, ConfigDict
+11 | from typing import List, Optional, Dict
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+12 | import uuid
+13 | from datetime import datetime, timezone, timedelta
+   |
+
+UP035 `typing.Dict` is deprecated, use `dict` instead
+  --> backend\server.py:11:1
+   |
+ 9 | from pathlib import Path
+10 | from pydantic import BaseModel, Field, EmailStr, ConfigDict
+11 | from typing import List, Optional, Dict
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+12 | import uuid
+13 | from datetime import datetime, timezone, timedelta
+   |
+
+UP006 [*] Use `list` instead of `List` for type annotation
+  --> backend\server.py:60:20
+   |
+58 | class GroupCreate(BaseModel):
+59 |     name: str = Field(..., min_length=2)
+60 |     member_emails: List[EmailStr]
+   |                    ^^^^
+61 |     currency: str = "INR"
+   |
+help: Replace with `list`
+
+UP006 [*] Use `list` instead of `List` for type annotation
+  --> backend\server.py:67:14
+   |
+65 |     id: str
+66 |     name: str
+67 |     members: List[Dict]
+   |              ^^^^
+68 |     currency: str = "INR"
+69 |     created_by: str
+   |
+help: Replace with `list`
+
+UP006 [*] Use `dict` instead of `Dict` for type annotation
+  --> backend\server.py:67:19
+   |
+65 |     id: str
+66 |     name: str
+67 |     members: List[Dict]
+   |                   ^^^^
+68 |     currency: str = "INR"
+69 |     created_by: str
+   |
+help: Replace with `dict`
+
+UP006 [*] Use `list` instead of `List` for type annotation
+  --> backend\server.py:77:18
+   |
+75 |     quantity: int = Field(1, gt=0)
+76 |     category: str = "Other"
+77 |     assigned_to: List[str] = []
+   |                  ^^^^
+78 |
+79 | class SplitDetail(BaseModel):
+   |
+help: Replace with `list`
+
+UP006 [*] Use `list` instead of `List` for type annotation
+  --> backend\server.py:89:12
+   |
+87 |     date: str
+88 |     total_amount: float = Field(..., gt=0)
+89 |     items: List[ExpenseItem]
+   |            ^^^^
+90 |     split_type: str
+91 |     split_details: List[SplitDetail]
+   |
+help: Replace with `list`
+
+UP006 [*] Use `list` instead of `List` for type annotation
+  --> backend\server.py:91:20
+   |
+89 |     items: List[ExpenseItem]
+90 |     split_type: str
+91 |     split_details: List[SplitDetail]
+   |                    ^^^^
+92 |     receipt_image: Optional[str] = None
+93 |     category: str = "Food & Dining"
+   |
+help: Replace with `list`
+
+UP045 [*] Use `X | None` for type annotations
+  --> backend\server.py:92:20
+   |
+90 |     split_type: str
+91 |     split_details: List[SplitDetail]
+92 |     receipt_image: Optional[str] = None
+   |                    ^^^^^^^^^^^^^
+93 |     category: str = "Food & Dining"
+94 |     notes: Optional[str] = None
+   |
+help: Convert to `X | None`
+
+UP045 [*] Use `X | None` for type annotations
+  --> backend\server.py:94:12
+   |
+92 |     receipt_image: Optional[str] = None
+93 |     category: str = "Food & Dining"
+94 |     notes: Optional[str] = None
+   |            ^^^^^^^^^^^^^
+95 |
+96 | class Expense(BaseModel):
+   |
+help: Convert to `X | None`
+
+UP006 [*] Use `list` instead of `List` for type annotation
+   --> backend\server.py:104:12
+    |
+102 |     date: str
+103 |     total_amount: float
+104 |     items: List[ExpenseItem]
+    |            ^^^^
+105 |     split_type: str
+106 |     split_details: List[SplitDetail]
+    |
+help: Replace with `list`
+
+UP006 [*] Use `list` instead of `List` for type annotation
+   --> backend\server.py:106:20
+    |
+104 |     items: List[ExpenseItem]
+105 |     split_type: str
+106 |     split_details: List[SplitDetail]
+    |                    ^^^^
+107 |     receipt_image: Optional[str] = None
+108 |     category: str = "Food & Dining"
+    |
+help: Replace with `list`
+
+UP045 [*] Use `X | None` for type annotations
+   --> backend\server.py:107:20
+    |
+105 |     split_type: str
+106 |     split_details: List[SplitDetail]
+107 |     receipt_image: Optional[str] = None
+    |                    ^^^^^^^^^^^^^
+108 |     category: str = "Food & Dining"
+109 |     notes: Optional[str] = None
+    |
+help: Convert to `X | None`
+
+UP045 [*] Use `X | None` for type annotations
+   --> backend\server.py:109:12
+    |
+107 |     receipt_image: Optional[str] = None
+108 |     category: str = "Food & Dining"
+109 |     notes: Optional[str] = None
+    |            ^^^^^^^^^^^^^
+110 |     created_at: str
+    |
+help: Convert to `X | None`
+
+UP045 [*] Use `X | None` for type annotations
+   --> backend\server.py:113:15
+    |
+112 | class ExpenseUpdate(BaseModel):
+113 |     merchant: Optional[str] = None
+    |               ^^^^^^^^^^^^^
+114 |     date: Optional[str] = None
+115 |     total_amount: Optional[float] = None
+    |
+help: Convert to `X | None`
+
+UP045 [*] Use `X | None` for type annotations
+   --> backend\server.py:114:11
+    |
+112 | class ExpenseUpdate(BaseModel):
+113 |     merchant: Optional[str] = None
+114 |     date: Optional[str] = None
+    |           ^^^^^^^^^^^^^
+115 |     total_amount: Optional[float] = None
+116 |     items: Optional[List[ExpenseItem]] = None
+    |
+help: Convert to `X | None`
+
+UP045 [*] Use `X | None` for type annotations
+   --> backend\server.py:115:19
+    |
+113 |     merchant: Optional[str] = None
+114 |     date: Optional[str] = None
+115 |     total_amount: Optional[float] = None
+    |                   ^^^^^^^^^^^^^^^
+116 |     items: Optional[List[ExpenseItem]] = None
+117 |     split_type: Optional[str] = None
+    |
+help: Convert to `X | None`
+
+UP045 [*] Use `X | None` for type annotations
+   --> backend\server.py:116:12
+    |
+114 |     date: Optional[str] = None
+115 |     total_amount: Optional[float] = None
+116 |     items: Optional[List[ExpenseItem]] = None
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+117 |     split_type: Optional[str] = None
+118 |     split_details: Optional[List[SplitDetail]] = None
+    |
+help: Convert to `X | None`
+
+UP006 [*] Use `list` instead of `List` for type annotation
+   --> backend\server.py:116:21
+    |
+114 |     date: Optional[str] = None
+115 |     total_amount: Optional[float] = None
+116 |     items: Optional[List[ExpenseItem]] = None
+    |                     ^^^^
+117 |     split_type: Optional[str] = None
+118 |     split_details: Optional[List[SplitDetail]] = None
+    |
+help: Replace with `list`
+
+UP045 [*] Use `X | None` for type annotations
+   --> backend\server.py:117:17
+    |
+115 |     total_amount: Optional[float] = None
+116 |     items: Optional[List[ExpenseItem]] = None
+117 |     split_type: Optional[str] = None
+    |                 ^^^^^^^^^^^^^
+118 |     split_details: Optional[List[SplitDetail]] = None
+119 |     category: Optional[str] = None
+    |
+help: Convert to `X | None`
+
+UP045 [*] Use `X | None` for type annotations
+   --> backend\server.py:118:20
+    |
+116 |     items: Optional[List[ExpenseItem]] = None
+117 |     split_type: Optional[str] = None
+118 |     split_details: Optional[List[SplitDetail]] = None
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+119 |     category: Optional[str] = None
+120 |     notes: Optional[str] = None
+    |
+help: Convert to `X | None`
+
+UP006 [*] Use `list` instead of `List` for type annotation
+   --> backend\server.py:118:29
+    |
+116 |     items: Optional[List[ExpenseItem]] = None
+117 |     split_type: Optional[str] = None
+118 |     split_details: Optional[List[SplitDetail]] = None
+    |                             ^^^^
+119 |     category: Optional[str] = None
+120 |     notes: Optional[str] = None
+    |
+help: Replace with `list`
+
+UP045 [*] Use `X | None` for type annotations
+   --> backend\server.py:119:15
+    |
+117 |     split_type: Optional[str] = None
+118 |     split_details: Optional[List[SplitDetail]] = None
+119 |     category: Optional[str] = None
+    |               ^^^^^^^^^^^^^
+120 |     notes: Optional[str] = None
+    |
+help: Convert to `X | None`
+
+UP045 [*] Use `X | None` for type annotations
+   --> backend\server.py:120:12
+    |
+118 |     split_details: Optional[List[SplitDetail]] = None
+119 |     category: Optional[str] = None
+120 |     notes: Optional[str] = None
+    |            ^^^^^^^^^^^^^
+121 |
+122 | class SmartSplitRequest(BaseModel):
+    |
+help: Convert to `X | None`
+
+UP045 [*] Use `X | None` for type annotations
+   --> backend\server.py:125:22
+    |
+123 |     group_id: str
+124 |     instruction: str
+125 |     expense_context: Optional[Dict] = None
+    |                      ^^^^^^^^^^^^^^
+126 |
+127 | class SmartSplitResponse(BaseModel):
+    |
+help: Convert to `X | None`
+
+UP006 [*] Use `dict` instead of `Dict` for type annotation
+   --> backend\server.py:125:31
+    |
+123 |     group_id: str
+124 |     instruction: str
+125 |     expense_context: Optional[Dict] = None
+    |                               ^^^^
+126 |
+127 | class SmartSplitResponse(BaseModel):
+    |
+help: Replace with `dict`
+
+UP006 [*] Use `dict` instead of `Dict` for type annotation
+   --> backend\server.py:128:17
+    |
+127 | class SmartSplitResponse(BaseModel):
+128 |     split_plan: Dict
+    |                 ^^^^
+129 |     clarification_needed: bool = False
+130 |     clarification_question: Optional[str] = None
+    |
+help: Replace with `dict`
+
+UP045 [*] Use `X | None` for type annotations
+   --> backend\server.py:130:29
+    |
+128 |     split_plan: Dict
+129 |     clarification_needed: bool = False
+130 |     clarification_question: Optional[str] = None
+    |                             ^^^^^^^^^^^^^
+131 |
+132 | class UPIPaymentRequest(BaseModel):
+    |
+help: Convert to `X | None`
+
+UP045 [*] Use `X | None` for type annotations
+   --> backend\server.py:136:11
+    |
+134 |     amount: float = Field(..., gt=0)
+135 |     settlement_id: str
+136 |     note: Optional[str] = None
+    |           ^^^^^^^^^^^^^
+137 |
+138 | class BankAccount(BaseModel):
+    |
+help: Convert to `X | None`
+
+UP045 [*] Use `X | None` for type annotations
+   --> backend\server.py:163:17
+    |
+161 |     from_user_id: str
+162 |     from_upi_id: str
+163 |     to_user_id: Optional[str] = None
+    |                 ^^^^^^^^^^^^^
+164 |     to_upi_id: str
+165 |     amount: float
+    |
+help: Convert to `X | None`
+
+UP045 [*] Use `X | None` for type annotations
+   --> backend\server.py:168:11
+    |
+166 |     transaction_type: str
+167 |     status: str
+168 |     note: Optional[str] = None
+    |           ^^^^^^^^^^^^^
+169 |     reference_id: str
+170 |     created_at: str
+    |
+help: Convert to `X | None`
+
+UP045 [*] Use `X | None` for type annotations
+   --> backend\server.py:176:11
+    |
+174 |     amount: float = Field(..., gt=0)
+175 |     transaction_type: str = "payment"
+176 |     note: Optional[str] = None
+    |           ^^^^^^^^^^^^^
+177 |
+178 | class MoneyRequest(BaseModel):
+    |
+help: Convert to `X | None`
+
+UP045 [*] Use `X | None` for type annotations
+   --> backend\server.py:186:11
+    |
+184 |     to_upi_id: str
+185 |     amount: float
+186 |     note: Optional[str] = None
+    |           ^^^^^^^^^^^^^
+187 |     status: str
+188 |     created_at: str
+    |
+help: Convert to `X | None`
+
+UP045 [*] Use `X | None` for type annotations
+   --> backend\server.py:193:11
+    |
+191 |     to_upi_id: str = Field(..., pattern=r"^[\w.-]+@[\w.-]+$")
+192 |     amount: float = Field(..., gt=0)
+193 |     note: Optional[str] = None
+    |           ^^^^^^^^^^^^^
+194 |
+195 | class BillPayment(BaseModel):
+    |
+help: Convert to `X | None`
+
+UP006 [*] Use `list` instead of `List` for type annotation
+   --> backend\server.py:220:12
+    |
+218 |     date: str
+219 |     total_amount: float
+220 |     items: List[OCRItem]
+    |            ^^^^
+    |
+help: Replace with `list`
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:226:1
+    |
+224 |     if isinstance(e, HTTPException):
+225 |         raise e
+226 |     
+    | ^^^^
+227 |     error_msg = str(e)
+228 |     logging.error(f"{context} error: {error_msg}")
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:229:1
+    |
+227 |     error_msg = str(e)
+228 |     logging.error(f"{context} error: {error_msg}")
+229 |     
+    | ^^^^
+230 |     # Handle quota/billing-specific AI errors
+231 |     if "budget" in error_msg.lower() or "exceeded" in error_msg.lower():
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:236:1
+    |
+234 |             detail="Upstream AI service is temporarily unavailable due to quota or billing limits."
+235 |         )
+236 |     
+    | ^^^^
+237 |     raise HTTPException(
+238 |         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+    |
+help: Remove whitespace from blank line
+
+UP045 [*] Use `X | None` for type annotations
+   --> backend\server.py:320:33
+    |
+318 |     amount: float
+319 |
+320 | def verify_token(authorization: Optional[str] = Header(None)):
+    |                                 ^^^^^^^^^^^^^
+321 |     if not authorization or not authorization.startswith('Bearer '):
+322 |         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing or invalid token")
+    |
+help: Convert to `X | None`
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:323:1
+    |
+321 |     if not authorization or not authorization.startswith('Bearer '):
+322 |         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing or invalid token")
+323 |     
+    | ^^^^
+324 |     token = authorization.replace('Bearer ', '')
+325 |     try:
+    |
+help: Remove whitespace from blank line
+
+B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+   --> backend\server.py:329:9
+    |
+327 |         return payload
+328 |     except jwt.ExpiredSignatureError:
+329 |         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired")
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+330 |     except jwt.InvalidTokenError:
+331 |         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+    |
+
+B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+   --> backend\server.py:331:9
+    |
+329 |         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired")
+330 |     except jwt.InvalidTokenError:
+331 |         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+332 |
+333 | @api_router.post("/auth/register", response_model=TokenResponse)
+    |
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:338:1
+    |
+336 |     if existing:
+337 |         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
+338 |     
+    | ^^^^
+339 |     password_hash = bcrypt.hashpw(user_data.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:340:1
+    |
+339 |     password_hash = bcrypt.hashpw(user_data.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+340 |     
+    | ^^^^
+341 |     user_id = str(uuid.uuid4())
+342 |     user_doc = {
+    |
+help: Remove whitespace from blank line
+
+UP017 [*] Use `datetime.UTC` alias
+   --> backend\server.py:347:36
+    |
+345 |         "password_hash": password_hash,
+346 |         "name": user_data.name,
+347 |         "created_at": datetime.now(timezone.utc).isoformat()
+    |                                    ^^^^^^^^^^^^
+348 |     }
+    |
+help: Convert to `datetime.UTC` alias
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:349:1
+    |
+347 |         "created_at": datetime.now(timezone.utc).isoformat()
+348 |     }
+349 |     
+    | ^^^^
+350 |     await db.users.insert_one(user_doc)
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:351:1
+    |
+350 |     await db.users.insert_one(user_doc)
+351 |     
+    | ^^^^
+352 |     token = jwt.encode(
+353 |         {"user_id": user_id, "email": user_data.email, "exp": datetime.now(timezone.utc) + timedelta(days=30)},
+    |
+help: Remove whitespace from blank line
+
+UP017 [*] Use `datetime.UTC` alias
+   --> backend\server.py:353:76
+    |
+352 |     token = jwt.encode(
+353 |         {"user_id": user_id, "email": user_data.email, "exp": datetime.now(timezone.utc) + timedelta(days=30)},
+    |                                                                            ^^^^^^^^^^^^
+354 |         JWT_SECRET,
+355 |         algorithm='HS256'
+    |
+help: Convert to `datetime.UTC` alias
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:357:1
+    |
+355 |         algorithm='HS256'
+356 |     )
+357 |     
+    | ^^^^
+358 |     user = User(id=user_id, email=user_data.email, name=user_data.name, created_at=user_doc["created_at"])
+359 |     return TokenResponse(token=token, user=user)
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:366:1
+    |
+364 |     if not user_doc:
+365 |         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+366 |     
+    | ^^^^
+367 |     if not bcrypt.checkpw(credentials.password.encode('utf-8'), user_doc['password_hash'].encode('utf-8')):
+368 |         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:369:1
+    |
+367 |     if not bcrypt.checkpw(credentials.password.encode('utf-8'), user_doc['password_hash'].encode('utf-8')):
+368 |         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+369 |     
+    | ^^^^
+370 |     token = jwt.encode(
+371 |         {"user_id": user_doc['id'], "email": user_doc['email'], "exp": datetime.now(timezone.utc) + timedelta(days=30)},
+    |
+help: Remove whitespace from blank line
+
+UP017 [*] Use `datetime.UTC` alias
+   --> backend\server.py:371:85
+    |
+370 |     token = jwt.encode(
+371 |         {"user_id": user_doc['id'], "email": user_doc['email'], "exp": datetime.now(timezone.utc) + timedelta(days=30)},
+    |                                                                                     ^^^^^^^^^^^^
+372 |         JWT_SECRET,
+373 |         algorithm='HS256'
+    |
+help: Convert to `datetime.UTC` alias
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:375:1
+    |
+373 |         algorithm='HS256'
+374 |     )
+375 |     
+    | ^^^^
+376 |     user = User(id=user_doc['id'], email=user_doc['email'], name=user_doc['name'], created_at=user_doc['created_at'])
+377 |     return TokenResponse(token=token, user=user)
+    |
+help: Remove whitespace from blank line
+
+B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+   --> backend\server.py:416:9
+    |
+414 |         return result
+415 |     except binascii.Error:
+416 |         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid receipt image data.")
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+417 |     except Exception as e:
+418 |         handle_server_error(e, "OCR", "OCR scanning failed. Please try again or enter details manually.")
+    |
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:423:1
+    |
+421 | async def create_group(group_data: GroupCreate, current_user: dict = Depends(verify_token)):
+422 |     member_users = await db.users.find({"email": {"$in": group_data.member_emails}}, {"_id": 0}).to_list(100)
+423 |     
+    | ^^^^
+424 |     current_user_doc = await db.users.find_one({"id": current_user['user_id']}, {"_id": 0})
+425 |     if not current_user_doc:
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:427:1
+    |
+425 |     if not current_user_doc:
+426 |         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Current user not found")
+427 |     
+    | ^^^^
+428 |     current_user_in_list = any(u['email'] == current_user_doc['email'] for u in member_users)
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:429:1
+    |
+428 |     current_user_in_list = any(u['email'] == current_user_doc['email'] for u in member_users)
+429 |     
+    | ^^^^
+430 |     if not current_user_in_list:
+431 |         member_users.append(current_user_doc)
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:432:1
+    |
+430 |     if not current_user_in_list:
+431 |         member_users.append(current_user_doc)
+432 |     
+    | ^^^^
+433 |     if len(member_users) < len(group_data.member_emails) + (0 if current_user_in_list else 1):
+434 |         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Some member emails not found")
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:435:1
+    |
+433 |     if len(member_users) < len(group_data.member_emails) + (0 if current_user_in_list else 1):
+434 |         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Some member emails not found")
+435 |     
+    | ^^^^
+436 |     members = [{"id": u['id'], "email": u['email'], "name": u['name']} for u in member_users]
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:437:1
+    |
+436 |     members = [{"id": u['id'], "email": u['email'], "name": u['name']} for u in member_users]
+437 |     
+    | ^^^^
+438 |     group_id = str(uuid.uuid4())
+439 |     group_doc = {
+    |
+help: Remove whitespace from blank line
+
+UP017 [*] Use `datetime.UTC` alias
+   --> backend\server.py:445:36
+    |
+443 |         "currency": group_data.currency,
+444 |         "created_by": current_user['user_id'],
+445 |         "created_at": datetime.now(timezone.utc).isoformat()
+    |                                    ^^^^^^^^^^^^
+446 |     }
+    |
+help: Convert to `datetime.UTC` alias
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:447:1
+    |
+445 |         "created_at": datetime.now(timezone.utc).isoformat()
+446 |     }
+447 |     
+    | ^^^^
+448 |     await db.groups.insert_one(group_doc)
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:449:1
+    |
+448 |     await db.groups.insert_one(group_doc)
+449 |     
+    | ^^^^
+450 |     return Group(**group_doc)
+    |
+help: Remove whitespace from blank line
+
+UP006 [*] Use `list` instead of `List` for type annotation
+   --> backend\server.py:452:43
+    |
+450 |     return Group(**group_doc)
+451 |
+452 | @api_router.get("/groups", response_model=List[Group])
+    |                                           ^^^^
+453 | async def get_groups(current_user: dict = Depends(verify_token)):
+454 |     groups = await db.groups.find(
+    |
+help: Replace with `list`
+
+UP017 [*] Use `datetime.UTC` alias
+   --> backend\server.py:476:36
+    |
+474 |         "category": expense_data.category,
+475 |         "notes": expense_data.notes,
+476 |         "created_at": datetime.now(timezone.utc).isoformat()
+    |                                    ^^^^^^^^^^^^
+477 |     }
+    |
+help: Convert to `datetime.UTC` alias
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:478:1
+    |
+476 |         "created_at": datetime.now(timezone.utc).isoformat()
+477 |     }
+478 |     
+    | ^^^^
+479 |     await db.expenses.insert_one(expense_doc)
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:480:1
+    |
+479 |     await db.expenses.insert_one(expense_doc)
+480 |     
+    | ^^^^
+481 |     await db.expense_logs.insert_one({
+482 |         "id": str(uuid.uuid4()),
+    |
+help: Remove whitespace from blank line
+
+UP017 [*] Use `datetime.UTC` alias
+   --> backend\server.py:486:35
+    |
+484 |         "action": "added",
+485 |         "user_id": current_user['user_id'],
+486 |         "timestamp": datetime.now(timezone.utc).isoformat()
+    |                                   ^^^^^^^^^^^^
+487 |     })
+    |
+help: Convert to `datetime.UTC` alias
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:488:1
+    |
+486 |         "timestamp": datetime.now(timezone.utc).isoformat()
+487 |     })
+488 |     
+    | ^^^^
+489 |     return Expense(**expense_doc)
+    |
+help: Remove whitespace from blank line
+
+UP006 [*] Use `list` instead of `List` for type annotation
+   --> backend\server.py:491:63
+    |
+489 |     return Expense(**expense_doc)
+490 |
+491 | @api_router.get("/groups/{group_id}/expenses", response_model=List[Expense])
+    |                                                               ^^^^
+492 | async def get_group_expenses(group_id: str, current_user: dict = Depends(verify_token)):
+493 |     group = await db.groups.find_one({"id": group_id, "members.id": current_user['user_id']}, {"_id": 0})
+    |
+help: Replace with `list`
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:496:1
+    |
+494 |     if not group:
+495 |         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found or access denied")
+496 |     
+    | ^^^^
+497 |     expenses = await db.expenses.find({"group_id": group_id}, {"_id": 0}).to_list(1000)
+498 |     return expenses
+    |
+help: Remove whitespace from blank line
+
+UP006 [*] Use `list` instead of `List` for type annotation
+   --> backend\server.py:500:66
+    |
+498 |     return expenses
+499 |
+500 | @api_router.get("/groups/{group_id}/settlements", response_model=List[SettlementItem])
+    |                                                                  ^^^^
+501 | async def get_settlements(group_id: str, current_user: dict = Depends(verify_token)):
+502 |     group = await db.groups.find_one({"id": group_id, "members.id": current_user['user_id']}, {"_id": 0})
+    |
+help: Replace with `list`
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:505:1
+    |
+503 |     if not group:
+504 |         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found or access denied")
+505 |     
+    | ^^^^
+506 |     expenses = await db.expenses.find({"group_id": group_id}, {"_id": 0}).to_list(1000)
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:507:1
+    |
+506 |     expenses = await db.expenses.find({"group_id": group_id}, {"_id": 0}).to_list(1000)
+507 |     
+    | ^^^^
+508 |     balances = {}
+509 |     for member in group['members']:
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:511:1
+    |
+509 |     for member in group['members']:
+510 |         balances[member['id']] = {"name": member['name'], "balance": 0.0}
+511 |     
+    | ^^^^
+512 |     for expense in expenses:
+513 |         paid_by = expense['created_by']
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:518:1
+    |
+516 |                 balances[split['user_id']]['balance'] -= split['amount']
+517 |                 balances[paid_by]['balance'] += split['amount']
+518 |     
+    | ^^^^
+519 |     settlements = []
+520 |     debtors = [(uid, data) for uid, data in balances.items() if data['balance'] < -0.01]
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:522:1
+    |
+520 |     debtors = [(uid, data) for uid, data in balances.items() if data['balance'] < -0.01]
+521 |     creditors = [(uid, data) for uid, data in balances.items() if data['balance'] > 0.01]
+522 |     
+    | ^^^^
+523 |     for debtor_id, debtor_data in debtors:
+524 |         for creditor_id, creditor_data in creditors:
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:527:1
+    |
+525 |             if abs(debtor_data['balance']) < 0.01 or creditor_data['balance'] < 0.01:
+526 |                 continue
+527 |             
+    | ^^^^^^^^^^^^
+528 |             amount = min(abs(debtor_data['balance']), creditor_data['balance'])
+529 |             settlements.append(SettlementItem(
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:536:1
+    |
+534 |                 amount=round(amount, 2)
+535 |             ))
+536 |             
+    | ^^^^^^^^^^^^
+537 |             debtor_data['balance'] += amount
+538 |             creditor_data['balance'] -= amount
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:539:1
+    |
+537 |             debtor_data['balance'] += amount
+538 |             creditor_data['balance'] -= amount
+539 |     
+    | ^^^^
+540 |     return settlements
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:548:1
+    |
+546 |         if not group:
+547 |             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found")
+548 |         
+    | ^^^^^^^^
+549 |         members_info = ", ".join([f"{m['name']} (id: {m['id']})" for m in group['members']])
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:594:1
+    |
+592 |             if debtor_id != current_user['user_id']:
+593 |                 raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You can only initiate payments for your own debts")
+594 |                 
+    | ^^^^^^^^^^^^^^^^
+595 |             # Security check: Verify that the UPI payment amount matches the specific settlement
+596 |             settlements = await get_settlements(group_id, current_user)
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:606:1
+    |
+605 |         payment_id = str(uuid.uuid4())
+606 |         
+    | ^^^^^^^^
+607 |         upi_url = f"upi://pay?pa={payment.upi_id}&pn=goDutch&am={payment.amount}&cu=INR&tn={payment.note or 'Settlement'}"
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:608:1
+    |
+607 |         upi_url = f"upi://pay?pa={payment.upi_id}&pn=goDutch&am={payment.amount}&cu=INR&tn={payment.note or 'Settlement'}"
+608 |         
+    | ^^^^^^^^
+609 |         payment_doc = {
+610 |             "id": payment_id,
+    |
+help: Remove whitespace from blank line
+
+UP017 [*] Use `datetime.UTC` alias
+   --> backend\server.py:618:40
+    |
+616 |             "status": "initiated",
+617 |             "upi_url": upi_url,
+618 |             "created_at": datetime.now(timezone.utc).isoformat()
+    |                                        ^^^^^^^^^^^^
+619 |         }
+    |
+help: Convert to `datetime.UTC` alias
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:620:1
+    |
+618 |             "created_at": datetime.now(timezone.utc).isoformat()
+619 |         }
+620 |         
+    | ^^^^^^^^
+621 |         await db.payments.insert_one(payment_doc)
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:622:1
+    |
+621 |         await db.payments.insert_one(payment_doc)
+622 |         
+    | ^^^^^^^^
+623 |         return {
+624 |             "payment_id": payment_id,
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:638:1
+    |
+636 |         if existing:
+637 |             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="UPI ID already linked")
+638 |         
+    | ^^^^^^^^
+639 |         account_id = str(uuid.uuid4())
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:640:1
+    |
+639 |         account_id = str(uuid.uuid4())
+640 |         
+    | ^^^^^^^^
+641 |         is_primary = await db.bank_accounts.count_documents({"user_id": current_user['user_id']}) == 0
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:642:1
+    |
+641 |         is_primary = await db.bank_accounts.count_documents({"user_id": current_user['user_id']}) == 0
+642 |         
+    | ^^^^^^^^
+643 |         account_doc = {
+644 |             "id": account_id,
+    |
+help: Remove whitespace from blank line
+
+UP017 [*] Use `datetime.UTC` alias
+   --> backend\server.py:653:40
+    |
+651 |             "balance": 10000.00,
+652 |             "is_primary": is_primary,
+653 |             "created_at": datetime.now(timezone.utc).isoformat()
+    |                                        ^^^^^^^^^^^^
+654 |         }
+    |
+help: Convert to `datetime.UTC` alias
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:655:1
+    |
+653 |             "created_at": datetime.now(timezone.utc).isoformat()
+654 |         }
+655 |         
+    | ^^^^^^^^
+656 |         await db.bank_accounts.insert_one(account_doc)
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:657:1
+    |
+656 |         await db.bank_accounts.insert_one(account_doc)
+657 |         
+    | ^^^^^^^^
+658 |         return BankAccount(**account_doc)
+659 |     except Exception as e:
+    |
+help: Remove whitespace from blank line
+
+UP006 [*] Use `list` instead of `List` for type annotation
+   --> backend\server.py:662:49
+    |
+660 |         handle_server_error(e, "Add Account", "Failed to add account")
+661 |
+662 | @api_router.get("/upi/accounts", response_model=List[BankAccount])
+    |                                                 ^^^^
+663 | async def get_bank_accounts(current_user: dict = Depends(verify_token)):
+664 |     accounts = await db.bank_accounts.find({"user_id": current_user['user_id']}, {"_id": 0}).to_list(100)
+    |
+help: Replace with `list`
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:673:1
+    |
+671 |         if not account:
+672 |             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No bank account linked")
+673 |         
+    | ^^^^^^^^
+674 |         if account['balance'] < transaction.amount:
+675 |             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Insufficient balance")
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:676:1
+    |
+674 |         if account['balance'] < transaction.amount:
+675 |             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Insufficient balance")
+676 |         
+    | ^^^^^^^^
+677 |         recipient_account = await db.bank_accounts.find_one({"upi_id": transaction.to_upi_id}, {"_id": 0})
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:678:1
+    |
+677 |         recipient_account = await db.bank_accounts.find_one({"upi_id": transaction.to_upi_id}, {"_id": 0})
+678 |         
+    | ^^^^^^^^
+679 |         transaction_id = str(uuid.uuid4())
+680 |         reference_id = f"UPI{uuid.uuid4().hex[:12].upper()}"
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:681:1
+    |
+679 |         transaction_id = str(uuid.uuid4())
+680 |         reference_id = f"UPI{uuid.uuid4().hex[:12].upper()}"
+681 |         
+    | ^^^^^^^^
+682 |         transaction_doc = {
+683 |             "id": transaction_id,
+    |
+help: Remove whitespace from blank line
+
+UP017 [*] Use `datetime.UTC` alias
+   --> backend\server.py:693:40
+    |
+691 |             "note": transaction.note,
+692 |             "reference_id": reference_id,
+693 |             "created_at": datetime.now(timezone.utc).isoformat()
+    |                                        ^^^^^^^^^^^^
+694 |         }
+    |
+help: Convert to `datetime.UTC` alias
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:695:1
+    |
+693 |             "created_at": datetime.now(timezone.utc).isoformat()
+694 |         }
+695 |         
+    | ^^^^^^^^
+696 |         await db.transactions.insert_one(transaction_doc)
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:697:1
+    |
+696 |         await db.transactions.insert_one(transaction_doc)
+697 |         
+    | ^^^^^^^^
+698 |         await db.bank_accounts.update_one(
+699 |             {"id": account['id']},
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:702:1
+    |
+700 |             {"$inc": {"balance": -transaction.amount}}
+701 |         )
+702 |         
+    | ^^^^^^^^
+703 |         if recipient_account:
+704 |             await db.bank_accounts.update_one(
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:708:1
+    |
+706 |                 {"$inc": {"balance": transaction.amount}}
+707 |             )
+708 |         
+    | ^^^^^^^^
+709 |         return Transaction(**transaction_doc)
+710 |     except Exception as e:
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:719:1
+    |
+717 |         if not account:
+718 |             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No bank account linked")
+719 |         
+    | ^^^^^^^^
+720 |         recipient_account = await db.bank_accounts.find_one({"upi_id": request.to_upi_id}, {"_id": 0})
+721 |         if not recipient_account:
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:723:1
+    |
+721 |         if not recipient_account:
+722 |             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="UPI ID not found")
+723 |         
+    | ^^^^^^^^
+724 |         request_id = str(uuid.uuid4())
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:725:1
+    |
+724 |         request_id = str(uuid.uuid4())
+725 |         
+    | ^^^^^^^^
+726 |         request_doc = {
+727 |             "id": request_id,
+    |
+help: Remove whitespace from blank line
+
+UP017 [*] Use `datetime.UTC` alias
+   --> backend\server.py:735:40
+    |
+733 |             "note": request.note,
+734 |             "status": "pending",
+735 |             "created_at": datetime.now(timezone.utc).isoformat()
+    |                                        ^^^^^^^^^^^^
+736 |         }
+    |
+help: Convert to `datetime.UTC` alias
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:737:1
+    |
+735 |             "created_at": datetime.now(timezone.utc).isoformat()
+736 |         }
+737 |         
+    | ^^^^^^^^
+738 |         await db.money_requests.insert_one(request_doc)
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:739:1
+    |
+738 |         await db.money_requests.insert_one(request_doc)
+739 |         
+    | ^^^^^^^^
+740 |         return MoneyRequest(**request_doc)
+741 |     except Exception as e:
+    |
+help: Remove whitespace from blank line
+
+UP006 [*] Use `list` instead of `List` for type annotation
+   --> backend\server.py:744:49
+    |
+742 |         handle_server_error(e, "Request Money", "Request failed")
+743 |
+744 | @api_router.get("/upi/requests", response_model=List[MoneyRequest])
+    |                                                 ^^^^
+745 | async def get_money_requests(current_user: dict = Depends(verify_token)):
+746 |     account = await db.bank_accounts.find_one({"user_id": current_user['user_id'], "is_primary": True}, {"_id": 0})
+    |
+help: Replace with `list`
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:749:1
+    |
+747 |     if not account:
+748 |         return []
+749 |     
+    | ^^^^
+750 |     requests = await db.money_requests.find(
+751 |         {"$or": [{"from_user_id": current_user['user_id']}, {"to_user_id": current_user['user_id']}]},
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:754:1
+    |
+752 |         {"_id": 0}
+753 |     ).to_list(100)
+754 |     
+    | ^^^^
+755 |     return requests
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:763:1
+    |
+761 |         if not money_request:
+762 |             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Request not found")
+763 |         
+    | ^^^^^^^^
+764 |         if money_request['status'] != 'pending':
+765 |             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Request already processed")
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:766:1
+    |
+764 |         if money_request['status'] != 'pending':
+765 |             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Request already processed")
+766 |         
+    | ^^^^^^^^
+767 |         account = await db.bank_accounts.find_one({"user_id": current_user['user_id'], "is_primary": True}, {"_id": 0})
+768 |         if account['balance'] < money_request['amount']:
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:770:1
+    |
+768 |         if account['balance'] < money_request['amount']:
+769 |             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Insufficient balance")
+770 |         
+    | ^^^^^^^^
+771 |         transaction_id = str(uuid.uuid4())
+772 |         reference_id = f"UPI{uuid.uuid4().hex[:12].upper()}"
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:773:1
+    |
+771 |         transaction_id = str(uuid.uuid4())
+772 |         reference_id = f"UPI{uuid.uuid4().hex[:12].upper()}"
+773 |         
+    | ^^^^^^^^
+774 |         transaction_doc = {
+775 |             "id": transaction_id,
+    |
+help: Remove whitespace from blank line
+
+UP017 [*] Use `datetime.UTC` alias
+   --> backend\server.py:785:40
+    |
+783 |             "note": f"Payment for request: {money_request.get('note', '')}",
+784 |             "reference_id": reference_id,
+785 |             "created_at": datetime.now(timezone.utc).isoformat()
+    |                                        ^^^^^^^^^^^^
+786 |         }
+    |
+help: Convert to `datetime.UTC` alias
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:787:1
+    |
+785 |             "created_at": datetime.now(timezone.utc).isoformat()
+786 |         }
+787 |         
+    | ^^^^^^^^
+788 |         await db.transactions.insert_one(transaction_doc)
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:789:1
+    |
+788 |         await db.transactions.insert_one(transaction_doc)
+789 |         
+    | ^^^^^^^^
+790 |         await db.bank_accounts.update_one(
+791 |             {"user_id": current_user['user_id'], "is_primary": True},
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:794:1
+    |
+792 |             {"$inc": {"balance": -money_request['amount']}}
+793 |         )
+794 |         
+    | ^^^^^^^^
+795 |         await db.bank_accounts.update_one(
+796 |             {"user_id": money_request['from_user_id'], "is_primary": True},
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:799:1
+    |
+797 |             {"$inc": {"balance": money_request['amount']}}
+798 |         )
+799 |         
+    | ^^^^^^^^
+800 |         await db.money_requests.update_one(
+801 |             {"id": request_id},
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:804:1
+    |
+802 |             {"$set": {"status": "accepted"}}
+803 |         )
+804 |         
+    | ^^^^^^^^
+805 |         return {"status": "success", "transaction_id": transaction_id}
+806 |     except Exception as e:
+    |
+help: Remove whitespace from blank line
+
+UP006 [*] Use `list` instead of `List` for type annotation
+   --> backend\server.py:809:53
+    |
+807 |         handle_server_error(e, "Accept Request", "Failed to accept request")
+808 |
+809 | @api_router.get("/upi/transactions", response_model=List[Transaction])
+    |                                                     ^^^^
+810 | async def get_transactions(current_user: dict = Depends(verify_token), limit: int = 50):
+811 |     account = await db.bank_accounts.find_one({"user_id": current_user['user_id'], "is_primary": True}, {"_id": 0})
+    |
+help: Replace with `list`
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:814:1
+    |
+812 |     if not account:
+813 |         return []
+814 |     
+    | ^^^^
+815 |     transactions = await db.transactions.find(
+816 |         {"$or": [{"from_user_id": current_user['user_id']}, {"to_user_id": current_user['user_id']}]},
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:819:1
+    |
+817 |         {"_id": 0}
+818 |     ).sort("created_at", -1).limit(limit).to_list(limit)
+819 |     
+    | ^^^^
+820 |     return transactions
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:828:1
+    |
+826 |         if not account:
+827 |             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No bank account linked")
+828 |         
+    | ^^^^^^^^
+829 |         if account['balance'] < bill.amount:
+830 |             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Insufficient balance")
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:831:1
+    |
+829 |         if account['balance'] < bill.amount:
+830 |             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Insufficient balance")
+831 |         
+    | ^^^^^^^^
+832 |         transaction_id = str(uuid.uuid4())
+833 |         reference_id = f"BILL{uuid.uuid4().hex[:12].upper()}"
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:834:1
+    |
+832 |         transaction_id = str(uuid.uuid4())
+833 |         reference_id = f"BILL{uuid.uuid4().hex[:12].upper()}"
+834 |         
+    | ^^^^^^^^
+835 |         transaction_doc = {
+836 |             "id": transaction_id,
+    |
+help: Remove whitespace from blank line
+
+UP017 [*] Use `datetime.UTC` alias
+   --> backend\server.py:846:40
+    |
+844 |             "note": f"{bill.category} - {bill.biller_name} - {bill.bill_number}",
+845 |             "reference_id": reference_id,
+846 |             "created_at": datetime.now(timezone.utc).isoformat()
+    |                                        ^^^^^^^^^^^^
+847 |         }
+    |
+help: Convert to `datetime.UTC` alias
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:848:1
+    |
+846 |             "created_at": datetime.now(timezone.utc).isoformat()
+847 |         }
+848 |         
+    | ^^^^^^^^
+849 |         await db.transactions.insert_one(transaction_doc)
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:850:1
+    |
+849 |         await db.transactions.insert_one(transaction_doc)
+850 |         
+    | ^^^^^^^^
+851 |         await db.bank_accounts.update_one(
+852 |             {"id": account['id']},
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:855:1
+    |
+853 |             {"$inc": {"balance": -bill.amount}}
+854 |         )
+855 |         
+    | ^^^^^^^^
+856 |         return {"status": "success", "transaction_id": transaction_id, "reference_id": reference_id}
+857 |     except Exception as e:
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:866:1
+    |
+864 |         if not account:
+865 |             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No bank account linked")
+866 |         
+    | ^^^^^^^^
+867 |         if account['balance'] < recharge.amount:
+868 |             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Insufficient balance")
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:869:1
+    |
+867 |         if account['balance'] < recharge.amount:
+868 |             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Insufficient balance")
+869 |         
+    | ^^^^^^^^
+870 |         transaction_id = str(uuid.uuid4())
+871 |         reference_id = f"RECH{uuid.uuid4().hex[:12].upper()}"
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:872:1
+    |
+870 |         transaction_id = str(uuid.uuid4())
+871 |         reference_id = f"RECH{uuid.uuid4().hex[:12].upper()}"
+872 |         
+    | ^^^^^^^^
+873 |         transaction_doc = {
+874 |             "id": transaction_id,
+    |
+help: Remove whitespace from blank line
+
+UP017 [*] Use `datetime.UTC` alias
+   --> backend\server.py:884:40
+    |
+882 |             "note": f"{recharge.recharge_type} - {recharge.mobile_number} - {recharge.operator}",
+883 |             "reference_id": reference_id,
+884 |             "created_at": datetime.now(timezone.utc).isoformat()
+    |                                        ^^^^^^^^^^^^
+885 |         }
+    |
+help: Convert to `datetime.UTC` alias
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:886:1
+    |
+884 |             "created_at": datetime.now(timezone.utc).isoformat()
+885 |         }
+886 |         
+    | ^^^^^^^^
+887 |         await db.transactions.insert_one(transaction_doc)
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:888:1
+    |
+887 |         await db.transactions.insert_one(transaction_doc)
+888 |         
+    | ^^^^^^^^
+889 |         await db.bank_accounts.update_one(
+890 |             {"id": account['id']},
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:893:1
+    |
+891 |             {"$inc": {"balance": -recharge.amount}}
+892 |         )
+893 |         
+    | ^^^^^^^^
+894 |         return {"status": "success", "transaction_id": transaction_id, "reference_id": reference_id}
+895 |     except Exception as e:
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:929:1
+    |
+927 |     if not expense:
+928 |         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Expense not found")
+929 |     
+    | ^^^^
+930 |     # Check if user is a member of the group
+931 |     group = await db.groups.find_one({"id": expense["group_id"], "members.id": current_user['user_id']}, {"_id": 0})
+    |
+help: Remove whitespace from blank line
+
+UP017 [*] Use `datetime.UTC` alias
+   --> backend\server.py:949:39
+    |
+947 |             "action": "edited",
+948 |             "user_id": current_user['user_id'],
+949 |             "timestamp": datetime.now(timezone.utc).isoformat()
+    |                                       ^^^^^^^^^^^^
+950 |         })
+951 |     updated = await db.expenses.find_one({"id": expense_id}, {"_id": 0})
+    |
+help: Convert to `datetime.UTC` alias
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:959:1
+    |
+957 |     if not expense:
+958 |         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Expense not found")
+959 |     
+    | ^^^^
+960 |     # Check if user is a member of the group
+961 |     group = await db.groups.find_one({"id": expense["group_id"], "members.id": current_user['user_id']}, {"_id": 0})
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:964:1
+    |
+962 |     if not group:
+963 |         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only group members can delete this expense")
+964 |         
+    | ^^^^^^^^
+965 |     await db.expense_logs.insert_one({
+966 |         "id": str(uuid.uuid4()),
+    |
+help: Remove whitespace from blank line
+
+UP017 [*] Use `datetime.UTC` alias
+   --> backend\server.py:970:35
+    |
+968 |         "action": "deleted",
+969 |         "user_id": current_user['user_id'],
+970 |         "timestamp": datetime.now(timezone.utc).isoformat()
+    |                                   ^^^^^^^^^^^^
+971 |     })
+972 |     await db.expenses.delete_one({"id": expense_id})
+    |
+help: Convert to `datetime.UTC` alias
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:980:1
+    |
+978 |         if not group:
+979 |             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found")
+980 |         
+    | ^^^^^^^^
+981 |         expenses = await db.expenses.find({"group_id": group_id}, {"_id": 0}).to_list(1000)
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:982:1
+    |
+981 |         expenses = await db.expenses.find({"group_id": group_id}, {"_id": 0}).to_list(1000)
+982 |         
+    | ^^^^^^^^
+983 |         total_spent = sum(e['total_amount'] for e in expenses)
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:984:1
+    |
+983 |         total_spent = sum(e['total_amount'] for e in expenses)
+984 |         
+    | ^^^^^^^^
+985 |         category_breakdown = {}
+986 |         for expense in expenses:
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> backend\server.py:989:1
+    |
+987 |             category = expense.get('category', 'Other')
+988 |             category_breakdown[category] = category_breakdown.get(category, 0) + expense['total_amount']
+989 |         
+    | ^^^^^^^^
+990 |         user_spending = {}
+991 |         for expense in expenses:
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+    --> backend\server.py:998:1
+     |
+ 996 |                     user_spending[uid] = {"name": uname, "amount": 0}
+ 997 |                 user_spending[uid]['amount'] += split['amount']
+ 998 |         
+     | ^^^^^^^^
+ 999 |         monthly_trend = {}
+1000 |         for expense in expenses:
+     |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+    --> backend\server.py:1003:1
+     |
+1001 |             month = expense['date'][:7]
+1002 |             monthly_trend[month] = monthly_trend.get(month, 0) + expense['total_amount']
+1003 |         
+     | ^^^^^^^^
+1004 |         return {
+1005 |             "total_expenses": len(expenses),
+     |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+    --> backend\server.py:1019:1
+     |
+1017 |     if os.getenv("ENV", "development") != "development":
+1018 |         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Reset not allowed in production")
+1019 |     
+     | ^^^^
+1020 |     await db.users.delete_many({})
+1021 |     await db.groups.delete_many({})
+     |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+    --> backend\server.py:1027:1
+     |
+1025 |     await db.money_requests.delete_many({})
+1026 |     await db.payments.delete_many({})
+1027 |     
+     | ^^^^
+1028 |     await seed_data(db)
+1029 |     return {"status": "success", "message": "Database reset and seeded with fresh fake data"}
+     |
+help: Remove whitespace from blank line
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> backend\test_mongo_conn.py:1:1
+  |
+1 | / from pymongo import MongoClient
+2 | | import os
+3 | | from dotenv import load_dotenv
+4 | | from pathlib import Path
+  | |________________________^
+5 |
+6 |   ROOT_DIR = Path(__file__).parent
+  |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> backend\test_ocr_models.py:1:1
+  |
+1 | / import json
+2 | | import pytest
+3 | | from pydantic import ValidationError
+4 | | from server import OCRItem, OCRResult
+  | |_____________________________________^
+5 |
+6 |   def test_ocr_item_validation_success():
+  |
+help: Organize imports
+
+F401 [*] `json` imported but unused
+ --> backend\test_ocr_models.py:1:8
+  |
+1 | import json
+  |        ^^^^
+2 | import pytest
+3 | from pydantic import ValidationError
+  |
+help: Remove unused import: `json`
+
+Found 372 errors.
+[*] 354 fixable with the `--fix` option.

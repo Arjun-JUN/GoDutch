@@ -34,6 +34,8 @@ export {
   Money,
   Note,
   PaperPlaneTilt,
+  PaperPlaneRight,
+  Hash,
   PencilSimple,
   Phone,
   Plus,

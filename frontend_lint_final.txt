@@ -1,0 +1,128 @@
+﻿
+> frontend@0.1.0 lint C:\Projects\GoDutch\frontend
+> eslint src --ext .js,.jsx
+
+
+C:\Projects\GoDutch\frontend\src\__mocks__\framer-motion.js
+  16:7   error  Component definition is missing display name              react/display-name
+  19:11  error  'initial' is assigned a value but never used              no-unused-vars
+  19:20  error  'animate' is assigned a value but never used              no-unused-vars
+  19:29  error  'exit' is assigned a value but never used                 no-unused-vars
+  19:35  error  'variants' is assigned a value but never used             no-unused-vars
+  19:45  error  'transition' is assigned a value but never used           no-unused-vars
+  20:11  error  'whileHover' is assigned a value but never used           no-unused-vars
+  20:23  error  'whileTap' is assigned a value but never used             no-unused-vars
+  20:33  error  'whileFocus' is assigned a value but never used           no-unused-vars
+  20:45  error  'whileInView' is assigned a value but never used          no-unused-vars
+  21:11  error  'layout' is assigned a value but never used               no-unused-vars
+  21:19  error  'layoutId' is assigned a value but never used             no-unused-vars
+  21:29  error  'drag' is assigned a value but never used                 no-unused-vars
+  21:35  error  'dragConstraints' is assigned a value but never used      no-unused-vars
+  22:11  error  'onAnimationStart' is assigned a value but never used     no-unused-vars
+  22:29  error  'onAnimationComplete' is assigned a value but never used  no-unused-vars
+
+C:\Projects\GoDutch\frontend\src\__tests__\ExpenseDetail.test.js
+  12:20  error  'it' is defined but never used       no-unused-vars
+  17:10  error  'useAuth' is defined but never used  no-unused-vars
+
+C:\Projects\GoDutch\frontend\src\__tests__\NewExpenseRedesign.test.js
+   9:20  error  'it' is defined but never used       no-unused-vars
+  14:10  error  'useAuth' is defined but never used  no-unused-vars
+
+C:\Projects\GoDutch\frontend\src\__tests__\SettlementsPage.test.js
+  1:24  error  'test' is defined but never used     no-unused-vars
+  3:26  error  'waitFor' is defined but never used  no-unused-vars
+  6:10  error  'useAuth' is defined but never used  no-unused-vars
+
+C:\Projects\GoDutch\frontend\src\__tests__\UPIHome.test.js
+  1:24  error  'test' is defined but never used     no-unused-vars
+  3:26  error  'waitFor' is defined but never used  no-unused-vars
+  6:10  error  'useAuth' is defined but never used  no-unused-vars
+
+C:\Projects\GoDutch\frontend\src\hooks\use-toast.js
+  8:7  error  'actionTypes' is assigned a value but never used  no-unused-vars
+
+C:\Projects\GoDutch\frontend\src\pages\AddBankAccount.js
+  4:10  error  'useAuth' is defined but never used  no-unused-vars
+
+C:\Projects\GoDutch\frontend\src\pages\Dashboard.js
+  7:87  error  'MemberBadge' is defined but never used  no-unused-vars
+
+C:\Projects\GoDutch\frontend\src\pages\ExpenseDetail.js
+    1:44  error  'useMemo' is defined but never used             no-unused-vars
+    9:3   error  'Airplane' is defined but never used            no-unused-vars
+   11:3   error  'Car' is defined but never used                 no-unused-vars
+   12:3   error  'CurrencyInr' is defined but never used         no-unused-vars
+   14:3   error  'ForkKnife' is defined but never used           no-unused-vars
+   15:3   error  'Lightbulb' is defined but never used           no-unused-vars
+   19:3   error  'ShoppingBag' is defined but never used         no-unused-vars
+   20:3   error  'ShoppingCart' is defined but never used        no-unused-vars
+   21:3   error  'Stethoscope' is defined but never used         no-unused-vars
+   22:3   error  'Tag' is defined but never used                 no-unused-vars
+   23:3   error  'Ticket' is defined but never used              no-unused-vars
+  186:9   error  'isCreator' is assigned a value but never used  no-unused-vars
+
+C:\Projects\GoDutch\frontend\src\pages\GroupDetail.js
+   4:10  error  'useAuth' is defined but never used          no-unused-vars
+   8:3   error  'Airplane' is defined but never used         no-unused-vars
+  10:3   error  'CalendarBlank' is defined but never used    no-unused-vars
+  11:3   error  'Car' is defined but never used              no-unused-vars
+  12:3   error  'DotsThreeCircle' is defined but never used  no-unused-vars
+  13:3   error  'ForkKnife' is defined but never used        no-unused-vars
+  14:3   error  'Lightbulb' is defined but never used        no-unused-vars
+  15:3   error  'Note' is defined but never used             no-unused-vars
+  16:3   error  'PencilSimple' is defined but never used     no-unused-vars
+  18:3   error  'ShoppingBag' is defined but never used      no-unused-vars
+  19:3   error  'ShoppingCart' is defined but never used     no-unused-vars
+  20:3   error  'Stethoscope' is defined but never used      no-unused-vars
+  21:3   error  'Tag' is defined but never used              no-unused-vars
+  22:3   error  'Ticket' is defined but never used           no-unused-vars
+  23:3   error  'Trash' is defined but never used            no-unused-vars
+  25:3   error  'X' is defined but never used                no-unused-vars
+
+C:\Projects\GoDutch\frontend\src\pages\GroupsPage.js
+  4:10  error  'useAuth' is defined but never used  no-unused-vars
+
+C:\Projects\GoDutch\frontend\src\pages\ItemSplitView.js
+  14:20  error  'AppButton' is defined but never used  no-unused-vars
+
+C:\Projects\GoDutch\frontend\src\pages\NewExpenseRedesign.js
+    1:44  error    'useMemo' is defined but never used                                                                            no-unused-vars
+    8:3   error    'CATEGORIES' is defined but never used                                                                         no-unused-vars
+    9:3   error    'CATEGORY_ICONS' is defined but never used                                                                     no-unused-vars
+   14:25  error    'smartSplitEdge' is defined but never used                                                                     no-unused-vars
+   16:3   error    'Airplane' is defined but never used                                                                           no-unused-vars
+   20:3   error    'Car' is defined but never used                                                                                no-unused-vars
+   21:3   error    'CaretDown' is defined but never used                                                                          no-unused-vars
+   23:3   error    'CurrencyInr' is defined but never used                                                                        no-unused-vars
+   24:3   error    'DotsThreeCircle' is defined but never used                                                                    no-unused-vars
+   25:3   error    'ForkKnife' is defined but never used                                                                          no-unused-vars
+   27:3   error    'Lightbulb' is defined but never used                                                                          no-unused-vars
+   31:3   error    'ShoppingBag' is defined but never used                                                                        no-unused-vars
+   32:3   error    'ShoppingCart' is defined but never used                                                                       no-unused-vars
+   33:3   error    'Stethoscope' is defined but never used                                                                        no-unused-vars
+   34:3   error    'Ticket' is defined but never used                                                                             no-unused-vars
+  550:6   warning  React Hook useEffect has a missing dependency: 'loadGroups'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Projects\GoDutch\frontend\src\pages\ReportsPage.js
+  4:10  error  'useAuth' is defined but never used  no-unused-vars
+
+C:\Projects\GoDutch\frontend\src\pages\SendMoney.js
+  4:10  error  'useAuth' is defined but never used  no-unused-vars
+
+C:\Projects\GoDutch\frontend\src\pages\SlateDocs.js
+  24:3  error  'Cards' is defined but never used  no-unused-vars
+
+C:\Projects\GoDutch\frontend\src\pages\UPIHome.js
+  1:31  error  'useCallback' is defined but never used  no-unused-vars
+
+C:\Projects\GoDutch\frontend\src\slate\ui\command.jsx
+  36:52  error  Unknown property 'cmdk-input-wrapper' found  react/no-unknown-property
+
+C:\Projects\GoDutch\frontend\src\utils\calculateShare.js
+  12:3   error  'currentUser' is defined but never used             no-unused-vars
+  72:15  error  'totalAssigned' is assigned a value but never used  no-unused-vars
+
+Γ£û 82 problems (81 errors, 1 warning)
+
+ΓÇëELIFECYCLEΓÇë Command failed with exit code 1.

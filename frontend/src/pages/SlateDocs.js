@@ -109,19 +109,19 @@ const SlateDocs = () => {
               <div className="flex flex-wrap gap-4 items-center mb-10">
                 <div className="space-y-2 flex flex-col items-center">
                   <AppButton variant="primary">Primary Action</AppButton>
-                  <code className="text-[10px] opacity-60">variant="primary"</code>
+                  <code className="text-[10px] opacity-60">variant=&quot;primary&quot;</code>
                 </div>
                 <div className="space-y-2 flex flex-col items-center">
                   <AppButton variant="secondary">Secondary</AppButton>
-                  <code className="text-[10px] opacity-60">variant="secondary"</code>
+                  <code className="text-[10px] opacity-60">variant=&quot;secondary&quot;</code>
                 </div>
                 <div className="space-y-2 flex flex-col items-center">
                   <AppButton variant="ghost">Ghost Button</AppButton>
-                  <code className="text-[10px] opacity-60">variant="ghost"</code>
+                  <code className="text-[10px] opacity-60">variant=&quot;ghost&quot;</code>
                 </div>
                 <div className="space-y-2 flex flex-col items-center">
                   <AppButton variant="icon"><Plus size={20} weight="bold" /></AppButton>
-                  <code className="text-[10px] opacity-60">variant="icon"</code>
+                  <code className="text-[10px] opacity-60">variant=&quot;icon&quot;</code>
                 </div>
               </div>
 
@@ -129,15 +129,15 @@ const SlateDocs = () => {
               <div className="flex flex-wrap gap-4 items-end">
                 <div className="space-y-2 flex flex-col items-center">
                   <AppButton size="sm">Small</AppButton>
-                  <code className="text-[10px] opacity-60">size="sm"</code>
+                  <code className="text-[10px] opacity-60">size=&quot;sm&quot;</code>
                 </div>
                 <div className="space-y-2 flex flex-col items-center">
                   <AppButton size="md">Medium (Default)</AppButton>
-                  <code className="text-[10px] opacity-60">size="md"</code>
+                  <code className="text-[10px] opacity-60">size=&quot;md&quot;</code>
                 </div>
                 <div className="space-y-2 flex flex-col items-center">
                   <AppButton size="lg">Large Scale</AppButton>
-                  <code className="text-[10px] opacity-60">size="lg"</code>
+                  <code className="text-[10px] opacity-60">size=&quot;lg&quot;</code>
                 </div>
               </div>
             </AppSurface>

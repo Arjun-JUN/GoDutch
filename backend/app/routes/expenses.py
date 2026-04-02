@@ -1,12 +1,11 @@
 import uuid
-import os
-from datetime import datetime, timezone
-from typing import List
-from fastapi import APIRouter, HTTPException, Depends, status
+from datetime import UTC, datetime
+
+from fastapi import APIRouter, Depends, HTTPException, status
+
 from app.database import db
-from app.models.expense import Expense, ExpenseCreate, ExpenseUpdate
 from app.dependencies import verify_token
-from app.utils.errors import handle_server_error
+from app.models.expense import Expense, ExpenseCreate, ExpenseUpdate
 
 router = APIRouter(prefix="/expenses", tags=["Expenses"])
 
@@ -26,19 +25,19 @@ async def create_expense(expense_data: ExpenseCreate, current_user: dict = Depen
         "receipt_image": expense_data.receipt_image,
         "category": expense_data.category,
         "notes": expense_data.notes,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": datetime.now(UTC).isoformat()
     }
-    
+
     await db.expenses.insert_one(expense_doc)
-    
+
     await db.expense_logs.insert_one({
         "id": str(uuid.uuid4()),
         "expense_id": expense_id,
         "action": "added",
         "user_id": current_user['user_id'],
-        "timestamp": datetime.now(timezone.utc).isoformat()
+        "timestamp": datetime.now(UTC).isoformat()
     })
-    
+
     return Expense(**expense_doc)
 
 @router.get("/categories")
@@ -65,11 +64,11 @@ async def update_expense(expense_id: str, update_data: ExpenseUpdate, current_us
     expense = await db.expenses.find_one({"id": expense_id}, {"_id": 0})
     if not expense:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Expense not found")
-    
+
     group = await db.groups.find_one({"id": expense["group_id"], "members.id": current_user['user_id']}, {"_id": 0})
     if not group:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only group members can edit this expense")
-    
+
     update_fields = {}
     for field, value in update_data.model_dump(exclude_none=True).items():
         if field == "items":
@@ -78,7 +77,7 @@ async def update_expense(expense_id: str, update_data: ExpenseUpdate, current_us
             update_fields["split_details"] = [s.model_dump() for s in update_data.split_details]
         else:
             update_fields[field] = value
-            
+
     if update_fields:
         await db.expenses.update_one({"id": expense_id}, {"$set": update_fields})
         await db.expense_logs.insert_one({
@@ -86,7 +85,7 @@ async def update_expense(expense_id: str, update_data: ExpenseUpdate, current_us
             "expense_id": expense_id,
             "action": "edited",
             "user_id": current_user['user_id'],
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(UTC).isoformat()
         })
     updated = await db.expenses.find_one({"id": expense_id}, {"_id": 0})
     return updated
@@ -96,16 +95,16 @@ async def delete_expense(expense_id: str, current_user: dict = Depends(verify_to
     expense = await db.expenses.find_one({"id": expense_id}, {"_id": 0})
     if not expense:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Expense not found")
-    
+
     group = await db.groups.find_one({"id": expense["group_id"], "members.id": current_user['user_id']}, {"_id": 0})
     if not group:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only group members can delete this expense")
-        
+
     await db.expense_logs.insert_one({
         "id": str(uuid.uuid4()),
         "expense_id": expense_id,
         "action": "deleted",
         "user_id": current_user['user_id'],
-        "timestamp": datetime.now(timezone.utc).isoformat()
+        "timestamp": datetime.now(UTC).isoformat()
     })
     await db.expenses.delete_one({"id": expense_id})

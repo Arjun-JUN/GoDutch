@@ -1,5 +1,6 @@
 from pydantic import BaseModel, ConfigDict
 
+
 class SettlementItem(BaseModel):
     model_config = ConfigDict(extra="ignore")
     from_user_id: str

@@ -12,8 +12,8 @@ const React = require('react');
 const motion = new Proxy(
   {},
   {
-    get: (_target, tag) =>
-      React.forwardRef(({ children, ...props }, ref) => {
+    get: (_target, tag) => {
+      const Component = React.forwardRef(({ children, ...props }, ref) => {
         // Strip framer-only props so React doesn't warn about unknown DOM attributes
         const {
           initial, animate, exit, variants, transition,
@@ -23,7 +23,10 @@ const motion = new Proxy(
           ...domProps
         } = props;
         return React.createElement(tag, { ref, ...domProps }, children);
-      }),
+      });
+      Component.displayName = `motion.${tag}`;
+      return Component;
+    },
   }
 );
 
