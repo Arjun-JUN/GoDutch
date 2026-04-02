@@ -10,7 +10,8 @@ import {
   SignOut, 
   Users 
 } from '@/slate/icons';
-import { AppButton, IconBadge } from './index';
+import { AppButton } from './AppButton';
+import { IconBadge } from './AppSurface';
 
 function Header() {
   const navigate = useNavigate();
