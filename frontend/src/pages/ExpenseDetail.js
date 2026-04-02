@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '../contexts/AuthContext';
@@ -7,8 +8,6 @@ import { CATEGORIES, CATEGORY_ICONS } from '../lib/constants';
 import { calculateSplitDetails } from '../utils/calculateShare';
 import {
   CalendarBlank,
-  DotsThreeCircle,
-  Note,
   PencilSimple,
   Receipt,
   Trash,
@@ -380,11 +379,10 @@ function ExpenseDetail() {
                               key={member.id}
                               type="button"
                               onClick={() => toggleMemberAssignment(index, member.id)}
-                              className={`rounded-full px-2 py-1 text-[10px] font-bold transition-all border ${
-                                (item.assigned_to || []).includes(member.id)
+                              className={`rounded-full px-2 py-1 text-[10px] font-bold transition-all border ${(item.assigned_to || []).includes(member.id)
                                   ? 'bg-[var(--app-primary-soft)] text-[var(--app-primary-strong)] border-[var(--app-primary)]'
                                   : 'bg-[var(--app-soft)] text-[var(--app-muted)] border-transparent'
-                              }`}
+                                }`}
                             >
                               {member.name}
                             </button>
@@ -437,7 +435,7 @@ function ExpenseDetail() {
           <AppSurface className="mb-8 p-6 md:p-10 flex flex-col md:flex-row md:items-center justify-between gap-8 overflow-hidden relative shadow-xl border-none">
             {/* Background Gradient Layer */}
             <div className="absolute inset-0 bg-gradient-to-br from-[var(--app-primary-strong)] to-[var(--app-primary)] opacity-[0.98]" />
-            
+
             {/* Decorative Pattern / Large Icon */}
             <div className="absolute -right-12 -bottom-12 opacity-10 pointer-events-none transform rotate-12">
               {(() => {
@@ -447,38 +445,38 @@ function ExpenseDetail() {
             </div>
 
             <div className="relative z-10 flex items-center gap-6">
-               <div className="flex h-20 w-20 items-center justify-center rounded-[2.5rem] bg-white/15 backdrop-blur-md border border-white/20 text-white shadow-lg">
-                  {(() => {
-                    const Icon = CATEGORY_ICONS[expense.category] || DotsThreeCircle;
-                    return <Icon size={40} weight="bold" />;
-                  })()}
-               </div>
-               <div>
-                 <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.25em] text-white/50 mb-3">
-                   <CalendarBlank size={16} weight="bold" />
-                   {expense.date}
-                 </div>
-                 <h3 className="text-3xl font-black tracking-tighter text-white md:text-4xl">
-                   {expense.category || 'Other'}
-                 </h3>
-                 <p className="mt-1 text-sm font-bold text-white/60 uppercase tracking-widest">
-                   {expense.split_type} Split
-                 </p>
-               </div>
+              <div className="flex h-20 w-20 items-center justify-center rounded-[2.5rem] bg-white/15 backdrop-blur-md border border-white/20 text-white shadow-lg">
+                {(() => {
+                  const Icon = CATEGORY_ICONS[expense.category] || DotsThreeCircle;
+                  return <Icon size={40} weight="bold" />;
+                })()}
+              </div>
+              <div>
+                <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.25em] text-white/50 mb-3">
+                  <CalendarBlank size={16} weight="bold" />
+                  {expense.date}
+                </div>
+                <h3 className="text-3xl font-black tracking-tighter text-white md:text-4xl">
+                  {expense.category || 'Other'}
+                </h3>
+                <p className="mt-1 text-sm font-bold text-white/60 uppercase tracking-widest">
+                  {expense.split_type} Split
+                </p>
+              </div>
             </div>
 
             <div className="relative z-10 text-left md:text-right">
-               <p className="text-[11px] font-black uppercase tracking-[0.25em] text-white/50 mb-1">Your Personal Share</p>
-               <p className="text-5xl md:text-7xl font-black tracking-tighter text-white drop-shadow-md">
-                  <span className="text-2xl md:text-3xl mr-1 opacity-60 font-medium tracking-tight">Rs</span>
-                  {myShare ? Number(myShare.amount).toFixed(2) : '0.00'}
-               </p>
-               <div className="flex items-center md:justify-end gap-3 mt-4">
-                  <div className="h-px w-8 bg-white/20 hidden md:block" />
-                  <span className="text-sm font-bold text-white/70">
-                    Total bill <span className="text-white">Rs {Number(expense.total_amount).toFixed(2)}</span>
-                  </span>
-               </div>
+              <p className="text-[11px] font-black uppercase tracking-[0.25em] text-white/50 mb-1">Your Personal Share</p>
+              <p className="text-5xl md:text-7xl font-black tracking-tighter text-white drop-shadow-md">
+                <span className="text-2xl md:text-3xl mr-1 opacity-60 font-medium tracking-tight">Rs</span>
+                {myShare ? Number(myShare.amount).toFixed(2) : '0.00'}
+              </p>
+              <div className="flex items-center md:justify-end gap-3 mt-4">
+                <div className="h-px w-8 bg-white/20 hidden md:block" />
+                <span className="text-sm font-bold text-white/70">
+                  Total bill <span className="text-white">Rs {Number(expense.total_amount).toFixed(2)}</span>
+                </span>
+              </div>
             </div>
           </AppSurface>
         )}
@@ -588,11 +586,10 @@ function ExpenseDetail() {
                     <div
                       key={i}
                       data-testid={`split-row-${i}`}
-                      className={`flex items-center justify-between gap-3 rounded-[1.25rem] p-3 ${
-                        isMe
+                      className={`flex items-center justify-between gap-3 rounded-[1.25rem] p-3 ${isMe
                           ? 'bg-[var(--app-soft-strong)]'
                           : 'bg-white dark:bg-[var(--app-surface)]'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center gap-2">
                         <MemberBadge active={isMe}>{split.user_name}</MemberBadge>
@@ -601,11 +598,10 @@ function ExpenseDetail() {
                         )}
                       </div>
                       <p
-                        className={`text-base font-extrabold tracking-[-0.03em] ${
-                          isMe
+                        className={`text-base font-extrabold tracking-[-0.03em] ${isMe
                             ? 'text-[var(--app-primary-strong)]'
                             : 'text-[var(--app-foreground)]'
-                        }`}
+                          }`}
                       >
                         Rs {Number(split.amount).toFixed(2)}
                       </p>
