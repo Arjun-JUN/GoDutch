@@ -9,7 +9,6 @@ export const calculateSplitDetails = ({
   members,
   splitBetween, // Array of { user_id, amount, shares, assigned_to }
   items = [],
-  currentUser,
 }) => {
   const total = parseFloat(totalAmount) || 0;
   if (!members || members.length === 0) return [];
@@ -69,12 +68,10 @@ export const calculateSplitDetails = ({
         if (itemSplitType === 'unequal' || itemSplitType === 'custom') {
           // Item-level unequal split
           const customAmounts = item.custom_amounts || {};
-          let totalAssigned = 0;
           assignedTo.forEach((mid) => {
             const amt = parseFloat(customAmounts[mid]) || 0;
             if (memberTotals[mid] !== undefined) {
               memberTotals[mid] += amt;
-              totalAssigned += amt;
             }
           });
           // If total custom amounts < subtotal, split the remainder? 

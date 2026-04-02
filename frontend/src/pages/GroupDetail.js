@@ -5,24 +5,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { api } from '../lib/api';
 import { CATEGORY_ICONS } from '../lib/constants';
 import {
-  Airplane,
   ArrowsLeftRight,
-  CalendarBlank,
-  Car,
-  DotsThreeCircle,
-  ForkKnife,
-  Lightbulb,
-  Note,
-  PencilSimple,
   Receipt,
-  ShoppingBag,
-  ShoppingCart,
-  Stethoscope,
-  Tag,
-  Ticket,
-  Trash,
   Users,
-  X,
 } from '@/slate/icons';
 import { Header, AppShell, AppSurface, ExpenseCard, MemberBadge, PageBackButton, PageContent, StatCard } from '@/slate';
 
