@@ -1,25 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Microphone, 
-  PaperPlaneRight, 
-  Check, 
-  CaretDown, 
+import {
+  Microphone,
+  PaperPlaneRight,
+  Check,
+  CaretDown,
   CaretUp,
   Plus,
   Trash,
   Lightning
 } from '@/slate/icons';
-import { AppInput } from '@/slate';
+import { AppButton, AppInput, MemberBadge } from '@/slate';
 import { smartSplitEdge } from '../utils/edgeAI';
 import { toast } from 'sonner';
 
-export function ItemSplitView({ 
-  items, 
-  onItemsChange, 
-  members, 
+export function ItemSplitView({
+  items,
+  onItemsChange,
+  members,
   currencySymbol,
-  totalAmount 
+  totalAmount
 }) {
   const [smartInput, setSmartInput] = useState('');
   const [isRecording, setIsRecording] = useState(false);
@@ -66,7 +66,7 @@ export function ItemSplitView({
 
   const handleSmartSplit = async () => {
     if (!smartInput.trim()) return;
-    
+
     const loadingToast = toast.loading('AI is calculating split...');
     try {
       const membersInfo = members.map(m => `${m.name} (id: ${m.id})`).join(', ');
@@ -114,7 +114,6 @@ export function ItemSplitView({
   const addItem = () => {
     const newItems = [...items, { name: '', price: '', quantity: 1, category: 'General', assigned_to: [], split_type: 'equal' }];
     onItemsChange(newItems);
-    // Auto-expand the newly added item for immediate editing
     setExpandedItemId(newItems.length - 1);
   };
 
@@ -133,13 +132,13 @@ export function ItemSplitView({
     const newItems = [...items];
     const item = { ...newItems[itemIdx] };
     const assigned = item.assigned_to || [];
-    
+
     if (assigned.includes(memberId)) {
       item.assigned_to = assigned.filter(id => id !== memberId);
     } else {
       item.assigned_to = [...assigned, memberId];
     }
-    
+
     newItems[itemIdx] = item;
     onItemsChange(newItems);
   };
@@ -152,17 +151,17 @@ export function ItemSplitView({
     <div className="item-split-container">
       {/* Smart Split AI Input */}
       <div className="smart-split-bubble">
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--app-primary)] text-white shadow-sm">
+        <div className="smart-split-icon">
           <Lightning size={16} weight="fill" />
         </div>
-        <input 
+        <input
           className="smart-split-input"
           placeholder="e.g. 'Split pizza between Arjun and Priya'"
           value={smartInput}
           onChange={(e) => setSmartInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSmartSplit()}
         />
-        <button 
+        <button
           className={`voice-btn ${isRecording ? 'recording' : ''}`}
           onClick={toggleRecording}
           type="button"
@@ -170,24 +169,25 @@ export function ItemSplitView({
           <Microphone size={18} weight={isRecording ? "fill" : "bold"} />
         </button>
         {smartInput && (
-          <button 
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--app-primary)] text-white transition-transform active:scale-90"
+          <AppButton
+            variant="icon"
+            className="smart-split-send-btn"
             onClick={handleSmartSplit}
           >
             <PaperPlaneRight size={18} weight="bold" />
-          </button>
+          </AppButton>
         )}
       </div>
 
-      {/* Items List — Editable */}
+      {/* Items List */}
       <div className="item-split-list" data-testid="item-split-list">
         {items.map((item, idx) => {
           const isExpanded = expandedItemId === idx;
           const lineTotal = (parseFloat(item.price) || 0) * (parseInt(item.quantity) || 1);
 
           return (
-            <motion.div 
-              key={idx} 
+            <motion.div
+              key={idx}
               className={`item-card ${isExpanded ? 'active' : ''}`}
               layout
               initial={{ opacity: 0, y: 8 }}
@@ -272,22 +272,23 @@ export function ItemSplitView({
 
                     {/* Member assignment */}
                     <div className="item-member-section">
-                      <p className="item-section-label">Split with:</p>
-                      <div className="flex flex-wrap gap-2">
+                      <p className="item-section-label">Split With</p>
+                      <div className="item-member-chips">
                         {members.map((member) => {
                           const isSelected = item.assigned_to?.includes(member.id);
                           return (
-                            <div
+                            <MemberBadge
                               key={member.id}
-                              className={`member-chip ${isSelected ? 'selected' : ''}`}
+                              active={isSelected}
+                              className="member-chip-item"
                               onClick={() => toggleMemberForItem(idx, member.id)}
                             >
-                              <div className="flex h-5 w-5 items-center justify-center rounded-full bg-white/50 text-[10px]">
+                              <span className="member-chip-avatar">
                                 {member.name.charAt(0)}
-                              </div>
+                              </span>
                               {member.name}
                               {isSelected && <Check size={12} weight="bold" />}
-                            </div>
+                            </MemberBadge>
                           );
                         })}
                       </div>
@@ -295,40 +296,42 @@ export function ItemSplitView({
                       {/* Equal/Unequal Toggle */}
                       {item.assigned_to?.length > 1 && (
                         <div className="item-split-mode-toggle">
-                          <button 
+                          <button
                             className={`mode-toggle-btn ${item.split_type !== 'unequal' ? 'active' : ''}`}
                             onClick={() => {
                               const newItems = [...items];
                               newItems[idx] = { ...newItems[idx], split_type: 'equal' };
                               onItemsChange(newItems);
                             }}
+                            type="button"
                           >
-                            EQUALLY
+                            Equally
                           </button>
-                          <button 
+                          <button
                             className={`mode-toggle-btn ${item.split_type === 'unequal' ? 'active' : ''}`}
                             onClick={() => {
                               const newItems = [...items];
                               newItems[idx] = { ...newItems[idx], split_type: 'unequal' };
                               onItemsChange(newItems);
                             }}
+                            type="button"
                           >
-                            UNEQUALLY
+                            Unequally
                           </button>
                         </div>
                       )}
-                      
+
                       {item.split_type === 'unequal' && (
-                         <div className="mt-3 space-y-2">
+                         <div className="item-custom-amounts">
                            {(item.assigned_to || []).map(mid => {
                              const member = members.find(m => m.id === mid);
                              return (
-                               <div key={mid} className="flex items-center justify-between gap-3 px-1">
-                                 <span className="text-xs font-bold text-[var(--app-muted)]">{member?.name}</span>
-                                 <AppInput 
+                               <div key={mid} className="item-custom-amount-row">
+                                 <span className="item-custom-amount-name">{member?.name}</span>
+                                 <AppInput
                                    type="number"
                                    placeholder="0.00"
-                                   className="!py-1 !px-2 !rounded-lg !text-xs !w-20 text-right"
+                                   className="item-custom-amount-input"
                                    value={item.custom_amounts?.[mid] || ''}
                                    onChange={(e) => {
                                      const newItems = [...items];
@@ -353,20 +356,20 @@ export function ItemSplitView({
       </div>
 
       {/* Add Item Button */}
-      <button 
-        className="item-add-btn" 
-        type="button" 
+      <AppButton
+        variant="secondary"
+        className="item-add-btn"
         onClick={addItem}
         data-testid="add-item-btn"
       >
         <Plus size={16} weight="bold" />
-        <span>Add item</span>
-      </button>
+        <span>Add Item</span>
+      </AppButton>
 
       {/* Running Total */}
       <div className={`item-total-bar ${Math.abs(difference) > 0.01 ? (difference < 0 ? 'over' : 'under') : 'match'}`} data-testid="item-total-bar">
         <div className="item-total-row">
-          <span className="item-total-label">Items total</span>
+          <span className="item-total-label">Items Total</span>
           <span className="item-total-value">{currencySymbol}{itemsTotal.toFixed(2)}</span>
         </div>
         {Math.abs(difference) > 0.01 && (
