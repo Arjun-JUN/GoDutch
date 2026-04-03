@@ -1,5 +1,6 @@
+import React, { createRef } from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { vi, describe, it, expect, createRef } from 'vitest';
+import { vi, describe, it, expect } from 'vitest';
 import { Field, AppInput, AppTextarea } from '../slate/components/AppField';
 
 describe('AppField Components', () => {
