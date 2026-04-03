@@ -6,9 +6,8 @@ import {
   Check, 
   CaretDown, 
   CaretUp,
-  Tag,
-  Hash,
-  CurrencyInr,
+  Plus,
+  Trash,
   Lightning
 } from '@/slate/icons';
 import { AppInput } from '@/slate';
@@ -84,8 +83,6 @@ export function ItemSplitView({
       }
 
       if (result.split_plan && result.split_plan.items) {
-        // Merge or replace items based on logic? 
-        // For now, let's replace or update if names match
         const newItems = [...items];
         result.split_plan.items.forEach(newItem => {
           const idx = newItems.findIndex(i => i.name.toLowerCase() === newItem.name.toLowerCase());
@@ -95,7 +92,7 @@ export function ItemSplitView({
             newItems.push({
               ...newItem,
               assigned_to: newItem.assigned_to || [],
-              split_type: 'equal' // default
+              split_type: 'equal'
             });
           }
         });
@@ -106,6 +103,30 @@ export function ItemSplitView({
     } catch (error) {
       toast.error('Smart split failed', { id: loadingToast });
     }
+  };
+
+  const updateItem = (idx, field, value) => {
+    const newItems = [...items];
+    newItems[idx] = { ...newItems[idx], [field]: value };
+    onItemsChange(newItems);
+  };
+
+  const addItem = () => {
+    const newItems = [...items, { name: '', price: '', quantity: 1, category: 'General', assigned_to: [], split_type: 'equal' }];
+    onItemsChange(newItems);
+    // Auto-expand the newly added item for immediate editing
+    setExpandedItemId(newItems.length - 1);
+  };
+
+  const removeItem = (idx) => {
+    if (items.length <= 1) {
+      toast.error('At least one item is required');
+      return;
+    }
+    const newItems = items.filter((_, i) => i !== idx);
+    onItemsChange(newItems);
+    if (expandedItemId === idx) setExpandedItemId(null);
+    else if (expandedItemId > idx) setExpandedItemId(expandedItemId - 1);
   };
 
   const toggleMemberForItem = (itemIdx, memberId) => {
@@ -123,11 +144,9 @@ export function ItemSplitView({
     onItemsChange(newItems);
   };
 
-  const updateItemSplitMode = (itemIdx, mode) => {
-    const newItems = [...items];
-    newItems[itemIdx] = { ...newItems[itemIdx], split_type: mode };
-    onItemsChange(newItems);
-  };
+  const itemsTotal = items.reduce((sum, item) => sum + ((parseFloat(item.price) || 0) * (parseInt(item.quantity) || 1)), 0);
+  const expenseTotal = parseFloat(totalAmount) || 0;
+  const difference = expenseTotal - itemsTotal;
 
   return (
     <div className="item-split-container">
@@ -160,121 +179,209 @@ export function ItemSplitView({
         )}
       </div>
 
-      {/* Items List */}
-      <div className="item-split-list">
-        {items.map((item, idx) => (
-          <div key={`${item.name}-${idx}`} className={`item-card ${expandedItemId === idx ? 'active' : ''}`}>
-            <div 
-              className="item-header"
-              onClick={() => setExpandedItemId(expandedItemId === idx ? null : idx)}
+      {/* Items List — Editable */}
+      <div className="item-split-list" data-testid="item-split-list">
+        {items.map((item, idx) => {
+          const isExpanded = expandedItemId === idx;
+          const lineTotal = (parseFloat(item.price) || 0) * (parseInt(item.quantity) || 1);
+
+          return (
+            <motion.div 
+              key={idx} 
+              className={`item-card ${isExpanded ? 'active' : ''}`}
+              layout
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.18 }}
             >
-              <div className="item-info-main">
-                <span className="item-name">{item.name}</span>
-                <span className="item-amount">{currencySymbol}{(parseFloat(item.price) * (parseInt(item.quantity) || 1)).toFixed(2)}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black uppercase tracking-widest text-[var(--app-muted)]">
-                  {item.assigned_to?.length || 0} split
-                </span>
-                {expandedItemId === idx ? <CaretUp size={16} weight="bold" /> : <CaretDown size={16} weight="bold" />}
-              </div>
-            </div>
-
-            <AnimatePresence>
-              {expandedItemId === idx && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  {/* Item Details (The "Tap" reveal) */}
-                  <div className="item-details-overlay">
-                    <div className="detail-item">
-                      <span className="detail-label"><Hash size={10} className="inline mr-1"/>Qty</span>
-                      <span className="detail-value">{item.quantity || 1}</span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="detail-label"><CurrencyInr size={10} className="inline mr-1"/>Rate</span>
-                      <span className="detail-value">{currencySymbol}{parseFloat(item.price).toFixed(2)}</span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="detail-label"><Tag size={10} className="inline mr-1"/>Type</span>
-                      <span className="detail-value capitalize">{item.category || 'Food'}</span>
-                    </div>
+              {/* Compact row: Name + Price inline */}
+              <div className="item-edit-row" data-testid={`item-row-${idx}`}>
+                <div className="item-edit-fields">
+                  <input
+                    className="item-name-input"
+                    type="text"
+                    placeholder="Item name"
+                    value={item.name}
+                    onChange={(e) => updateItem(idx, 'name', e.target.value)}
+                    data-testid={`item-name-${idx}`}
+                  />
+                  <div className="item-price-wrapper">
+                    <span className="item-currency-symbol">{currencySymbol}</span>
+                    <input
+                      className="item-price-input"
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      value={item.price}
+                      onChange={(e) => updateItem(idx, 'price', e.target.value)}
+                      data-testid={`item-price-${idx}`}
+                    />
                   </div>
+                </div>
 
-                  {/* Split Selection */}
-                  <div className="p-4 border-t border-[var(--app-border-soft)]">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-[var(--app-muted)] mb-3">Split with:</p>
-                    <div className="flex flex-wrap gap-2">
-                      {members.map((member) => {
-                        const isSelected = item.assigned_to?.includes(member.id);
-                        return (
-                          <div
-                            key={member.id}
-                            className={`member-chip ${isSelected ? 'selected' : ''}`}
-                            onClick={() => toggleMemberForItem(idx, member.id)}
-                          >
-                            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-white/50 text-[10px]">
-                              {member.name.charAt(0)}
+                <div className="item-row-actions">
+                  <button
+                    className="item-delete-btn"
+                    type="button"
+                    onClick={() => removeItem(idx)}
+                    data-testid={`item-delete-${idx}`}
+                    title="Remove item"
+                  >
+                    <Trash size={14} weight="bold" />
+                  </button>
+                  <button
+                    className="item-expand-btn"
+                    type="button"
+                    onClick={() => setExpandedItemId(isExpanded ? null : idx)}
+                    data-testid={`item-expand-${idx}`}
+                    title="Assign members"
+                  >
+                    {isExpanded ? <CaretUp size={14} weight="bold" /> : <CaretDown size={14} weight="bold" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Expanded: quantity + member assignment */}
+              <AnimatePresence>
+                {isExpanded && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="item-expanded-section"
+                  >
+                    {/* Quantity row */}
+                    <div className="item-qty-row">
+                      <label className="item-detail-label">Qty</label>
+                      <input
+                        className="item-qty-input"
+                        type="number"
+                        min="1"
+                        value={item.quantity || 1}
+                        onChange={(e) => updateItem(idx, 'quantity', e.target.value)}
+                        data-testid={`item-qty-${idx}`}
+                      />
+                      {(parseInt(item.quantity) || 1) > 1 && (
+                        <span className="item-line-total">
+                          = {currencySymbol}{lineTotal.toFixed(2)}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Member assignment */}
+                    <div className="item-member-section">
+                      <p className="item-section-label">Split with:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {members.map((member) => {
+                          const isSelected = item.assigned_to?.includes(member.id);
+                          return (
+                            <div
+                              key={member.id}
+                              className={`member-chip ${isSelected ? 'selected' : ''}`}
+                              onClick={() => toggleMemberForItem(idx, member.id)}
+                            >
+                              <div className="flex h-5 w-5 items-center justify-center rounded-full bg-white/50 text-[10px]">
+                                {member.name.charAt(0)}
+                              </div>
+                              {member.name}
+                              {isSelected && <Check size={12} weight="bold" />}
                             </div>
-                            {member.name}
-                            {isSelected && <Check size={12} weight="bold" />}
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    {/* Equal/Unequal Toggle for Item */}
-                    {item.assigned_to?.length > 1 && (
-                      <div className="item-split-mode-toggle">
-                        <button 
-                          className={`mode-toggle-btn ${item.split_type !== 'unequal' ? 'active' : ''}`}
-                          onClick={() => updateItemSplitMode(idx, 'equal')}
-                        >
-                          EQUALLY
-                        </button>
-                        <button 
-                          className={`mode-toggle-btn ${item.split_type === 'unequal' ? 'active' : ''}`}
-                          onClick={() => updateItemSplitMode(idx, 'unequal')}
-                        >
-                          UNEQUALLY
-                        </button>
+                          );
+                        })}
                       </div>
-                    )}
-                    
-                    {item.split_type === 'unequal' && (
-                       <div className="mt-3 space-y-2">
-                         {item.assigned_to.map(mid => {
-                           const member = members.find(m => m.id === mid);
-                           return (
-                             <div key={mid} className="flex items-center justify-between gap-3 px-1">
-                               <span className="text-xs font-bold text-[var(--app-muted)]">{member?.name}</span>
-                               <AppInput 
-                                 type="number"
-                                 placeholder="0.00"
-                                 className="!py-1 !px-2 !rounded-lg !text-xs !w-20 text-right"
-                                 value={item.custom_amounts?.[mid] || ''}
-                                 onChange={(e) => {
-                                   const newItems = [...items];
-                                   const newItem = {...newItems[idx]};
-                                   newItem.custom_amounts = {...(newItem.custom_amounts || {}), [mid]: e.target.value};
-                                   newItems[idx] = newItem;
-                                   onItemsChange(newItems);
-                                 }}
-                               />
-                             </div>
-                           )
-                         })}
-                       </div>
-                    )}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+
+                      {/* Equal/Unequal Toggle */}
+                      {item.assigned_to?.length > 1 && (
+                        <div className="item-split-mode-toggle">
+                          <button 
+                            className={`mode-toggle-btn ${item.split_type !== 'unequal' ? 'active' : ''}`}
+                            onClick={() => {
+                              const newItems = [...items];
+                              newItems[idx] = { ...newItems[idx], split_type: 'equal' };
+                              onItemsChange(newItems);
+                            }}
+                          >
+                            EQUALLY
+                          </button>
+                          <button 
+                            className={`mode-toggle-btn ${item.split_type === 'unequal' ? 'active' : ''}`}
+                            onClick={() => {
+                              const newItems = [...items];
+                              newItems[idx] = { ...newItems[idx], split_type: 'unequal' };
+                              onItemsChange(newItems);
+                            }}
+                          >
+                            UNEQUALLY
+                          </button>
+                        </div>
+                      )}
+                      
+                      {item.split_type === 'unequal' && (
+                         <div className="mt-3 space-y-2">
+                           {(item.assigned_to || []).map(mid => {
+                             const member = members.find(m => m.id === mid);
+                             return (
+                               <div key={mid} className="flex items-center justify-between gap-3 px-1">
+                                 <span className="text-xs font-bold text-[var(--app-muted)]">{member?.name}</span>
+                                 <AppInput 
+                                   type="number"
+                                   placeholder="0.00"
+                                   className="!py-1 !px-2 !rounded-lg !text-xs !w-20 text-right"
+                                   value={item.custom_amounts?.[mid] || ''}
+                                   onChange={(e) => {
+                                     const newItems = [...items];
+                                     const newItem = {...newItems[idx]};
+                                     newItem.custom_amounts = {...(newItem.custom_amounts || {}), [mid]: e.target.value};
+                                     newItems[idx] = newItem;
+                                     onItemsChange(newItems);
+                                   }}
+                                 />
+                               </div>
+                             )
+                           })}
+                         </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      {/* Add Item Button */}
+      <button 
+        className="item-add-btn" 
+        type="button" 
+        onClick={addItem}
+        data-testid="add-item-btn"
+      >
+        <Plus size={16} weight="bold" />
+        <span>Add item</span>
+      </button>
+
+      {/* Running Total */}
+      <div className={`item-total-bar ${Math.abs(difference) > 0.01 ? (difference < 0 ? 'over' : 'under') : 'match'}`} data-testid="item-total-bar">
+        <div className="item-total-row">
+          <span className="item-total-label">Items total</span>
+          <span className="item-total-value">{currencySymbol}{itemsTotal.toFixed(2)}</span>
+        </div>
+        {Math.abs(difference) > 0.01 && (
+          <div className="item-total-row">
+            <span className="item-total-label">{difference > 0 ? 'Remaining' : 'Over by'}</span>
+            <span className={`item-total-value ${difference < 0 ? 'text-danger' : ''}`}>
+              {currencySymbol}{Math.abs(difference).toFixed(2)}
+            </span>
           </div>
-        ))}
+        )}
+        {Math.abs(difference) <= 0.01 && (
+          <div className="item-total-match">
+            <Check size={14} weight="bold" /> Matches expense total
+          </div>
+        )}
       </div>
     </div>
   );
