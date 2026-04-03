@@ -809,6 +809,23 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ═══════════════════════════════════════════════
+   Split Mode Description
+   ═══════════════════════════════════════════════ */
+
+.split-mode-description {
+  font-family: 'Manrope', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--app-muted);
+  letter-spacing: 0.01em;
+  line-height: 1.5;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 1.25rem;
+  background: var(--app-soft);
+  border-radius: 0.75rem;
+}
+
+/* ═══════════════════════════════════════════════
    Item-Based Split
    ═══════════════════════════════════════════════ */
 
