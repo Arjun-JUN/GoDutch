@@ -17,7 +17,10 @@ os.environ.setdefault("JWT_SECRET", "test-jwt-secret-for-testing")
 os.environ.setdefault("GEMINI_API_KEY", "")
 
 # ── project root on sys.path so `import backend.server` works ───────────────
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, _PROJECT_ROOT)
+# ── backend/ on sys.path so `from seed import seed_data` resolves correctly ─
+sys.path.insert(0, os.path.join(_PROJECT_ROOT, 'backend'))
 
 import pytest
 import mongomock_motor
