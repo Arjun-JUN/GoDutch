@@ -9,6 +9,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { vi } from 'vitest';
 import { AppButton } from '../slate/components/AppButton';
 
 describe('AppButton', () => {
@@ -28,14 +29,14 @@ describe('AppButton', () => {
   });
 
   test('calls onClick handler when clicked', () => {
-    const handleClick = jest.fn();
+    const handleClick = vi.fn();
     render(<AppButton onClick={handleClick}>Press</AppButton>);
     fireEvent.click(screen.getByRole('button'));
     expect(handleClick).toHaveBeenCalledTimes(1);
   });
 
   test('does not fire onClick when disabled', () => {
-    const handleClick = jest.fn();
+    const handleClick = vi.fn();
     render(
       <AppButton onClick={handleClick} disabled>
         Disabled
