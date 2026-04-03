@@ -189,7 +189,6 @@ export function ItemSplitView({
             <motion.div
               key={idx}
               className={`item-card ${isExpanded ? 'active' : ''}`}
-              layout
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
@@ -294,35 +293,52 @@ export function ItemSplitView({
                       </div>
 
                       {/* Equal/Unequal Toggle */}
-                      {item.assigned_to?.length > 1 && (
-                        <div className="item-split-mode-toggle">
-                          <button
-                            className={`mode-toggle-btn ${item.split_type !== 'unequal' ? 'active' : ''}`}
-                            onClick={() => {
-                              const newItems = [...items];
-                              newItems[idx] = { ...newItems[idx], split_type: 'equal' };
-                              onItemsChange(newItems);
-                            }}
-                            type="button"
+                      <AnimatePresence>
+                        {item.assigned_to?.length > 1 && (
+                          <motion.div
+                            className="item-split-mode-toggle"
+                            initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                            animate={{ opacity: 1, height: 'auto', marginTop: 12 }}
+                            exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                            transition={{ duration: 0.2, ease: 'easeInOut' }}
+                            style={{ overflow: 'hidden' }}
                           >
-                            Equally
-                          </button>
-                          <button
-                            className={`mode-toggle-btn ${item.split_type === 'unequal' ? 'active' : ''}`}
-                            onClick={() => {
-                              const newItems = [...items];
-                              newItems[idx] = { ...newItems[idx], split_type: 'unequal' };
-                              onItemsChange(newItems);
-                            }}
-                            type="button"
-                          >
-                            Unequally
-                          </button>
-                        </div>
-                      )}
+                            <button
+                              className={`mode-toggle-btn ${item.split_type !== 'unequal' ? 'active' : ''}`}
+                              onClick={() => {
+                                const newItems = [...items];
+                                newItems[idx] = { ...newItems[idx], split_type: 'equal' };
+                                onItemsChange(newItems);
+                              }}
+                              type="button"
+                            >
+                              Equally
+                            </button>
+                            <button
+                              className={`mode-toggle-btn ${item.split_type === 'unequal' ? 'active' : ''}`}
+                              onClick={() => {
+                                const newItems = [...items];
+                                newItems[idx] = { ...newItems[idx], split_type: 'unequal' };
+                                onItemsChange(newItems);
+                              }}
+                              type="button"
+                            >
+                              Unequally
+                            </button>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
 
-                      {item.split_type === 'unequal' && (
-                         <div className="item-custom-amounts">
+                      <AnimatePresence>
+                        {item.split_type === 'unequal' && (
+                         <motion.div
+                           className="item-custom-amounts"
+                           initial={{ opacity: 0, height: 0 }}
+                           animate={{ opacity: 1, height: 'auto' }}
+                           exit={{ opacity: 0, height: 0 }}
+                           transition={{ duration: 0.2, ease: 'easeInOut' }}
+                           style={{ overflow: 'hidden' }}
+                         >
                            {(item.assigned_to || []).map(mid => {
                              const member = members.find(m => m.id === mid);
                              return (
@@ -344,8 +360,9 @@ export function ItemSplitView({
                                </div>
                              )
                            })}
-                         </div>
-                      )}
+                         </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
                   </motion.div>
                 )}

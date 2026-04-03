@@ -216,6 +216,7 @@ function SplitBetweenModal({ open, onClose, members, splitBetween, splitMode, on
   const totalShares = localSplit.reduce((s, p) => s + (parseInt(p.shares) || 1), 0);
 
   const tabs = ['Equally', 'Unequally', 'By shares', 'By line item'];
+  const tabToMode = (tab) => tab === 'By line item' ? 'item-based' : tab.toLowerCase().replace(/ /g, '');
 
   return (
     <AnimatePresence>
@@ -252,7 +253,7 @@ function SplitBetweenModal({ open, onClose, members, splitBetween, splitMode, on
           )}
           <div className="split-tab-nav mb-5" data-testid="split-tab-nav">
             {tabs.map((tab) => {
-              const modeValue = tab === 'By line item' ? 'item-based' : tab.toLowerCase().replace(' ', '');
+              const modeValue = tabToMode(tab);
               return (
                 <button
                   key={tab}
@@ -273,11 +274,11 @@ function SplitBetweenModal({ open, onClose, members, splitBetween, splitMode, on
             dragElastic={0.2}
             onDragEnd={(e, info) => {
               const swipeThreshold = 50;
-              const currentIdx = tabs.findIndex(tab => tab.toLowerCase().replace(' ', '') === localMode);
+              const currentIdx = tabs.findIndex(tab => tabToMode(tab) === localMode);
               if (info.offset.x < -swipeThreshold && currentIdx < tabs.length - 1) {
-                setLocalMode(tabs[currentIdx + 1].toLowerCase().replace(' ', ''));
+                setLocalMode(tabToMode(tabs[currentIdx + 1]));
               } else if (info.offset.x > swipeThreshold && currentIdx > 0) {
-                setLocalMode(tabs[currentIdx - 1].toLowerCase().replace(' ', ''));
+                setLocalMode(tabToMode(tabs[currentIdx - 1]));
               }
             }}
           >
