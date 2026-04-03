@@ -251,7 +251,7 @@ function SplitBetweenModal({ open, onClose, members, splitBetween, splitMode, on
               </div>
             </Callout>
           )}
-          <div className="split-tab-nav mb-5" data-testid="split-tab-nav">
+          <div className="split-tab-nav mb-4" data-testid="split-tab-nav">
             {tabs.map((tab) => {
               const modeValue = tabToMode(tab);
               return (
@@ -267,6 +267,24 @@ function SplitBetweenModal({ open, onClose, members, splitBetween, splitMode, on
               );
             })}
           </div>
+
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={localMode}
+              className="split-mode-description"
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.16, ease: 'easeOut' }}
+            >
+              {{
+                'equally': '✦ The classic. Everyone owes the same — no drama, no calculator needed.',
+                'unequally': '✦ Someone had the lobster. Set each person\'s exact share.',
+                'byshares': '✦ The fair-but-flexible. More shares = bigger slice of the bill.',
+                'item-based': '✦ Surgical precision. Attach each item to whoever ordered it.',
+              }[localMode]}
+            </motion.div>
+          </AnimatePresence>
 
           <motion.div
             drag="x"
