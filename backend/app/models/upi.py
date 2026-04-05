@@ -1,10 +1,10 @@
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
 
 class UPIPaymentRequest(BaseModel):
     upi_id: str = Field(..., pattern=r"^[\w.-]+@[\w.-]+$")
-    amount: float = Field(..., gt=0)
+    amount: float = Field(..., gt=0, le=1_000_000)
     settlement_id: str
     note: str | None = None
 
@@ -20,6 +20,12 @@ class BankAccount(BaseModel):
     balance: float
     is_primary: bool
     created_at: str
+
+    @field_serializer("account_number")
+    def mask_account_number(self, v: str) -> str:
+        if len(v) <= 4:
+            return "****"
+        return "*" * (len(v) - 4) + v[-4:]
 
 class BankAccountCreate(BaseModel):
     bank_name: str = Field(..., min_length=2)
@@ -44,7 +50,7 @@ class Transaction(BaseModel):
 
 class TransactionCreate(BaseModel):
     to_upi_id: str = Field(..., pattern=r"^[\w.-]+@[\w.-]+$")
-    amount: float = Field(..., gt=0)
+    amount: float = Field(..., gt=0, le=1_000_000)
     transaction_type: str = "payment"
     note: str | None = None
 
@@ -62,17 +68,17 @@ class MoneyRequest(BaseModel):
 
 class MoneyRequestCreate(BaseModel):
     to_upi_id: str = Field(..., pattern=r"^[\w.-]+@[\w.-]+$")
-    amount: float = Field(..., gt=0)
+    amount: float = Field(..., gt=0, le=1_000_000)
     note: str | None = None
 
 class BillPayment(BaseModel):
     biller_name: str = Field(..., min_length=2)
     bill_number: str = Field(..., min_length=1)
-    amount: float = Field(..., gt=0)
+    amount: float = Field(..., gt=0, le=1_000_000)
     category: str
 
 class RechargeRequest(BaseModel):
     mobile_number: str = Field(..., pattern=r"^\d{10}$")
     operator: str = Field(..., min_length=2)
-    amount: float = Field(..., gt=0)
+    amount: float = Field(..., gt=0, le=100_000)
     recharge_type: str

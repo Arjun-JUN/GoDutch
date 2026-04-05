@@ -5,7 +5,7 @@ from fastapi import APIRouter, FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
 from app.database import client, db
-from app.routes import ai, auth, dev, expenses, groups, settlements, upi
+from app.routes import ai, auth, expenses, groups, settlements, upi
 from seed import seed_data
 
 # Configure logging
@@ -27,7 +27,11 @@ api_router.include_router(expenses.router)
 api_router.include_router(upi.router)
 api_router.include_router(ai.router)
 api_router.include_router(settlements.router)
-api_router.include_router(dev.router)
+
+# Only include dev routes in non-production environments
+if os.getenv("ENV") != "production":
+    from app.routes import dev
+    api_router.include_router(dev.router)
 
 # Include master router in app
 app.include_router(api_router)

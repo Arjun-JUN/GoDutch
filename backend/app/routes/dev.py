@@ -1,14 +1,15 @@
 import os
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.database import db
+from app.dependencies import verify_token
 from seed import seed_data
 
 router = APIRouter(prefix="/dev", tags=["Dev"])
 
 @router.post("/reset")
-async def reset_db():
+async def reset_db(current_user: dict = Depends(verify_token)):
     if os.getenv("ENV", "development") != "development":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

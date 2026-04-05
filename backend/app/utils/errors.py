@@ -19,5 +19,5 @@ def handle_server_error(e: Exception, context: str, default_detail: str):
 
     raise HTTPException(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        detail=default_detail if not error_msg else f"{default_detail}: {error_msg}"
+        detail=default_detail
     )

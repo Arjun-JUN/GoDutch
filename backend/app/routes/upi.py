@@ -23,10 +23,10 @@ router = APIRouter(prefix="/upi", tags=["UPI"])
 @router.post("/initiate-payment")
 async def initiate_upi_payment(payment: UPIPaymentRequest, current_user: dict = Depends(verify_token)):
     try:
-        # Security check: Ensure user is only paying their own debts
-        if len(payment.settlement_id) >= 110:
-            debtor_id = payment.settlement_id[37:73]
-            if debtor_id != current_user['user_id']:
+        # Security check: Verify the settlement belongs to the current user
+        if payment.settlement_id:
+            settlement = await db.payments.find_one({"id": payment.settlement_id})
+            if settlement and settlement.get("from_user") != current_user['user_id']:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="You can only initiate payments for your own debts"

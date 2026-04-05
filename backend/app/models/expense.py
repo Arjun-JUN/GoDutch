@@ -18,7 +18,7 @@ class ExpenseCreate(BaseModel):
     group_id: str
     merchant: str = Field(..., min_length=1)
     date: str
-    total_amount: float = Field(..., gt=0)
+    total_amount: float = Field(..., gt=0, le=10_000_000)
     items: list[ExpenseItem]
     split_type: str
     split_details: list[SplitDetail]
