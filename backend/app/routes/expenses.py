@@ -11,6 +11,16 @@ router = APIRouter(prefix="/expenses", tags=["Expenses"])
 
 @router.post("", response_model=Expense)
 async def create_expense(expense_data: ExpenseCreate, current_user: dict = Depends(verify_token)):
+    # Verify the user is a member of the group
+    group = await db.groups.find_one(
+        {"id": expense_data.group_id, "members.id": current_user['user_id']}, {"_id": 0}
+    )
+    if not group:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You must be a group member to create expenses"
+        )
+
     expense_id = str(uuid.uuid4())
     expense_doc = {
         "id": expense_id,

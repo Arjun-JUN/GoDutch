@@ -31,7 +31,8 @@ async def generate_structured_content(parts, response_model):
             detail="Gemini API key not configured."
         )
 
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
+    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
+    headers = {"x-goog-api-key": GEMINI_API_KEY}
     payload = {
         "contents": [{"parts": parts}],
         "generationConfig": {
@@ -43,7 +44,7 @@ async def generate_structured_content(parts, response_model):
     def _send_request():
         with requests.Session() as session:
             session.trust_env = False
-            response = session.post(url, json=payload, timeout=60)
+            response = session.post(url, json=payload, headers=headers, timeout=60)
         response.raise_for_status()
         return response.json()
 
