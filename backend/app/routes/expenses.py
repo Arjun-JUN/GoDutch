@@ -21,6 +21,23 @@ async def create_expense(expense_data: ExpenseCreate, current_user: dict = Depen
             detail="You must be a group member to create expenses"
         )
 
+    # Validate split_details: every user_id must be a group member
+    member_ids = {m['id'] for m in group['members']}
+    for split in expense_data.split_details:
+        if split.user_id not in member_ids:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"split_details contains non-member user_id: {split.user_id}"
+            )
+
+    # Validate split amounts sum matches total_amount (within 1 cent)
+    split_total = sum(s.amount for s in expense_data.split_details)
+    if abs(split_total - expense_data.total_amount) > 0.01:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="split_details amounts do not sum to total_amount"
+        )
+
     expense_id = str(uuid.uuid4())
     expense_doc = {
         "id": expense_id,
