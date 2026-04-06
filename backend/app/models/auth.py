@@ -3,8 +3,8 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 class UserRegister(BaseModel):
     email: EmailStr
-    password: str = Field(..., min_length=6)
-    name: str = Field(..., min_length=2)
+    password: str = Field(..., min_length=6, max_length=128)
+    name: str = Field(..., min_length=2, max_length=100)
 
 class UserLogin(BaseModel):
     email: EmailStr

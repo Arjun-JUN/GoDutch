@@ -1,9 +1,9 @@
 """
-Unit tests for pure helper functions in backend/server.py.
+Unit tests for pure helper functions in app/utils/ai_helpers.py.
 These tests require no database or HTTP stack.
 """
 import pytest
-from backend.server import _extract_json_block
+from app.utils.ai_helpers import _extract_json_block
 
 
 class TestExtractJsonBlock:

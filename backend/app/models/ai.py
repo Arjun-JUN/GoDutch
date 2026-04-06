@@ -1,10 +1,10 @@
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class OCRRequest(BaseModel):
-    image_base64: str
-    mime_type: str = "image/jpeg"
+    image_base64: str = Field(..., max_length=10_000_000)  # ~7.5 MB decoded
+    mime_type: str = Field(default="image/jpeg", pattern=r"^image/(jpeg|png|webp|heic)$")
 
 class OCRItem(BaseModel):
     name: str
@@ -19,7 +19,7 @@ class OCRResult(BaseModel):
 
 class SmartSplitRequest(BaseModel):
     group_id: str
-    instruction: str
+    instruction: str = Field(..., min_length=1, max_length=2000)
     expense_context: dict | None = None
 
 class SmartSplitResponse(BaseModel):

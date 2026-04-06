@@ -6,7 +6,7 @@ class UPIPaymentRequest(BaseModel):
     upi_id: str = Field(..., pattern=r"^[\w.-]+@[\w.-]+$")
     amount: float = Field(..., gt=0, le=1_000_000)
     settlement_id: str
-    note: str | None = None
+    note: str | None = Field(default=None, max_length=200)
 
 class BankAccount(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -26,6 +26,13 @@ class BankAccount(BaseModel):
         if len(v) <= 4:
             return "****"
         return "*" * (len(v) - 4) + v[-4:]
+
+    @field_serializer("ifsc_code")
+    def mask_ifsc_code(self, v: str) -> str:
+        # Expose only the bank identifier (first 4 chars); mask branch code
+        if len(v) <= 4:
+            return v
+        return v[:4] + "*" * (len(v) - 4)
 
 class BankAccountCreate(BaseModel):
     bank_name: str = Field(..., min_length=2)
