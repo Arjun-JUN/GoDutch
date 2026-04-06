@@ -1,25 +1,15 @@
 """
-Unit tests for Pydantic models in backend/server.py.
+Unit tests for Pydantic models.
 Validates field constraints, defaults, and validators without touching HTTP or DB.
 """
 import pytest
 from pydantic import ValidationError
 
-from backend.server import (
-    UserRegister,
-    UserLogin,
-    GroupCreate,
-    ExpenseCreate,
-    ExpenseItem,
-    SplitDetail,
-    BankAccountCreate,
-    TransactionCreate,
-    MoneyRequestCreate,
-    OCRRequest,
-    SmartSplitRequest,
-    BillPayment,
-    RechargeRequest,
-)
+from app.models.auth import UserRegister, UserLogin
+from app.models.group import GroupCreate
+from app.models.expense import ExpenseCreate, ExpenseItem, SplitDetail
+from app.models.upi import BankAccountCreate, TransactionCreate, MoneyRequestCreate, BillPayment, RechargeRequest
+from app.models.ai import OCRRequest, SmartSplitRequest
 
 
 class TestUserRegister:
