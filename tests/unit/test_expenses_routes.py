@@ -11,10 +11,11 @@ class TestExpensesCRUD:
     """Full CRUD cycle for expenses through the HTTP API."""
 
     @pytest.fixture
-    async def expense_payload(self, test_group, registered_user):
+    async def expense_payload(self, test_group, registered_user, second_user):
         """Return a valid expense creation payload."""
         group_id = test_group["id"]
         alice_id = registered_user["user"]["id"]
+        bob_id = second_user["user"]["id"]
         return {
             "group_id": group_id,
             "merchant": "Starbucks",
@@ -27,6 +28,7 @@ class TestExpensesCRUD:
             "split_type": "equal",
             "split_details": [
                 {"user_id": alice_id, "user_name": "Alice", "amount": 250.0},
+                {"user_id": bob_id, "user_name": "Bob", "amount": 250.0},
             ],
             "category": "Food & Dining",
         }

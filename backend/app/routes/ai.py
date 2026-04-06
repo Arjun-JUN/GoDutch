@@ -55,9 +55,11 @@ async def scan_receipt(request: OCRRequest, current_user: dict = Depends(verify_
 @router.post("/smart-split", response_model=SmartSplitResponse)
 async def smart_split(request: SmartSplitRequest, current_user: dict = Depends(verify_token)):
     try:
-        group = await db.groups.find_one({"id": request.group_id}, {"_id": 0})
+        group = await db.groups.find_one(
+            {"id": request.group_id, "members.id": current_user['user_id']}, {"_id": 0}
+        )
         if not group:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found or access denied")
 
         members_info = ", ".join([f"{m['name']} (id: {m['id']})" for m in group['members']])
         context = f"Expense context: {request.expense_context}" if request.expense_context else ""

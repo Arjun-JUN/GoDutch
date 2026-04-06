@@ -1,8 +1,8 @@
 """
 Shared pytest fixtures for all tests.
 
-Environment variables must be set before importing backend.server because
-the server reads them at module-load time (JWT_SECRET, DB_NAME, etc.).
+Environment variables must be set before importing the backend because
+the app reads them at module-load time (JWT_SECRET, DB_NAME, etc.).
 Motor's AsyncIOMotorClient is lazy, so no real MongoDB connection is made
 until the first query — we swap in a mongomock-motor database before any
 endpoint is called.
@@ -16,7 +16,7 @@ os.environ.setdefault("DB_NAME", "test_godutch")
 os.environ.setdefault("JWT_SECRET", "test-jwt-secret-for-testing")
 os.environ.setdefault("GEMINI_API_KEY", "")
 
-# ── project root on sys.path so `import backend.server` works ───────────────
+# ── project root on sys.path so `import backend.app.main` works ─────────────
 _PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, _PROJECT_ROOT)
 # ── backend/ on sys.path so `from seed import seed_data` resolves correctly ─
@@ -26,7 +26,8 @@ import pytest
 import mongomock_motor
 from httpx import AsyncClient, ASGITransport
 
-import backend.server as server
+import app.database as database
+from app.main import app
 
 
 # ── Database fixture ─────────────────────────────────────────────────────────
@@ -34,13 +35,24 @@ import backend.server as server
 @pytest.fixture
 async def mock_db(monkeypatch):
     """
-    Replace server.db with a fresh in-memory MongoDB for every test.
+    Replace app.database.db with a fresh in-memory MongoDB for every test.
     mongomock-motor is a drop-in async replacement for Motor, so all
     Motor-style awaits (find_one, insert_one, to_list, …) work unchanged.
     """
     mock_client = mongomock_motor.AsyncMongoMockClient()
     db = mock_client["test_godutch"]
-    monkeypatch.setattr(server, "db", db)
+    monkeypatch.setattr(database, "db", db)
+    # Also patch all router modules that imported db directly at load time
+    import app.routes.auth as auth_routes
+    import app.routes.groups as groups_routes
+    import app.routes.expenses as expenses_routes
+    import app.routes.settlements as settlements_routes
+    import app.routes.upi as upi_routes
+    import app.routes.ai as ai_routes
+    import app.routes.dev as dev_routes
+    for module in (auth_routes, groups_routes, expenses_routes,
+                   settlements_routes, upi_routes, ai_routes, dev_routes):
+        monkeypatch.setattr(module, "db", db)
     yield db
 
 
@@ -50,7 +62,7 @@ async def mock_db(monkeypatch):
 async def client(mock_db):
     """Async HTTPX client wired directly to the FastAPI app (no network)."""
     async with AsyncClient(
-        transport=ASGITransport(app=server.app),
+        transport=ASGITransport(app=app),
         base_url="http://test",
     ) as ac:
         yield ac
