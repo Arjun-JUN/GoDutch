@@ -1,5 +1,6 @@
+import re
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class ExpenseItem(BaseModel):
@@ -19,6 +20,13 @@ class ExpenseCreate(BaseModel):
     merchant: str = Field(..., min_length=1)
     date: str
     total_amount: float = Field(..., gt=0, le=10_000_000)
+
+    @field_validator("date")
+    @classmethod
+    def validate_date_format(cls, v: str) -> str:
+        if v and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", v):
+            raise ValueError("date must be in YYYY-MM-DD format")
+        return v
     items: list[ExpenseItem]
     split_type: str
     split_details: list[SplitDetail]

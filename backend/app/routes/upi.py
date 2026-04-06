@@ -1,7 +1,8 @@
 import uuid
 from datetime import UTC, datetime
+from urllib.parse import quote
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.database import db
 from app.dependencies import verify_token
@@ -33,7 +34,13 @@ async def initiate_upi_payment(payment: UPIPaymentRequest, current_user: dict = 
                 )
 
         payment_id = str(uuid.uuid4())
-        upi_url = f"upi://pay?pa={payment.upi_id}&pn=goDutch&am={payment.amount}&cu=INR&tn={payment.note or 'Settlement'}"
+        upi_url = (
+            f"upi://pay?pa={quote(payment.upi_id, safe='')}"
+            f"&pn=goDutch"
+            f"&am={payment.amount}"
+            f"&cu=INR"
+            f"&tn={quote(payment.note or 'Settlement', safe='')}"
+        )
 
         payment_doc = {
             "id": payment_id,
@@ -216,7 +223,7 @@ async def accept_money_request(request_id: str, current_user: dict = Depends(ver
         handle_server_error(e, "Accept Request", "Failed to accept request")
 
 @router.get("/transactions", response_model=list[Transaction])
-async def get_transactions(current_user: dict = Depends(verify_token), limit: int = 50):
+async def get_transactions(current_user: dict = Depends(verify_token), limit: int = Query(default=50, ge=1, le=200)):
     transactions = await db.transactions.find(
         {"$or": [{"from_user_id": current_user['user_id']}, {"to_user_id": current_user['user_id']}]},
         {"_id": 0}
