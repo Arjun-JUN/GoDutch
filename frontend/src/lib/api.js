@@ -51,7 +51,7 @@ const request = async (endpoint, options = {}) => {
 
     return data;
   } catch (error) {
-    console.error('API Error:', { endpoint, method, error });
+    console.error(`API Error [${method} ${endpoint}]:`, error);
     throw error;
   }
 };
