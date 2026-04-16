@@ -1,0 +1,59 @@
+import React from 'react';
+import { View } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
+import { Text } from './Text';
+
+interface PageHeroProps {
+  eyebrow?: string;
+  title: string | React.ReactNode;
+  description?: string;
+  actions?: React.ReactNode;
+  /** Tight vertical rhythm for secondary screens. */
+  compact?: boolean;
+}
+
+/**
+ * Editorial-voice hero section — eyebrow label, oversized title, optional body + actions.
+ * Uses "generous breath" per DESIGN_GUIDELINES.
+ */
+export const PageHero: React.FC<PageHeroProps> = ({
+  eyebrow,
+  title,
+  description,
+  actions,
+  compact = false,
+}) => (
+  <View style={{ marginTop: compact ? 16 : 24, marginBottom: compact ? 24 : 32 }}>
+    {eyebrow ? (
+      <Animated.View entering={FadeInDown.delay(0).duration(300)}>
+        <Text variant="eyebrow" tone="primary" style={{ marginBottom: 8 }}>
+          {eyebrow}
+        </Text>
+      </Animated.View>
+    ) : null}
+    <Animated.View entering={FadeInDown.delay(60).duration(350)}>
+      {typeof title === 'string' ? (
+        <Text variant={compact ? 'titleXl' : 'display'} weight="extrabold">
+          {title}
+        </Text>
+      ) : (
+        title
+      )}
+    </Animated.View>
+    {description ? (
+      <Animated.View entering={FadeInDown.delay(120).duration(400)}>
+        <Text variant="body" tone="muted" style={{ marginTop: 8 }}>
+          {description}
+        </Text>
+      </Animated.View>
+    ) : null}
+    {actions ? (
+      <Animated.View
+        entering={FadeInDown.delay(180).duration(400)}
+        style={{ marginTop: 20, flexDirection: 'row', gap: 12 }}
+      >
+        {actions}
+      </Animated.View>
+    ) : null}
+  </View>
+);
