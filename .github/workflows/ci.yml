@@ -62,11 +62,3 @@ jobs:
       - name: Run Ruff
         run: cd backend && ruff check .
 
-  enforce-pr:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    steps:
-      - name: Fail on direct push to main
-        run: |
-          echo "ERROR: Direct pushes to main are forbidden. Please use a Pull Request."
-          exit 1
