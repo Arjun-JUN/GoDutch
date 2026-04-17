@@ -331,36 +331,36 @@ export function ItemSplitView({
 
                       <AnimatePresence>
                         {item.split_type === 'unequal' && (
-                         <motion.div
-                           className="item-custom-amounts"
-                           initial={{ opacity: 0, height: 0 }}
-                           animate={{ opacity: 1, height: 'auto' }}
-                           exit={{ opacity: 0, height: 0 }}
-                           transition={{ duration: 0.2, ease: 'easeInOut' }}
-                           style={{ overflow: 'hidden' }}
-                         >
-                           {(item.assigned_to || []).map(mid => {
-                             const member = members.find(m => m.id === mid);
-                             return (
-                               <div key={mid} className="item-custom-amount-row">
-                                 <span className="item-custom-amount-name">{member?.name}</span>
-                                 <AppInput
-                                   type="number"
-                                   placeholder="0.00"
-                                   className="item-custom-amount-input"
-                                   value={item.custom_amounts?.[mid] || ''}
-                                   onChange={(e) => {
-                                     const newItems = [...items];
-                                     const newItem = {...newItems[idx]};
-                                     newItem.custom_amounts = {...(newItem.custom_amounts || {}), [mid]: e.target.value};
-                                     newItems[idx] = newItem;
-                                     onItemsChange(newItems);
-                                   }}
-                                 />
-                               </div>
-                             )
-                           })}
-                         </motion.div>
+                          <motion.div
+                            className="item-custom-amounts"
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.2, ease: 'easeInOut' }}
+                            style={{ overflow: 'hidden' }}
+                          >
+                            {(item.assigned_to || []).map(mid => {
+                              const member = members.find(m => m.id === mid);
+                              return (
+                                <div key={mid} className="item-custom-amount-row">
+                                  <span className="item-custom-amount-name">{member?.name}</span>
+                                  <AppInput
+                                    type="number"
+                                    placeholder="0.00"
+                                    className="item-custom-amount-input"
+                                    value={item.custom_amounts?.[mid] || ''}
+                                    onChange={(e) => {
+                                      const newItems = [...items];
+                                      const newItem = { ...newItems[idx] };
+                                      newItem.custom_amounts = { ...(newItem.custom_amounts || {}), [mid]: e.target.value };
+                                      newItems[idx] = newItem;
+                                      onItemsChange(newItems);
+                                    }}
+                                  />
+                                </div>
+                              )
+                            })}
+                          </motion.div>
                         )}
                       </AnimatePresence>
                     </div>

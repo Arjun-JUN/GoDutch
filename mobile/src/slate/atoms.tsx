@@ -78,30 +78,52 @@ interface StatCardProps {
   label: string;
   value: string;
   description?: string;
-  icon?: React.ReactNode;
+  /** tone drives both indicator dot + value color. Mirrors web StatCard. */
   tone?: 'default' | 'positive' | 'negative';
+  /** Override indicator color (e.g. red for "You owe"). */
+  indicatorColor?: string;
+  /** Override value color. */
+  valueColor?: string;
+  /** Kept for compatibility with legacy call sites — rendered in the label row. */
+  icon?: React.ReactNode;
 }
 
-export const StatCard: React.FC<StatCardProps> = ({ label, value, description, icon, tone = 'default' }) => {
-  const valueColor =
-    tone === 'positive' ? colors.success : tone === 'negative' ? colors.danger : colors.foreground;
+export const StatCard: React.FC<StatCardProps> = ({
+  label,
+  value,
+  description,
+  tone = 'default',
+  indicatorColor,
+  valueColor,
+  icon,
+}) => {
+  const dot = indicatorColor ?? (tone === 'negative' ? colors.danger : colors.primary);
+  const vColor = valueColor ?? (tone === 'negative' ? colors.danger : colors.primaryStrong);
   return (
-    <AppSurface variant="solid" compact style={{ flex: 1 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Text variant="eyebrow" tone="muted">
+    <AppSurface variant="solid" style={{ flex: 1, padding: 20, borderRadius: 28 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+        {icon ?? (
+          <View
+            style={{
+              width: 10,
+              height: 10,
+              borderRadius: 999,
+              backgroundColor: dot,
+            }}
+          />
+        )}
+        <Text variant="label" weight="semibold" tone="muted">
           {label}
         </Text>
-        {icon ? <IconBadge icon={icon} size="sm" tone="soft" /> : null}
       </View>
       <Text
-        variant="titleXl"
         weight="extrabold"
-        style={{ marginTop: 10, color: valueColor }}
+        style={{ fontSize: 30, lineHeight: 34, letterSpacing: -1.2, color: vColor }}
       >
         {value}
       </Text>
       {description ? (
-        <Text variant="label" tone="subtle" style={{ marginTop: 4 }}>
+        <Text variant="label" tone="muted" style={{ marginTop: 8 }}>
           {description}
         </Text>
       ) : null}

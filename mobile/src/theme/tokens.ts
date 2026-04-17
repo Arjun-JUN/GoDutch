@@ -78,7 +78,7 @@ export const spacing = {
   xl: 32,
   '2xl': 48,
   '3xl': 64,
-  // "Generous breath" per DESIGN_GUIDELINES — use for functional group separators.
+  // "Generous breath" per DESIGN_RULES/user-interface/guides/spacing-and-rhythm.md
   breath: 88, // ~5.5rem
   breathLg: 136, // ~8.5rem
 };

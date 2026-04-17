@@ -16,6 +16,8 @@ interface ExpensesState {
   replace: (tempId: string, real: Expense) => void;
   /** Remove an expense from the cache (e.g., after delete or optimistic rollback). */
   remove: (groupId: string, expenseId: string) => void;
+  /** Replace an edited expense in the cache after a successful PUT. */
+  update: (groupId: string, expenseId: string, updated: Expense) => void;
   getForGroup: (groupId: string) => Expense[];
   /** Flat list across all known groups, sorted by created_at/date desc. */
   getAll: () => Expense[];
@@ -105,6 +107,14 @@ export const useExpensesStore = create<ExpensesState>((set, get) => ({
           [groupId]: list.filter((e) => e.id !== expenseId),
         },
       };
+    });
+  },
+
+  update: (groupId, expenseId, updated) => {
+    set((s) => {
+      const list = s.byGroupId[groupId] ?? [];
+      const next = list.map((e) => (e.id === expenseId ? updated : e));
+      return { byGroupId: { ...s.byGroupId, [groupId]: next.sort(sortByDateDesc) } };
     });
   },
 

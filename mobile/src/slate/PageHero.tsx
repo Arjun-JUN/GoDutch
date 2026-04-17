@@ -14,7 +14,7 @@ interface PageHeroProps {
 
 /**
  * Editorial-voice hero section — eyebrow label, oversized title, optional body + actions.
- * Uses "generous breath" per DESIGN_GUIDELINES.
+ * Uses "generous breath" per DESIGN_RULES/user-interface/guides/spacing-and-rhythm.md
  */
 export const PageHero: React.FC<PageHeroProps> = ({
   eyebrow,

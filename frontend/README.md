@@ -1,51 +1,47 @@
-# GoDutch Frontend
+# frontend
 
-The premium React application forGoDutch, built with a focus on speed, aesthetics, and modularity.
+> React 18 + Vite web application: the browser client for GoDutch.
 
-## Tech Stack
-- **Framework**: React 18+
-- **Build Tool**: Vite
-- **Package Manager**: pnpm
-- **Design System**: Slate (Custom library in `src/slate`)
-- **Icons**: Phosphor Icons (via `@/slate/icons`)
-- **Animations**: Framer Motion
-- **Styling**: Vanilla CSS with modern tokens
+## Overview
 
-## Getting Started
+This directory is the complete web frontend. It is a single-page application (SPA) built with React 18, bundled by Vite, and styled with Tailwind CSS plus the GoDutch Slate design system. The app communicates exclusively with the backend at `http://localhost:8000` via the API client in `src/lib/api.js`.
 
-### 1. Install Dependencies
-We strictly recommend using **pnpm** for this repository to ensure consistent dependency resolution.
-```powershell
-pnpm install
-```
+Authentication is JWT-based: the token is stored in localStorage and attached to every request by the API client. All protected routes redirect to `/auth` if the token is absent or expired.
 
-### 2. Start Development Server
-```powershell
-pnpm dev
-```
-The app will be available at `http://localhost:3000`.
+## How it works
 
-### 3. Environment Setup
-Create a `.env` file in the `frontend` root:
-```env
-REACT_APP_BACKEND_URL=http://localhost:8000
-```
+1. `index.html` loads the Vite bundle; React mounts at `#root`.
+2. `src/index.js` renders `<App />` wrapped in `<AuthProvider>`.
+3. `src/App.js` wraps the router. `src/MainRoutes.js` defines all routes, wrapping protected routes in an auth guard.
+4. On each navigation, the matching page component renders and calls the API client to fetch data.
+5. Mutations (create expense, settle, etc.) call the API client, then update local state or re-fetch.
 
-## Project Structure
-- `src/slate/`: Core design system components, icons, and tokens.
-- `src/pages/`: Main application views (Dashboard, Auth, Expenses, etc.).
-- `src/contexts/`: Global state management (Auth, etc.).
-- `src/lib/`: API utilities and helper functions.
+## Key files
 
-## Design Guidelines
-When building new features, always:
-1. **Use Slate Components**: Prioritize components from `@/slate` (e.g., `AppButton`, `AppSurface`).
-2. **Follow Tokens**: Use CSS variables from `tokens.css` (e.g., `var(--app-primary)`).
-3. **Icons**: Import all icons from `@/slate/icons` to maintain style consistency.
-4. **Animations**: Use the built-in `motion` variants for smooth page transitions.
+| File | What it does |
+|------|-------------|
+| `index.html` | HTML shell; Vite entry point |
+| `vite.config.js` | Dev server on port 3000, API proxy to 8000 |
+| `tailwind.config.js` | Tailwind config — GoDutch design tokens |
+| `src/index.js` | React root mount |
+| `src/App.js` | Router wrapper |
+| `src/MainRoutes.js` | Route definitions and auth guard |
+| `src/.env.local` | `VITE_API_URL` for the backend base URL |
 
-## Testing
-Run the test suite using Vitest:
-```powershell
-pnpm test
-```
+## Interactions
+
+| Direction | Who | How |
+|-----------|-----|-----|
+| Upstream | Browser | HTTP requests to port 3000 (dev) |
+| Downstream | `backend/` | HTTP REST via `src/lib/api.js` |
+| Downstream | Tailwind / Slate | CSS class-based styling |
+
+## Gotchas
+
+- The Vite dev server proxies `/api/*` to `localhost:8000`. In production, CORS must be configured explicitly.
+- `craco.config.js` is a leftover from a Create React App migration — it is not used by Vite and can be safely ignored.
+
+## Further reading
+
+- [src/](src/README.md) — application source
+- [../backend/](../backend/README.md) — API server
