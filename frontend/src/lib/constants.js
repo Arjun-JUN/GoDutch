@@ -104,7 +104,7 @@ export function getIconForDescription(description) {
   if (!raw) return { icon: Receipt, category: 'Other' };
 
   // Tokenise: split on spaces and common punctuation
-  const words = raw.split(/[\s,./&()+\-]+/).filter(Boolean);
+  const words = raw.split(/[\s,./&()+-]+/).filter(Boolean);
 
   let bestScore = 0;
   let bestEntry = null;

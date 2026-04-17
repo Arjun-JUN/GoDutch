@@ -3,7 +3,6 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-
 VALID_SPLIT_TYPES = Literal["equal", "custom", "item-based"]
 VALID_CATEGORIES = Literal[
     "Food & Dining", "Transportation", "Entertainment", "Shopping",

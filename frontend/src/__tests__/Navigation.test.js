@@ -14,7 +14,7 @@ vi.mock('../pages/AuthPageRedesign', () => ({ default: () => <div data-testid="a
 
 // Mock Header to test navigation triggers
 vi.mock('../slate/components/Header', () => ({
-  default: () => {
+  default: function MockHeader() {
     const { useNavigate } = require('react-router-dom');
     const navigate = useNavigate();
     return (
