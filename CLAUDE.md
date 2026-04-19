@@ -145,7 +145,7 @@ Follow [`DESIGN_RULES/`](./DESIGN_RULES/README.md) strictly. The canonical platf
 The web frontend has been removed. All UI is delivered through the Expo mobile app
 (`mobile/`) using the Slate component library in `mobile/src/slate/`.
 
-Open bugs — see [`PQ_BUGS_LOG.md`](./PQ_BUGS_LOG.md):
+Known open bug:
 - **B003**: Any user can settle for anyone (auth gap).
 
 ## gstack
@@ -186,3 +186,4 @@ Available gstack skills:
 - `/unfreeze`
 - `/gstack-upgrade`
 - `/learn`
+

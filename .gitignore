@@ -4,10 +4,12 @@
 .idea/
 .vscode/
 .codex/
+.obsidian/
 
 # Dependencies
 node_modules/
 /node_modules
+package-lock.json
 /.pnp
 .pnp.js
 .yarn/install-state.gz
@@ -19,6 +21,7 @@ node_modules/
 
 # Testing
 /coverage
+mobile/coverage/
 
 # Next.js
 /.next/
@@ -32,7 +35,6 @@ dist/
 dist
 
 # Environment files (comprehensive coverage)
-
 *token.json*
 *credentials.json*
 
@@ -44,6 +46,7 @@ yarn-error.log*
 dump.rdb
 npm.log
 uvicorn*.log
+backend_lint.txt
 
 # Build artifact variants
 frontend/build-codex*/
@@ -64,6 +67,8 @@ chainlit.md
 .chainlit
 .ipynb_checkpoints/
 .ac
+mobile/scratch/
+tmp/
 
 # Deployment
 .vercel
@@ -90,7 +95,8 @@ agenthub/agents/youtube/db
 memory/test_credentials.md
 
 # Mobile development
-android-sdk/-e 
+android-sdk/-e
+
 # Environment files
 *.env
 *.env.*
