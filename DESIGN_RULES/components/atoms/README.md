@@ -37,7 +37,7 @@ Circular background tile — for icons in expense cards, empty states, and list 
 Sizes: sm=36pt, md=44pt, lg=56pt.
 
 ```tsx
-import { Receipt } from '@/slate/icons';
+import { Plus, Receipt } from 'lucide-react-native';
 <IconBadge icon={<Receipt size={24} color={colors.foreground} />} tone="soft" size="md" />
 <IconBadge icon={<Plus size={20} color={colors.primaryForeground} />} tone="primary" size="sm" />
 ```
@@ -109,7 +109,7 @@ Centered placeholder for empty lists and first-use screens.
 | `action` | `{ label: string; onPress: () => void }` | — |
 
 ```tsx
-import { Receipt } from '@/slate/icons';
+import { Plus, Receipt } from 'lucide-react-native';
 import { colors } from '@/theme/tokens';
 
 <EmptyState
@@ -192,3 +192,4 @@ Heights: sm=16px, md=32px, lg=56px.
 - [../text/](../text/README.md)
 - [../surfaces/](../surfaces/README.md)
 - [../../user-interface/guides/spacing-and-rhythm.md](../../user-interface/guides/spacing-and-rhythm.md)
+

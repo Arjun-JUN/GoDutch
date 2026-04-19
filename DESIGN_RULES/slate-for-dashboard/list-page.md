@@ -12,7 +12,7 @@ Use this pattern for a full-screen list of homogeneous items: all expenses in a 
 import { AppShell, PageContent, Header, ExpenseCard } from '@/slate';
 import { EmptyState } from '@/slate/atoms';
 import { FlatList, View } from 'react-native';
-import { Receipt } from '@/slate/icons';
+import { Receipt } from 'lucide-react-native';
 
 export default function ExpenseListScreen({ expenses }) {
   return (
@@ -68,3 +68,4 @@ export default function ExpenseListScreen({ expenses }) {
 - [page-templates.md](page-templates.md)
 - [../components/expense-card/](../components/expense-card/README.md)
 - [../components/atoms/](../components/atoms/README.md) — EmptyState
+

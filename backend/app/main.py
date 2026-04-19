@@ -6,7 +6,6 @@ from starlette.middleware.cors import CORSMiddleware
 
 from app.database import client, db
 from app.routes import ai, auth, expenses, groups, settlements, upi
-from seed import seed_data
 
 # Configure logging
 logging.basicConfig(
@@ -38,10 +37,8 @@ app.include_router(api_router)
 
 @app.on_event("startup")
 async def startup_event():
-    # Only seed in development
-    if os.getenv("ENV") != "production":
-        logger.info("Initializing database with seed data...")
-        await seed_data(db)
+    # Removed seeding logic
+    pass
 
 @app.on_event("shutdown")
 async def shutdown_db_client():

@@ -4,7 +4,7 @@
 
 ## Overview
 
-This directory is the container for everything the server needs to run. The actual application logic lives one level deeper in `app/`, while this root holds the bootstrapping files that make the server startable in development and the seed script that populates a fresh MongoDB instance with realistic sample data.
+This directory is the container for everything the server needs to run. The actual application logic lives one level deeper in `app/`, while this root holds the bootstrapping files that make the server startable in development.
 
 `server.py` exists as a compatibility shim. It re-exports the app from `app/main.py` for older entry-point expectations, but new work should begin from `app/main.py`.
 
@@ -12,7 +12,6 @@ This directory is the container for everything the server needs to run. The actu
 
 1. A process runner imports `backend.app.main:app`.
 2. `app/main.py` creates the FastAPI instance, registers middleware, mounts routers, and manages the MongoDB lifecycle.
-3. `seed.py` can be run separately to populate development users, groups, and expenses.
 
 ## Key files
 
@@ -20,7 +19,6 @@ This directory is the container for everything the server needs to run. The actu
 |------|-------------|
 | `app/main.py` | FastAPI app factory for routes, middleware, and DB lifecycle |
 | `server.py` | Compatibility shim that re-exports `app` |
-| `seed.py` | Development data seeder |
 | `requirements.txt` | Python package dependencies |
 | `pyproject.toml` | Tooling config for pytest and ruff |
 
@@ -41,7 +39,6 @@ This directory is the container for everything the server needs to run. The actu
 ## Gotchas
 
 - `server.py` is a shim, so avoid adding product logic there.
-- `seed.py` is idempotent but can overwrite expected local sample data when re-run.
 - The maintained backend tests live under [`../tests/`](../tests/README.md), not as one-off scripts in this folder.
 
 ## Further reading

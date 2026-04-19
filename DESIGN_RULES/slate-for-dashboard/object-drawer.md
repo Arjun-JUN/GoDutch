@@ -4,7 +4,7 @@
 
 ## What it is
 
-An "object drawer" is a bottom sheet that surfaces contextual actions for a specific item — edit, delete, share, settle. It's the mobile-native alternative to the web's dropdown context menu or modal dialog.
+An "object drawer" is a bottom sheet that surfaces contextual actions for a specific item — edit, delete, share, settle. It is the mobile-native action surface for expense, member, and settlement actions.
 
 ## Pattern
 
@@ -12,7 +12,7 @@ An "object drawer" is a bottom sheet that surfaces contextual actions for a spec
 import { useRef } from 'react';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { AppBottomSheet, SheetHeader, AppButton } from '@/slate';
-import { Trash, PencilSimple } from '@/slate/icons';
+import { Pencil, Trash } from 'lucide-react-native';
 import { colors } from '@/theme/tokens';
 
 export function ExpenseDrawer({ expense, onEdit, onDelete }) {
@@ -29,7 +29,7 @@ export function ExpenseDrawer({ expense, onEdit, onDelete }) {
       <AppButton
         variant="ghost"
         size="md"
-        leftIcon={<PencilSimple size={18} color={colors.foreground} />}
+        leftIcon={<Pencil size={18} color={colors.foreground} />}
         onPress={onEdit}
         style={{ justifyContent: 'flex-start' }}
       >
@@ -75,3 +75,4 @@ drawerRef.current?.dismiss();
 
 - [../components/bottom-sheet/](../components/bottom-sheet/README.md)
 - [../components/buttons/](../components/buttons/README.md)
+

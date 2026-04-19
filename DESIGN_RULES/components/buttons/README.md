@@ -33,7 +33,7 @@ All other `PressableProps` are spread onto the underlying `Pressable`.
 
 ```tsx
 import { AppButton } from '@/slate';
-import { Plus, Check } from '@/slate/icons';
+import { Plus, Check, X } from 'lucide-react-native';
 import { colors } from '@/theme/tokens';
 
 // Primary — main screen CTA
@@ -114,3 +114,4 @@ import { colors } from '@/theme/tokens';
 - [../surfaces/](../surfaces/README.md)
 - [../interaction-states.md](../interaction-states.md)
 - [../../user-interface/guides/accessibility.md](../../user-interface/guides/accessibility.md)
+

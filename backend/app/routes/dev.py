@@ -4,7 +4,6 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.database import db
 from app.dependencies import verify_token
-from seed import seed_data
 
 router = APIRouter(prefix="/dev", tags=["Dev"])
 
@@ -24,5 +23,4 @@ async def reset_db(current_user: dict = Depends(verify_token)):
     await db.money_requests.delete_many({})
     await db.payments.delete_many({})
 
-    await seed_data(db)
-    return {"status": "success", "message": "Database reset and seeded with fresh fake data"}
+    return {"status": "success", "message": "Database reset"}

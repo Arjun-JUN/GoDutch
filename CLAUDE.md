@@ -6,7 +6,6 @@
 - **Mobile**: Expo + React Native + NativeWind + Zustand v5 + Expo Router. Source: `mobile/`.
 - **Auth**: JWT (30-day expiry). `verify_token` dependency on every protected route.
 - **AI**: Gemini API for receipt OCR (`/ai/ocr/scan`) and smart split (`/ai/smart-split`).
-- **DB Seeding**: `backend/seed.py` populates dev data. Run separately if needed.
 
 ## Running locally
 

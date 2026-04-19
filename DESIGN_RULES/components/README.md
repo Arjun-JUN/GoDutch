@@ -55,5 +55,6 @@ import { AppButton, AppSurface, AppShell, PageContent, PageHero, Header,
 import { IconBadge, MemberBadge, StatCard, EmptyState, Callout, Avatar, Breath } from '@/slate/atoms';
 
 // Icons
-import { Plus, Receipt, ArrowLeft } from '@/slate/icons';
+import { Plus, Receipt, ArrowLeft } from 'lucide-react-native';
 ```
+

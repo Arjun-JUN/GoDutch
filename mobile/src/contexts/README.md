@@ -4,34 +4,34 @@
 
 ## Overview
 
-Currently one context: `AuthContext.tsx`. Identical in purpose to the web frontend's `contexts/AuthContext.js`, adapted for React Native — AsyncStorage instead of localStorage, Expo Router navigation instead of React Router.
+Currently this folder contains `AuthContext.tsx`. It owns app-wide authentication state for the Expo client, using AsyncStorage for persistence and Expo Router for navigation.
 
 ## How it works
 
 1. `<AuthProvider>` wraps the app in `app/_layout.tsx`.
-2. On mount, it reads the JWT from AsyncStorage. Valid token → set user state and navigate to tabs. Missing/expired → navigate to auth.
-3. `login(token, user)` saves to AsyncStorage and updates state. `logout()` clears both.
-4. Any component or route calls `useAuth()` to get `{ user, token, login, logout }`.
+2. On mount, it reads the JWT from AsyncStorage.
+3. A valid token restores user state and keeps the user in the authenticated area.
+4. `login(token, user)` persists auth state and `logout()` clears it.
+5. Any component or route calls `useAuth()` to access `{ user, token, login, logout }`.
 
 ## Key files
 
 | File | What it does |
 |------|-------------|
-| `AuthContext.tsx` | Context definition, `AuthProvider` component, `useAuth` hook |
+| `AuthContext.tsx` | Context definition, `AuthProvider`, and `useAuth` hook |
 
 ## Interactions
 
 | Direction | Who | How |
 |-----------|-----|-----|
-| Upstream | `app/_layout.tsx` | Wraps entire app |
-| Downstream | `src/api/client.ts` | Reads token for auth header |
-| Downstream | `app/` routes | Read `user` for display; call `logout` |
+| Upstream | `app/_layout.tsx` | Wraps the entire app |
+| Downstream | `src/api/client.ts` | Reads token for auth headers |
+| Downstream | `app/` routes | Reads `user` and calls `logout` |
 
 ## Gotchas
 
-- AsyncStorage is async — on first mount there is a brief period where `token` is `null` even if the user is logged in. Show a splash/loading state rather than flashing the auth screen.
+- AsyncStorage is async, so there is a brief startup period where auth state is still hydrating.
 
 ## Further reading
 
 - [api/](../api/README.md)
-- [../../../frontend/src/contexts/](../../../frontend/src/contexts/README.md) — web counterpart

@@ -23,7 +23,6 @@ Native stack headers are disabled globally in GoDutch (`headerShown: false` in E
 ```tsx
 import { Header } from '@/slate';
 import { AppButton } from '@/slate';
-import { Plus } from '@/slate/icons';
 import { colors } from '@/theme/tokens';
 
 // Standard sub-screen
@@ -70,3 +69,4 @@ Padding: 24px horizontal, 8px top, 16px bottom.
 
 - [../shell/](../shell/README.md)
 - [../../slate-for-dashboard/navigation.md](../../slate-for-dashboard/navigation.md)
+

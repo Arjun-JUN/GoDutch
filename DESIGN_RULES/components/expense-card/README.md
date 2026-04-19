@@ -37,7 +37,7 @@ Use `ExpenseCard` in any list or scroll view displaying expense entries. It is s
 
 ```tsx
 import { ExpenseCard } from '@/slate';
-import { ShoppingBag } from '@/slate/icons';
+import { ShoppingBag } from 'lucide-react-native';
 import { colors } from '@/theme/tokens';
 
 // Basic card
@@ -101,3 +101,4 @@ import { colors } from '@/theme/tokens';
 
 - [../../slate-for-dashboard/list-page.md](../../slate-for-dashboard/list-page.md)
 - [../atoms/](../atoms/README.md) — `EmptyState` for empty lists
+

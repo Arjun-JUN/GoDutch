@@ -45,7 +45,7 @@ All `TextInputProps` are spread.
 
 ```tsx
 import { Field, AppInput, AppTextarea } from '@/slate';
-import { MagnifyingGlass, CurrencyInr } from '@/slate/icons';
+import { IndianRupee, Search } from 'lucide-react-native';
 import { colors } from '@/theme/tokens';
 
 // Basic labeled input
@@ -61,7 +61,7 @@ import { colors } from '@/theme/tokens';
 // With left icon
 <Field label="Merchant">
   <AppInput
-    leftIcon={<MagnifyingGlass size={18} color={colors.mutedSubtle} />}
+    leftIcon={<Search size={18} color={colors.mutedSubtle} />}
     placeholder="Search or enter name"
     value={merchant}
     onChangeText={setMerchant}
@@ -71,7 +71,7 @@ import { colors } from '@/theme/tokens';
 // With currency icon
 <Field label="Amount">
   <AppInput
-    leftIcon={<CurrencyInr size={18} color={colors.muted} />}
+    leftIcon={<IndianRupee size={18} color={colors.muted} />}
     keyboardType="decimal-pad"
     placeholder="0.00"
     value={amount}
@@ -121,3 +121,4 @@ import { colors } from '@/theme/tokens';
 - [../buttons/](../buttons/README.md)
 - [../text/](../text/README.md)
 - [../../slate-for-dashboard/settings.md](../../slate-for-dashboard/settings.md)
+
