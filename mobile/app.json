@@ -40,6 +40,13 @@
       "expo-secure-store",
       "expo-font",
       "expo-splash-screen"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "86345b5c-b8e3-4c23-9e74-d1d3057211d2"
+      }
+    },
+    "owner": "arjun-juns-organization"
   }
 }
