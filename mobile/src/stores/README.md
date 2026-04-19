@@ -8,19 +8,21 @@ Three Zustand stores provide the data layer for the mobile app. Each store holds
 
 ## How it works
 
-1. A route component calls a store action: `useExpensesStore().fetchExpenses()`.
-2. The action sets `loading = true`, calls `client.get('/expenses')`, updates the store array, sets `loading = false`.
-3. Components select the slice they need: `const expenses = useExpensesStore(s => s.expenses)`.
-4. Mutations (create, delete) call the API and then refetch or optimistically update the store.
+1. A route component calls `useExpensesStore().fetch(groupId)`.
+2. The store checks a 20-second cache window (`loadedAtGroupId`); if fresh it skips the API call.
+3. On cache miss, `api.get('/groups/:id/expenses')` is called, results sorted by date desc, stored in `byGroupId[groupId]`.
+4. **Optimistic creates**: `addOptimistic(tempExpense)` inserts immediately; `replace(tempId, serverExpense)` swaps in the server record on success; `remove` rolls back on failure.
+5. **Edits**: `update(groupId, expenseId, updatedExpense)` replaces the entry in-place after a successful `PUT /expenses/:id`.
+6. `invalidate(groupId?)` clears the cache timestamp so the next `fetch` re-hits the API.
 
 ## Key files
 
 | File | What it does |
 |------|-------------|
-| `expensesStore.ts` | `expenses[]`, `fetchExpenses()`, `createExpense()`, `deleteExpense()` |
-| `groupsStore.ts` | `groups[]`, `fetchGroups()`, `createGroup()` |
-| `settlementsStore.ts` | `settlements[]`, `fetchSettlements(groupId)` |
-| `types.ts` | Shared TypeScript types for store state shapes |
+| `expensesStore.ts` | `byGroupId` cache; `fetch`, `addOptimistic`, `replace`, `update`, `remove`, `invalidate`, `reset` |
+| `groupsStore.ts` | `groups[]`; `fetch`, `getById`, `getAll`, `reset` |
+| `settlementsStore.ts` | `settlements[]`; `fetchSettlements(groupId)` |
+| `types.ts` | Shared TypeScript types (`Expense`, `Group`, `Member`, `ExpenseSplit`, `ExpenseItem`, `SettlementItem`) |
 | `index.ts` | Barrel re-export |
 
 ## Interactions

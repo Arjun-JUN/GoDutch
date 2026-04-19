@@ -7,10 +7,8 @@
     "eslint": "8.57.1"
   },
   "scripts": {
-    "dev": "concurrently \"cd backend && python -m uvicorn app.main:app --reload --port 8000\" \"cd frontend && pnpm start\"",
-    "lint:frontend": "pnpm -C frontend lint",
-    "lint:backend": "cd backend && ruff check .",
-    "lint": "pnpm lint:frontend && pnpm lint:backend"
+    "dev": "concurrently \"cd backend && python -m uvicorn app.main:app --reload --port 8000\" \"cd mobile && npx expo start\"",
+    "lint:backend": "cd backend && ruff check ."
   },
   "packageManager": "pnpm@10.33.0+sha512.10568bb4a6afb58c9eb3630da90cc9516417abebd3fabbe6739f0ae795728da1491e9db5a544c76ad8eb7570f5c4bb3d6c637b2cb41bfdcdb47fa823c8649319",
   "pnpm": {

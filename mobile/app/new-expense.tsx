@@ -16,6 +16,7 @@ import {
   Tag,
   Users,
   Zap,
+  Sparkles,
 } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
@@ -69,6 +70,11 @@ export default function NewExpenseScreen() {
   const [savingExpense, setSavingExpense] = useState(false);
   const [scanningReceipt, setScanningReceipt] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // ── AI Smart Split state ──────────────────────────────────────────────────────
+  const [showSmartSplit, setShowSmartSplit] = useState(false);
+  const [smartSplitInstruction, setSmartSplitInstruction] = useState('');
+  const [smartSplitting, setSmartSplitting] = useState(false);
 
   useEffect(() => {
     fetchGroups();
@@ -142,6 +148,57 @@ export default function NewExpenseScreen() {
       setError('Receipt scan failed — you can enter details manually.');
     } finally {
       setScanningReceipt(false);
+    }
+  };
+
+  // ── AI Smart Split ────────────────────────────────────────────────────────────
+  const handleSmartSplit = async () => {
+    if (!smartSplitInstruction.trim()) return;
+    setSmartSplitting(true);
+    setError(null);
+    try {
+      const response = await api.post('/ai/smart-split', {
+        group_id: selectedGroupId,
+        instruction: smartSplitInstruction.trim(),
+        expense_context: merchant
+          ? { merchant, total_amount: parseFloat(totalAmount) || 0 }
+          : undefined,
+      });
+
+      if (response.clarification_needed) {
+        Alert.alert(
+          'Clarification needed',
+          response.clarification_question ?? 'Please clarify your split.'
+        );
+        return;
+      }
+
+      const plan = response.split_plan;
+      if (plan.items?.length) {
+        setItems(
+          plan.items.map((it: any) => ({
+            name: it.name,
+            price: String(it.price ?? 0),
+            quantity: it.quantity ?? 1,
+            assigned_to: it.assigned_to ?? [],
+            split_type: 'equal',
+          }))
+        );
+      }
+
+      const modeMap: Record<string, SplitMode> = {
+        'item-based': 'item-based',
+        'equal': 'equally',
+        'custom': 'unequally',
+      };
+      const mode: SplitMode = modeMap[plan.split_type] ?? 'equally';
+      setSplitMode(mode);
+      setShowSmartSplit(false);
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch {
+      setError('Smart split failed — you can configure it manually.');
+    } finally {
+      setSmartSplitting(false);
     }
   };
 
@@ -268,6 +325,7 @@ export default function NewExpenseScreen() {
             <InteractiveSurface
               compact
               onPress={handlePickReceipt}
+              testID="scan-receipt-surface"
               style={{ marginBottom: 24, flexDirection: 'row', alignItems: 'center', gap: 14 }}
             >
               <View
@@ -422,6 +480,44 @@ export default function NewExpenseScreen() {
                 </View>
                 <ChevronDown size={16} color={colors.mutedSubtle} />
               </InteractiveSurface>
+
+              {/* AI Smart Split */}
+              <InteractiveSurface
+                compact
+                onPress={() => setShowSmartSplit(!showSmartSplit)}
+                testID="ai-split-surface"
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}
+              >
+                <Sparkles size={18} color={colors.primary} strokeWidth={2.2} />
+                <View style={{ flex: 1 }}>
+                  <Text variant="label" tone="subtle">AI Smart Split</Text>
+                  <Text variant="title" weight="semibold" style={{ marginTop: 2 }}>
+                    Describe how to split in plain words
+                  </Text>
+                </View>
+                <ChevronDown size={16} color={colors.mutedSubtle} />
+              </InteractiveSurface>
+
+              {showSmartSplit && (
+                <AppSurface variant="solid" style={{ gap: 12, padding: 16 }}>
+                  <AppInput
+                    value={smartSplitInstruction}
+                    onChangeText={setSmartSplitInstruction}
+                    placeholder="e.g. Alice pays for everything, or split pizza equally but Bob pays for drinks"
+                    autoFocus
+                  />
+                  <AppButton
+                    variant="primary"
+                    size="md"
+                    onPress={handleSmartSplit}
+                    loading={smartSplitting}
+                    haptic
+                    leftIcon={<Sparkles size={16} color={colors.primaryForeground} strokeWidth={2.2} />}
+                  >
+                    Apply AI Split
+                  </AppButton>
+                </AppSurface>
+              )}
             </View>
 
             {/* Save */}

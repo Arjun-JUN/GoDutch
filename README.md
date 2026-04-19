@@ -1,48 +1,46 @@
 # GoDutch
 
-GoDutch is a premium split-expense application with a focus on high-fidelity UI and seamless ledger management.
+GoDutch is a premium split-expense application with a focus on high-fidelity UI and seamless ledger management. Built React Native-first for iOS and Android (web via React Native for Web, future).
 
-- **Backend**: `FastAPI` (Python 3.11+) located in `backend/`
-- **Frontend**: `React` (Vite, Slate UI) located in `frontend/`
+- **Backend**: `FastAPI` (Python 3.11+) — `backend/`
+- **Mobile**: `Expo` + React Native + NativeWind + Zustand v5 — `mobile/`
 - **Database**: `MongoDB` (Local or Atlas)
 
 ## Prerequisites
 
 - **Python 3.11+**
-- **Node.js 18+** & **pnpm** (Recommended)
+- **Node.js 18+** & **pnpm**
 - **MongoDB** running on `localhost:27017`
 
 ## Quick Start
 
-The fastest way to get the entire stack (Backend + Frontend) running is from the root directory:
-
-```powershell
-# 1. Install dependencies
+```bash
+# 1. Install root + mobile dependencies
 pnpm install
+cd mobile && pnpm install
 
-# 2. Start the integrated dev server
+# 2. Start backend + Expo dev server together
+cd ..
 pnpm dev
 ```
 
-*Note: If you don't have pnpm installed, you can use `npm install` and `npm run dev` from the root, but pnpm is strictly recommended for frontend performance.*
+`pnpm dev` runs `concurrently`: FastAPI on port 8000 and `npx expo start` for the mobile app.
 
 ---
 
 ## Detailed Component Setup
 
 ### 1. Database (MongoDB)
+
 Ensure MongoDB is active on your system. On Windows:
+
 ```powershell
-# Verify service status
 Get-Service | Where-Object { $_.Name -like '*Mongo*' }
-# If stopped, start it
-Start-Service MongoDB
+Start-Service MongoDB   # if stopped
 ```
 
-### 2. Backend Architecture
-The backend has been refactored into a structured FastAPI package.
+### 2. Backend
 
-**Manual Setup:**
 ```powershell
 cd backend
 python -m venv .venv
@@ -52,38 +50,57 @@ python -m uvicorn app.main:app --reload --port 8000
 ```
 
 **Environment (`backend/.env`):**
+
 ```env
 MONGO_URL=mongodb://localhost:27017
 DB_NAME=godutch
 JWT_SECRET=your-secure-secret
-CORS_ORIGINS=http://localhost:3000
+CORS_ORIGINS=http://localhost:8081
 GEMINI_API_KEY=your_key_here
 ```
 
-### 3. Frontend (Slate Design System)
-The frontend uses the **Slate** design system for a premium look and feel.
+### 3. Mobile App (Expo)
 
-**Manual Setup:**
 ```powershell
-cd frontend
+cd mobile
 pnpm install
-pnpm dev
+npx expo start
 ```
 
-**Environment (`frontend/.env`):**
+Scan the QR code with the **Expo Go** app (iOS/Android) or press `i`/`a` to open in a simulator.
+
+**Environment (`mobile/.env`):**
+
 ```env
-REACT_APP_BACKEND_URL=http://localhost:8000
+EXPO_PUBLIC_API_URL=http://localhost:8000
+```
+
+---
+
+## Running Tests
+
+```bash
+# Backend
+pytest
+pytest --cov=backend/app
+
+# Mobile
+cd mobile && pnpm test
+cd mobile && pnpm test --coverage
 ```
 
 ---
 
 ## Core Features
+
 - **Smart Settlements**: Real-time balance calculations across groups.
-- **UPI Integration**: Linked bank accounts and payment flows.
-- **AI Receipts**: OCR-powered expense extraction (requires `GEMINI_API_KEY`).
-- **Reports**: Deep spend analysis and group trends.
+- **Expense Editing**: Edit merchant, amount, date, category, and notes in-place.
+- **AI Smart Split**: Natural-language split instructions powered by Gemini.
+- **AI Receipts**: OCR-powered expense extraction from receipt photos.
+- **UPI Integration**: Native UPI deep links for instant payments.
 
 ## Troubleshooting
-- **Invalid hook call**: Ensure all dependencies are installed via `pnpm` and check for missing React imports in new components.
-- **Backend 500 Errors**: Verify MongoDB is reachable and your `.env` variables (especially `JWT_SECRET`) are set.
-- **CORS Issues**: Ensure `CORS_ORIGINS` in the backend matches your frontend URL (default `http://localhost:3000`).
+
+- **Backend 500 Errors**: Verify MongoDB is reachable and your `.env` variables are set.
+- **CORS Issues**: Ensure `CORS_ORIGINS` in the backend matches your Expo URL (default `http://localhost:8081`).
+- **Expo Go cache**: Run `npx expo start --clear` to reset the Metro bundler cache.

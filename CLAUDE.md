@@ -3,20 +3,20 @@
 ## Architecture
 
 - **Backend**: FastAPI structured package. Entry point: `backend/app/main.py`.
-- **Frontend**: React 18+ + Vite + Slate Design System + framer-motion.
+- **Mobile**: Expo + React Native + NativeWind + Zustand v5 + Expo Router. Source: `mobile/`.
 - **Auth**: JWT (30-day expiry). `verify_token` dependency on every protected route.
-- **AI**: Gemini API for receipt OCR (`/api/ocr/scan`) and smart split (`/api/ai/smart-split`).
+- **AI**: Gemini API for receipt OCR (`/ai/ocr/scan`) and smart split (`/ai/smart-split`).
 - **DB Seeding**: `backend/seed.py` populates dev data. Run separately if needed.
 
 ## Running locally
 
-To start both Backend and Frontend integrated:
+To start both Backend and Mobile integrated:
 
 ```bash
 pnpm dev
 ```
 
-Note: This uses `concurrently` from the root to start the FastAPI server (port 8000) and the Vite frontend (port 3000).
+Note: This uses `concurrently` from the root to start the FastAPI server (port 8000) and the Expo dev server.
 
 ## Tests — Non-Negotiable
 
@@ -38,16 +38,13 @@ pytest                       # all tests
 pytest tests/unit/ -x        # unit only, stop on first fail
 pytest --cov=backend/app     # coverage — aim for ≥ 90% on touched files
 
-# Frontend
-cd frontend && pnpm test
-cd frontend && pnpm test --coverage
-
 # Mobile
 cd mobile && pnpm test
+cd mobile && pnpm test --coverage
 ```
 
 - Backend tests use `mongomock-motor` (no real DB needed).
-- Frontend tests use Vitest and mock framer-motion for jsdom compatibility.
+- Mobile tests use Jest + jest-expo + @testing-library/react-native.
 - If a layer has no existing test harness, set one up as part of the change — do not skip.
 
 ## Folder Documentation — Non-Negotiable
@@ -107,7 +104,7 @@ The main path, step by step, from the entry point out. Name specific files and f
 
 | Direction | Who | How |
 |-----------|-----|-----|
-| Upstream (callers) | `frontend/src/lib/api.js` | HTTP GET/POST |
+| Upstream (callers) | `mobile/src/api/client.ts` | HTTP GET/POST |
 | Downstream (deps) | `backend/app/models/` | Pydantic validation |
 | Shared state | MongoDB `expenses` collection | read/write |
 
@@ -144,10 +141,48 @@ Follow [`DESIGN_RULES/`](./DESIGN_RULES/README.md) strictly. The canonical platf
 
 ## Status
 
-**Phase: Tech Debt Remediation & UI Polish.**
-The project has been migrated to `pnpm` and the backend has been modularized.
-All UI components use the **Slate** library in `src/slate`.
+**Phase: React Native first — mobile is the sole delivery platform.**
+The web frontend has been removed. All UI is delivered through the Expo mobile app
+(`mobile/`) using the Slate component library in `mobile/src/slate/`.
 
 Open bugs — see [`PQ_BUGS_LOG.md`](./PQ_BUGS_LOG.md):
 - **B003**: Any user can settle for anyone (auth gap).
-- **B005**: Enhance Add Expense UX (line-item visibility, quantities, card aesthetic).
+
+## gstack
+
+Use the `/browse` skill from gstack for all web browsing. Never use `mcp__claude-in-chrome__*` tools.
+
+Available gstack skills:
+- `/office-hours`
+- `/plan-ceo-review`
+- `/plan-eng-review`
+- `/plan-design-review`
+- `/design-consultation`
+- `/design-shotgun`
+- `/design-html`
+- `/review`
+- `/ship`
+- `/land-and-deploy`
+- `/canary`
+- `/benchmark`
+- `/browse`
+- `/connect-chrome`
+- `/qa`
+- `/qa-only`
+- `/design-review`
+- `/setup-browser-cookies`
+- `/setup-deploy`
+- `/retro`
+- `/investigate`
+- `/document-release`
+- `/codex`
+- `/cso`
+- `/autoplan`
+- `/plan-devex-review`
+- `/devex-review`
+- `/careful`
+- `/freeze`
+- `/guard`
+- `/unfreeze`
+- `/gstack-upgrade`
+- `/learn`
