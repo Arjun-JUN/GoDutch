@@ -10,7 +10,7 @@ import { StatCard, Callout, Breath, IconBadge } from '../../src/slate/atoms';
 import { AppSurface, InteractiveSurface } from '../../src/slate/AppSurface';
 import { AppButton } from '../../src/slate/AppButton';
 import { api } from '../../src/api/client';
-import { colors } from '../../src/theme/tokens';
+import { colors, spacing } from '../../src/theme/tokens';
 
 interface Transaction {
   id: string;
@@ -74,12 +74,12 @@ export default function UpiHomeScreen() {
         <PageContent>
           <PageHero eyebrow="Money Transfer" title="UPI Pay" compact />
 
-          <Callout tone="info" style={{ marginBottom: 24 }}>
+          <Callout tone="info" style={{ marginBottom: spacing.lg }}>
             UPI payments open your installed UPI app (GPay, PhonePe, Paytm). Works only on real devices with a UPI app installed.
           </Callout>
 
           {/* Quick actions */}
-          <View style={{ flexDirection: 'row', gap: 12, marginBottom: 32 }}>
+          <View style={{ flexDirection: 'row', gap: spacing.s12, marginBottom: spacing.xl }}>
             {quickActions.map((action) =>
               action.primary ? (
                 <AppButton
@@ -110,27 +110,27 @@ export default function UpiHomeScreen() {
           </View>
 
           {/* Linked accounts */}
-          <Text variant="eyebrow" tone="muted" style={{ marginBottom: 12 }}>
+          <Text variant="eyebrow" tone="muted" style={{ marginBottom: spacing.s12 }}>
             LINKED ACCOUNTS ({accounts.length})
           </Text>
           {loading ? (
-            <ActivityIndicator color={colors.primary} style={{ marginBottom: 24 }} />
+            <ActivityIndicator color={colors.primary} style={{ marginBottom: spacing.lg }} />
           ) : accounts.length === 0 ? (
-            <AppSurface variant="solid" compact style={{ marginBottom: 24 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+            <AppSurface variant="solid" compact style={{ marginBottom: spacing.lg }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
                 <IconBadge icon={<CreditCard size={18} color={colors.mutedSubtle} strokeWidth={2} />} tone="soft" size="sm" />
                 <Text variant="label" tone="subtle">No accounts linked yet.</Text>
               </View>
             </AppSurface>
           ) : (
-            <View style={{ gap: 8, marginBottom: 24 }}>
+            <View style={{ gap: spacing.sm, marginBottom: spacing.lg }}>
               {accounts.map((acc) => (
                 <AppSurface key={acc.id} variant="solid" compact>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
                     <IconBadge icon={<CreditCard size={18} color={colors.primary} strokeWidth={2.2} />} tone="soft" size="sm" />
                     <View style={{ flex: 1 }}>
                       <Text variant="title" weight="semibold">{acc.bank_name}</Text>
-                      <Text variant="label" tone="subtle" style={{ marginTop: 2 }}>{acc.upi_id}</Text>
+                      <Text variant="label" tone="subtle" style={{ marginTop: spacing.xs }}>{acc.upi_id}</Text>
                     </View>
                   </View>
                 </AppSurface>
@@ -139,23 +139,23 @@ export default function UpiHomeScreen() {
           )}
 
           {/* Recent transactions */}
-          <Text variant="eyebrow" tone="muted" style={{ marginBottom: 12 }}>
+          <Text variant="eyebrow" tone="muted" style={{ marginBottom: spacing.s12 }}>
             RECENT TRANSACTIONS
           </Text>
           {loading ? (
             <ActivityIndicator color={colors.primary} />
           ) : transactions.length === 0 ? (
             <AppSurface variant="solid" compact>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
                 <IconBadge icon={<Clock size={18} color={colors.mutedSubtle} strokeWidth={2} />} tone="soft" size="sm" />
                 <Text variant="label" tone="subtle">No transactions yet.</Text>
               </View>
             </AppSurface>
           ) : (
-            <View style={{ gap: 8 }}>
+            <View style={{ gap: spacing.sm }}>
               {transactions.slice(0, 10).map((txn) => (
                 <AppSurface key={txn.id} variant="solid" compact>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
                     <IconBadge
                       icon={
                         txn.type === 'credit'
@@ -169,7 +169,7 @@ export default function UpiHomeScreen() {
                       <Text variant="title" weight="semibold" numberOfLines={1}>
                         {txn.description ?? 'UPI Transfer'}
                       </Text>
-                      <Text variant="label" tone="subtle" style={{ marginTop: 2 }}>
+                      <Text variant="label" tone="subtle" style={{ marginTop: spacing.xs }}>
                         {new Date(txn.created_at).toLocaleDateString()} · {txn.status}
                       </Text>
                     </View>

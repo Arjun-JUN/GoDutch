@@ -18,6 +18,7 @@ Open only the leaf you need. Each component has its own `README.md`.
 | `Header` | `mobile/src/slate/Header.tsx` | [header/](header/README.md) |
 | `AppBottomSheet` + `SheetHeader` | `mobile/src/slate/AppBottomSheet.tsx` | [bottom-sheet/](bottom-sheet/README.md) |
 | `ExpenseCard` | `mobile/src/slate/ExpenseCard.tsx` | [expense-card/](expense-card/README.md) |
+| `Toast` | `mobile/src/slate/Toast.tsx` | [toast/](toast/README.md) |
 | `Text` | `mobile/src/slate/Text.tsx` | [text/](text/README.md) |
 | `IconBadge`, `MemberBadge`, `StatCard`, `EmptyState`, `Callout`, `Avatar`, `Breath` | `mobile/src/slate/atoms.tsx` | [atoms/](atoms/README.md) |
 
@@ -39,6 +40,7 @@ Open only the leaf you need. Each component has its own `README.md`.
 | Icons inventory | [icons.md](icons.md) |
 | Badges, progress, skeleton | [indicators.md](indicators.md) |
 | Press / focus / disabled / loading states | [interaction-states.md](interaction-states.md) |
+| Affordances, signifiers, grouping, active state | [affordances-and-signifiers.md](affordances-and-signifiers.md) |
 | Layout (AppShell, Breath, PageContent) | [layout.md](layout.md) |
 | Data visualization | [data-visualization/](data-visualization/README.md) |
 | Date selection | [date-selection.md](date-selection.md) |

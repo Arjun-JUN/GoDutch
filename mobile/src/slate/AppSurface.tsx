@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, ViewProps, Pressable, PressableProps, Platform } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { colors, shadows } from '../theme/tokens';
+import { colors, radii, shadows, spacing } from '../theme/tokens';
 import { cn } from './cn';
 
 type Variant = 'glass' | 'soft' | 'solid' | 'interactive' | 'list';
@@ -31,7 +31,7 @@ export const AppSurface: React.FC<AppSurfaceProps> = ({
   children,
   ...rest
 }) => {
-  const radius = compact || variant === 'list' ? 20 : 28;
+  const radius = compact || variant === 'list' ? radii.lg : radii.xl;
 
   if (variant === 'glass') {
     return (
@@ -52,7 +52,7 @@ export const AppSurface: React.FC<AppSurfaceProps> = ({
           intensity={Platform.OS === 'android' ? 30 : 40}
           tint="light"
           experimentalBlurMethod="dimezisBlurView"
-          style={{ padding: compact ? 16 : 24 }}
+          style={{ padding: compact ? spacing.md : spacing.lg }}
         >
           {children}
         </BlurView>
@@ -72,7 +72,7 @@ export const AppSurface: React.FC<AppSurfaceProps> = ({
       style={[
         {
           borderRadius: radius,
-          padding: compact ? 16 : 24,
+          padding: compact ? spacing.md : spacing.lg,
         },
         bgStyle,
         style,
@@ -105,13 +105,13 @@ export const InteractiveSurface: React.FC<InteractiveSurfaceProps> = ({
   style,
   ...rest
 }) => {
-  const radius = compact ? 20 : 28;
+  const radius = compact ? radii.lg : radii.xl;
   return (
     <Pressable
       style={({ pressed }) => [
         {
           borderRadius: radius,
-          padding: compact ? 16 : 24,
+          padding: compact ? spacing.md : spacing.lg,
           backgroundColor: pressed
             ? colors.soft
             : variant === 'soft'

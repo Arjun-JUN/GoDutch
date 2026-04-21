@@ -13,7 +13,7 @@ import { Plus, Trash, ChevronDown, ChevronUp, Check, Zap } from 'lucide-react-na
 import { LineItem, Participant } from '../../utils/splitting';
 import { api } from '../../api/client';
 import { Text } from '../../slate/Text';
-import { colors } from '../../theme/tokens';
+import { colors, radii, spacing } from '../../theme/tokens';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -127,19 +127,17 @@ export const ItemSplitSection: React.FC<ItemSplitSectionProps> = ({
           flexDirection: 'row',
           alignItems: 'center',
           backgroundColor: colors.soft,
-          borderRadius: 16,
-          padding: 12,
-          marginBottom: 20,
-          borderWidth: 1,
-          borderColor: colors.softStrong,
+          borderRadius: radii.md,
+          padding: spacing.s12,
+          marginBottom: spacing.s20,
         }}
       >
         <View
           style={{
             backgroundColor: colors.softStrong,
-            padding: 8,
-            borderRadius: 999,
-            marginRight: 10,
+            padding: spacing.sm,
+            borderRadius: radii.pill,
+            marginRight: spacing.s12,
           }}
         >
           <Zap size={16} color={colors.primary} fill={colors.primary} />
@@ -173,21 +171,19 @@ export const ItemSplitSection: React.FC<ItemSplitSectionProps> = ({
               key={idx}
               style={{
                 backgroundColor: colors.surfaceSolid,
-                borderRadius: 16,
-                marginBottom: 10,
+                borderRadius: radii.md,
+                marginBottom: spacing.s12,
                 overflow: 'hidden',
-                borderWidth: 1,
-                borderColor: colors.border,
               }}
             >
-              <View style={{ flexDirection: 'row', alignItems: 'center', padding: 14 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', padding: spacing.md }}>
                 <TextInput
                   style={{
                     flex: 1,
                     color: colors.foreground,
                     fontSize: 15,
                     fontFamily: 'Manrope_600SemiBold',
-                    marginRight: 8,
+                    marginRight: spacing.sm,
                   }}
                   placeholder="Item name"
                   placeholderTextColor={colors.mutedSubtle}
@@ -199,9 +195,9 @@ export const ItemSplitSection: React.FC<ItemSplitSectionProps> = ({
                     flexDirection: 'row',
                     alignItems: 'center',
                     backgroundColor: colors.soft,
-                    borderRadius: 10,
-                    paddingHorizontal: 8,
-                    paddingVertical: 4,
+                    borderRadius: radii.md,
+                    paddingHorizontal: spacing.sm,
+                    paddingVertical: spacing.xs,
                   }}
                 >
                   <Text variant="label" tone="subtle">{currencySymbol}</Text>
@@ -221,13 +217,13 @@ export const ItemSplitSection: React.FC<ItemSplitSectionProps> = ({
                   />
                 </View>
                 <TouchableOpacity
-                  style={{ marginLeft: 10 }}
+                  style={{ marginLeft: spacing.s12 }}
                   onPress={() => removeItem(idx)}
                 >
                   <Trash size={18} color={colors.danger} />
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={{ marginLeft: 8 }}
+                  style={{ marginLeft: spacing.sm }}
                   onPress={() => {
                     LayoutAnimation.configureNext(
                       LayoutAnimation.Presets.easeInEaseOut
@@ -246,10 +242,8 @@ export const ItemSplitSection: React.FC<ItemSplitSectionProps> = ({
               {isExpanded && (
                 <View
                   style={{
-                    padding: 14,
+                    padding: spacing.md,
                     paddingTop: 0,
-                    borderTopWidth: 1,
-                    borderTopColor: colors.border,
                   }}
                 >
                   {/* Quantity row */}
@@ -258,8 +252,8 @@ export const ItemSplitSection: React.FC<ItemSplitSectionProps> = ({
                       flexDirection: 'row',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      marginTop: 12,
-                      marginBottom: 12,
+                      marginTop: spacing.s12,
+                      marginBottom: spacing.s12,
                     }}
                   >
                     <Text variant="label" tone="muted">Quantity</Text>
@@ -268,11 +262,11 @@ export const ItemSplitSection: React.FC<ItemSplitSectionProps> = ({
                         flexDirection: 'row',
                         alignItems: 'center',
                         backgroundColor: colors.soft,
-                        borderRadius: 10,
+                        borderRadius: radii.md,
                       }}
                     >
                       <TouchableOpacity
-                        style={{ padding: 8 }}
+                        style={{ padding: spacing.sm }}
                         onPress={() =>
                           updateItem(
                             idx,
@@ -296,7 +290,7 @@ export const ItemSplitSection: React.FC<ItemSplitSectionProps> = ({
                         onChangeText={(val) => updateItem(idx, 'quantity', val)}
                       />
                       <TouchableOpacity
-                        style={{ padding: 8 }}
+                        style={{ padding: spacing.sm }}
                         onPress={() =>
                           updateItem(
                             idx,
@@ -310,8 +304,8 @@ export const ItemSplitSection: React.FC<ItemSplitSectionProps> = ({
                     </View>
                   </View>
 
-                  <Text variant="label" tone="muted" style={{ marginBottom: 8 }}>Split with</Text>
-                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                  <Text variant="label" tone="muted" style={{ marginBottom: spacing.sm }}>Split with</Text>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
                     {members.map((member) => {
                       const isSelected = item.assigned_to?.includes(member.id);
                       return (
@@ -321,11 +315,11 @@ export const ItemSplitSection: React.FC<ItemSplitSectionProps> = ({
                           style={{
                             flexDirection: 'row',
                             alignItems: 'center',
-                            paddingHorizontal: 12,
-                            paddingVertical: 6,
-                            borderRadius: 999,
+                            paddingHorizontal: spacing.s12,
+                            paddingVertical: spacing.sm,
+                            borderRadius: radii.pill,
                             backgroundColor: isSelected ? colors.primary : colors.soft,
-                            gap: 4,
+                            gap: spacing.xs,
                           }}
                         >
                           <Text
@@ -354,13 +348,11 @@ export const ItemSplitSection: React.FC<ItemSplitSectionProps> = ({
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: 16,
-            borderRadius: 16,
-            borderWidth: 1.5,
-            borderStyle: 'dashed',
-            borderColor: colors.softStrong,
-            marginBottom: 16,
-            gap: 8,
+            padding: spacing.md,
+            borderRadius: radii.md,
+            backgroundColor: colors.soft,
+            marginBottom: spacing.md,
+            gap: spacing.sm,
           }}
         >
           <Plus size={18} color={colors.mutedSubtle} />
@@ -371,13 +363,13 @@ export const ItemSplitSection: React.FC<ItemSplitSectionProps> = ({
       {/* Running total bar */}
       <View
         style={{
-          padding: 16,
-          borderRadius: 16,
+          padding: spacing.md,
+          borderRadius: radii.md,
           backgroundColor: Math.abs(diff) < 0.01 ? colors.successSoft : colors.soft,
-          marginTop: 8,
+          marginTop: spacing.sm,
         }}
       >
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacing.xs }}>
           <Text variant="label" tone="muted">Items total</Text>
           <Text variant="label" weight="bold">
             {currencySymbol}{itemsTotal.toFixed(2)}
@@ -395,7 +387,7 @@ export const ItemSplitSection: React.FC<ItemSplitSectionProps> = ({
             </Text>
           </View>
         ) : (
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
             <Check size={13} color={colors.success} strokeWidth={3} />
             <Text variant="label" style={{ color: colors.success }}>Matches expense total</Text>
           </View>

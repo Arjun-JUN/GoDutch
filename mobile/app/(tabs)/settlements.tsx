@@ -9,7 +9,7 @@ import { MemberBadge, EmptyState, Avatar, Breath, StatCard, Callout } from '../.
 import { AppSurface, InteractiveSurface } from '../../src/slate/AppSurface';
 import { useGroupsStore, useSettlementsStore } from '../../src/stores';
 import { useAuth } from '../../src/contexts/AuthContext';
-import { colors } from '../../src/theme/tokens';
+import { colors, radii, spacing } from '../../src/theme/tokens';
 import { getCurrencySymbol } from '../../src/utils/constants';
 import type { SettlementItem } from '../../src/stores/types';
 
@@ -99,7 +99,7 @@ export default function SettlementsScreen() {
           <PageHero eyebrow="Balance Sheet" title="Settlements" compact />
 
           {/* Summary row */}
-          <View style={{ flexDirection: 'row', gap: 12, marginBottom: 24 }}>
+          <View style={{ flexDirection: 'row', gap: spacing.s12, marginBottom: spacing.lg }}>
             <StatCard
               label="You owe"
               value={`${sym}${totalOwe.toFixed(2)}`}
@@ -117,8 +117,8 @@ export default function SettlementsScreen() {
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              style={{ marginBottom: 24 }}
-              contentContainerStyle={{ gap: 8, paddingRight: 8 }}
+              style={{ marginBottom: spacing.lg }}
+              contentContainerStyle={{ gap: spacing.sm, paddingRight: spacing.sm }}
             >
               <MemberBadge
                 active={selectedGroupId === null}
@@ -145,18 +145,18 @@ export default function SettlementsScreen() {
               description="No pending balances across your groups. Nice work."
             />
           ) : (
-            <View style={{ gap: 24 }}>
+            <View style={{ gap: spacing.lg }}>
               {/* You owe */}
               {youOwe.length > 0 && (
                 <View>
                   <Text
                     variant="eyebrow"
                     tone="muted"
-                    style={{ marginBottom: 12 }}
+                    style={{ marginBottom: spacing.s12 }}
                   >
                     YOU OWE
                   </Text>
-                  <View style={{ gap: 10 }}>
+                  <View style={{ gap: spacing.s12 }}>
                     {youOwe.map((s, i) => (
                       <SettlementRow
                         key={i}
@@ -175,11 +175,11 @@ export default function SettlementsScreen() {
                   <Text
                     variant="eyebrow"
                     tone="muted"
-                    style={{ marginBottom: 12 }}
+                    style={{ marginBottom: spacing.s12 }}
                   >
                     YOU'RE OWED
                   </Text>
-                  <View style={{ gap: 10 }}>
+                  <View style={{ gap: spacing.s12 }}>
                     {youreOwed.map((s, i) => (
                       <SettlementRow
                         key={i}
@@ -199,11 +199,11 @@ export default function SettlementsScreen() {
                   <Text
                     variant="eyebrow"
                     tone="muted"
-                    style={{ marginBottom: 12 }}
+                    style={{ marginBottom: spacing.s12 }}
                   >
                     BETWEEN OTHERS
                   </Text>
-                  <View style={{ gap: 10 }}>
+                  <View style={{ gap: spacing.s12 }}>
                     {settlements
                       .filter(
                         (s) =>
@@ -240,18 +240,18 @@ function SettlementRow({ settlement, direction, onPayPress }: SettlementRowProps
 
   return (
     <AppSurface variant="solid" compact>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.s12 }}>
         <Avatar name={isOwe ? settlement.to_user_name : settlement.from_user_name} size="md" />
         <View style={{ flex: 1 }}>
           <Text variant="title" weight="bold" numberOfLines={1}>
             {isOwe ? settlement.to_user_name : settlement.from_user_name}
           </Text>
-          <Text variant="label" tone="subtle" style={{ marginTop: 2 }}>
+          <Text variant="label" tone="subtle" style={{ marginTop: spacing.xs }}>
             {settlement.groupName}
           </Text>
         </View>
-        <View style={{ alignItems: 'flex-end', gap: 4 }}>
-          <Text variant="title" weight="extrabold" style={{ color: amountColor }}>
+        <View style={{ alignItems: 'flex-end', gap: spacing.xs }}>
+          <Text variant="amount" style={{ color: amountColor }}>
             {sym}{settlement.amount.toFixed(2)}
           </Text>
           {isOwe && onPayPress ? (
@@ -259,13 +259,13 @@ function SettlementRow({ settlement, direction, onPayPress }: SettlementRowProps
               compact
               onPress={onPayPress}
               style={{
-                paddingHorizontal: 12,
-                paddingVertical: 5,
-                borderRadius: 999,
+                paddingHorizontal: spacing.s12,
+                paddingVertical: spacing.xs,
+                borderRadius: radii.pill,
                 backgroundColor: colors.soft,
                 flexDirection: 'row',
                 alignItems: 'center',
-                gap: 4,
+                gap: spacing.xs,
               }}
             >
               <Text variant="label" weight="semibold" style={{ color: colors.primary }}>

@@ -73,9 +73,16 @@ export const shadows = {
 export const spacing = {
   xs: 4,
   sm: 8,
+  // Intermediate rung — matches Tailwind `gap-3`. Use for row-level gaps (expense list,
+  // dashboard quick actions). Preferred over sm↔md when sm is too tight and md too loose.
+  s12: 12,
   md: 16,
+  // Intermediate rung between md and lg. Use for stat card padding and hero-action gaps.
+  s20: 20,
   lg: 24,
   xl: 32,
+  // Intermediate rung between xl and 2xl. Use for page bottom padding under content.
+  s40: 40,
   '2xl': 48,
   '3xl': 64,
   // "Generous breath" per DESIGN_RULES/user-interface/guides/spacing-and-rhythm.md
@@ -99,7 +106,15 @@ export const typography = {
   titleXl: { fontSize: 28, lineHeight: 32, letterSpacing: -0.5 },
   titleLg: { fontSize: 22, lineHeight: 28, letterSpacing: -0.3 },
   title: { fontSize: 18, lineHeight: 24, letterSpacing: -0.2 },
+  // Row-level merchant / list title between body and title.
+  titleSm: { fontSize: 17, lineHeight: 22, letterSpacing: -0.2 },
   body: { fontSize: 15, lineHeight: 22, letterSpacing: -0.1 },
   label: { fontSize: 13, lineHeight: 18, letterSpacing: 0 },
   eyebrow: { fontSize: 11, lineHeight: 14, letterSpacing: 2.4 },
+  // Micro-eyebrow for compact row labels ("YOUR SHARE" in ExpenseCard).
+  eyebrowSm: { fontSize: 10, lineHeight: 14, letterSpacing: 1.5 },
+  // Inline amount display (expense rows, settlement rows).
+  amount: { fontSize: 24, lineHeight: 28, letterSpacing: -0.8 },
+  // Stat-card amount display (dashboard balance, totals).
+  amountLg: { fontSize: 30, lineHeight: 34, letterSpacing: -1.0 },
 };

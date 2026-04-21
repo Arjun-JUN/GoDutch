@@ -1,4 +1,4 @@
-import * as SecureStore from 'expo-secure-store';
+import * as SecureStore from '../utils/secureStore';
 import { Platform } from 'react-native';
 
 /**
@@ -16,6 +16,58 @@ if (__DEV__ && API_BASE.includes('localhost')) {
 }
 
 const getAuthToken = async () => await SecureStore.getItemAsync('token');
+
+/**
+ * Extract a human-readable error message from a FastAPI response body.
+ * FastAPI returns `detail` as a string for HTTPException and as an array of
+ * `{loc, msg, type}` objects for validation errors — both must be flattened
+ * to avoid the dreaded `[object Object]` in the UI.
+ */
+const extractErrorMessage = (data: any, status: number): string => {
+  const detail = data?.detail;
+
+  if (typeof detail === 'string' && detail.trim().length > 0) {
+    return detail;
+  }
+
+  if (Array.isArray(detail)) {
+    const parts = detail
+      .map((item) => {
+        if (typeof item === 'string') return item;
+        if (item && typeof item === 'object') {
+          const loc = Array.isArray(item.loc) ? item.loc.filter((s: any) => s !== 'body').join('.') : '';
+          const msg = item.msg || item.message || '';
+          return loc ? `${loc}: ${msg}` : msg;
+        }
+        return '';
+      })
+      .filter(Boolean);
+    if (parts.length) return parts.join('; ');
+  }
+
+  if (detail && typeof detail === 'object') {
+    if (typeof detail.message === 'string') return detail.message;
+    try {
+      return JSON.stringify(detail);
+    } catch {
+      /* fall through */
+    }
+  }
+
+  if (typeof data?.message === 'string' && data.message.trim().length > 0) {
+    return data.message;
+  }
+
+  return `API Request Failed (${status})`;
+};
+
+const safeStringify = (value: unknown): string => {
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
+};
 
 /**
  * Global 401 handler — registered by AuthProvider at mount.
@@ -82,7 +134,7 @@ const request = async (endpoint: string, options: any = {}) => {
     const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
-      const error: any = new Error(data.detail || data.message || 'API Request Failed');
+      const error: any = new Error(extractErrorMessage(data, response.status));
       error.status = response.status;
       error.data = data;
       throw error;
@@ -100,7 +152,10 @@ const request = async (endpoint: string, options: any = {}) => {
       console.error(`API Error [${method} ${endpoint}]:`, networkError.message);
       throw networkError;
     }
-    console.error(`API Error [${method} ${endpoint}]:`, error);
+    const details = error?.data !== undefined ? ` data=${safeStringify(error.data)}` : '';
+    console.error(
+      `API Error [${method} ${endpoint}]: ${error?.message || error} (status=${error?.status ?? 'n/a'})${details}`
+    );
     throw error;
   }
 };

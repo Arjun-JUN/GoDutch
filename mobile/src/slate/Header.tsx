@@ -2,7 +2,7 @@ import React from 'react';
 import { View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ArrowLeft } from 'lucide-react-native';
-import { colors } from '../theme/tokens';
+import { colors, spacing } from '../theme/tokens';
 import { AppButton } from './AppButton';
 import { Text } from './Text';
 
@@ -37,9 +37,9 @@ export const Header: React.FC<HeaderProps> = ({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 24,
-        paddingTop: 8,
-        paddingBottom: 16,
+        paddingHorizontal: spacing.lg,
+        paddingTop: spacing.sm,
+        paddingBottom: spacing.md,
       }}
     >
       <View style={{ width: 44 }}>

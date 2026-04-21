@@ -15,7 +15,7 @@ import { AppButton } from '../../src/slate/AppButton';
 import { AppInput, Field } from '../../src/slate/AppInput';
 import { Callout, Breath } from '../../src/slate/atoms';
 import { api } from '../../src/api/client';
-import { colors } from '../../src/theme/tokens';
+import { colors, spacing } from '../../src/theme/tokens';
 
 export default function SendMoneyScreen() {
   const [upiId, setUpiId] = useState('');
@@ -82,7 +82,7 @@ export default function SendMoneyScreen() {
         <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <PageContent>
             {error && (
-              <Callout tone="danger" style={{ marginBottom: 20 }}>{error}</Callout>
+              <Callout tone="danger" style={{ marginBottom: spacing.s20 }}>{error}</Callout>
             )}
 
             <View style={{ gap: 16, marginBottom: 32 }}>

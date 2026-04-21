@@ -8,7 +8,7 @@ import {
   BottomSheetBackdropProps,
   BottomSheetModalProps,
 } from '@gorhom/bottom-sheet';
-import { colors } from '../theme/tokens';
+import { colors, radii, spacing } from '../theme/tokens';
 import { Text } from './Text';
 import { AppButton } from './AppButton';
 import { X } from 'lucide-react-native';
@@ -66,13 +66,13 @@ export const AppBottomSheet = forwardRef<BottomSheetModal, AppBottomSheetProps>(
         backdropComponent={renderBackdrop}
         backgroundStyle={{
           backgroundColor: colors.surfaceSolid,
-          borderTopLeftRadius: 32,
-          borderTopRightRadius: 32,
+          borderTopLeftRadius: radii['2xl'],
+          borderTopRightRadius: radii['2xl'],
         }}
         handleIndicatorStyle={{
           backgroundColor: colors.mutedSubtle,
           width: 44,
-          height: 4,
+          height: spacing.xs,
         }}
         enableDynamicSizing={false}
         keyboardBehavior={Platform.OS === 'ios' ? 'interactive' : 'extend'}
@@ -83,16 +83,16 @@ export const AppBottomSheet = forwardRef<BottomSheetModal, AppBottomSheetProps>(
           // @ts-expect-error contentContainerStyle exists on scroll view only
           contentContainerStyle={
             scrollable
-              ? { padding: 24, paddingBottom: 40 }
+              ? { padding: spacing.lg, paddingBottom: spacing.s40 }
               : undefined
           }
-          style={scrollable ? undefined : { flex: 1, padding: 24 }}
+          style={scrollable ? undefined : { flex: 1, padding: spacing.lg }}
         >
           {title ? (
-            <View style={{ marginBottom: 20 }}>
+            <View style={{ marginBottom: spacing.s20 }}>
               <Text variant="titleLg">{title}</Text>
               {description ? (
-                <Text variant="body" tone="muted" className="mt-1">
+                <Text variant="body" tone="muted" style={{ marginTop: spacing.xs }}>
                   {description}
                 </Text>
               ) : null}
@@ -118,11 +118,11 @@ export const SheetHeader: React.FC<SheetHeaderProps> = ({ title, onClose, action
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      marginBottom: 16,
+      marginBottom: spacing.md,
     }}
   >
     <Text variant="titleLg">{title}</Text>
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
       {action}
       {onClose ? (
         <AppButton

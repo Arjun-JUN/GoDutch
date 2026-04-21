@@ -3,13 +3,18 @@ import { Text as RNText, TextProps, StyleSheet } from 'react-native';
 import { cn } from './cn';
 
 type Variant =
+  | 'displayLg'
   | 'display'
   | 'titleXl'
   | 'titleLg'
   | 'title'
+  | 'titleSm'
   | 'body'
   | 'label'
-  | 'eyebrow';
+  | 'eyebrow'
+  | 'eyebrowSm'
+  | 'amount'
+  | 'amountLg';
 
 type Weight = 'regular' | 'medium' | 'semibold' | 'bold' | 'extrabold';
 
@@ -29,13 +34,18 @@ const fontFor = (weight: Weight): string => {
 };
 
 const variantStyles = StyleSheet.create({
+  displayLg: { fontSize: 44, lineHeight: 48, letterSpacing: -1.2 },
   display: { fontSize: 36, lineHeight: 40, letterSpacing: -1 },
   titleXl: { fontSize: 28, lineHeight: 34, letterSpacing: -0.5 },
   titleLg: { fontSize: 22, lineHeight: 28, letterSpacing: -0.3 },
   title: { fontSize: 18, lineHeight: 24, letterSpacing: -0.2 },
+  titleSm: { fontSize: 17, lineHeight: 22, letterSpacing: -0.2 },
   body: { fontSize: 15, lineHeight: 22, letterSpacing: -0.1 },
   label: { fontSize: 13, lineHeight: 18 },
   eyebrow: { fontSize: 11, lineHeight: 14, letterSpacing: 2.4, textTransform: 'uppercase' },
+  eyebrowSm: { fontSize: 10, lineHeight: 14, letterSpacing: 1.5, textTransform: 'uppercase' },
+  amount: { fontSize: 24, lineHeight: 28, letterSpacing: -0.8 },
+  amountLg: { fontSize: 30, lineHeight: 34, letterSpacing: -1 },
 });
 
 interface SlateTextProps extends TextProps {
@@ -70,11 +80,16 @@ export const Text: React.FC<SlateTextProps> = ({
   // Default weight per variant (matches editorial hierarchy).
   const resolvedWeight: Weight =
     weight ??
-    (variant === 'display' || variant === 'titleXl' || variant === 'titleLg'
+    (variant === 'displayLg' ||
+    variant === 'display' ||
+    variant === 'titleXl' ||
+    variant === 'titleLg' ||
+    variant === 'amount' ||
+    variant === 'amountLg'
       ? 'extrabold'
-      : variant === 'title'
+      : variant === 'title' || variant === 'titleSm'
       ? 'bold'
-      : variant === 'eyebrow'
+      : variant === 'eyebrow' || variant === 'eyebrowSm'
       ? 'bold'
       : variant === 'label'
       ? 'semibold'

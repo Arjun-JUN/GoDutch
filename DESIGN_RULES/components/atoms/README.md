@@ -54,12 +54,18 @@ Pill tag for displaying group members. Can be active (selected) or pressable.
 | `active` | `boolean` | `false` |
 | `onPress` | `() => void` | — |
 
+**Active state honors the non-color signifier rule.** When `active` is true, the badge renders a check-mark icon *and* shifts its label from semibold → extrabold, in addition to the primary background fill. Colorblind users and users in glare still read the selected state clearly.
+
+**Press feedback.** Pressable badges run a scale-spring (0.96) on press and fire `Haptics.selectionAsync()` — no dead taps. Respects OS reduced-motion.
+
+**Accessibility.** Pressable variants announce `role="button"`. Active variants announce `accessibilityState.selected: true`. Non-pressable variants announce `role="text"`.
+
 ```tsx
 <MemberBadge active>Arjun</MemberBadge>
 <MemberBadge onPress={() => toggleMember(m.id)}>{m.name}</MemberBadge>
 
 {/* Member selection row */}
-<View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+<View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
   {members.map((m) => (
     <MemberBadge key={m.id} active={selected.includes(m.id)} onPress={() => toggle(m.id)}>
       {m.name}

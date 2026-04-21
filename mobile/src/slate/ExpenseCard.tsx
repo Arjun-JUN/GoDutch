@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Pressable } from 'react-native';
 import { Receipt } from 'lucide-react-native';
-import { colors, shadows } from '../theme/tokens';
+import { colors, radii, shadows, spacing } from '../theme/tokens';
 import { Text } from './Text';
 import { getCurrencySymbol } from '../utils/constants';
 
@@ -27,6 +27,8 @@ interface ExpenseCardProps {
 /**
  * Mirrors the web ExpenseCard: rounded-square soft icon tile on the left,
  * two-line merchant + date in the center, right-aligned "Rs / amount / eyebrow".
+ *
+ * Uses Text variants for all typography — no inline fontSize.
  */
 export const ExpenseCard: React.FC<ExpenseCardProps> = ({
   expense,
@@ -46,42 +48,41 @@ export const ExpenseCard: React.FC<ExpenseCardProps> = ({
   return (
     <Pressable
       onPress={onPress}
+      accessibilityRole="button"
       style={({ pressed }) => ({
         flexDirection: 'row',
         alignItems: 'stretch',
-        gap: 12,
-        padding: 16,
-        borderRadius: 32,
+        gap: spacing.s12,
+        padding: spacing.md,
+        borderRadius: radii['2xl'],
         backgroundColor: pressed ? colors.soft : colors.surfaceSolid,
         ...shadows.cardSm,
       })}
     >
       {/* Left: icon tile + title column */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1, minWidth: 0 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, flex: 1, minWidth: 0 }}>
         <View
           style={{
             width: 56,
             height: 56,
-            borderRadius: 16,
-            backgroundColor: '#e9efee',
+            borderRadius: radii.md + spacing.xs,
+            backgroundColor: colors.softHighest,
             alignItems: 'center',
             justifyContent: 'center',
           }}
         >
           {icon ?? <Receipt size={24} color={colors.foreground} strokeWidth={2} />}
         </View>
-        <View style={{ flex: 1, minWidth: 0, paddingRight: 8 }}>
-          <Text
-            weight="extrabold"
-            numberOfLines={2}
-            style={{ fontSize: 17, lineHeight: 20, letterSpacing: -0.3 }}
-          >
+        <View style={{ flex: 1, minWidth: 0, paddingRight: spacing.sm }}>
+          <Text variant="titleSm" weight="extrabold" numberOfLines={2}>
             {title}
           </Text>
           {date ? (
             <Text
+              variant="label"
               weight="semibold"
-              style={{ marginTop: 6, fontSize: 13, color: colors.foreground, opacity: 0.6 }}
+              tone="subtle"
+              style={{ marginTop: spacing.xs }}
             >
               {date}
             </Text>
@@ -94,45 +95,29 @@ export const ExpenseCard: React.FC<ExpenseCardProps> = ({
         style={{
           alignItems: 'flex-end',
           justifyContent: 'center',
-          paddingLeft: 8,
+          paddingLeft: spacing.sm,
           flexShrink: 0,
         }}
       >
         <Text
+          variant="label"
           weight="extrabold"
-          style={{
-            fontSize: 13,
-            lineHeight: 14,
-            color: colors.foreground,
-            opacity: 0.8,
-            marginBottom: 4,
-          }}
+          style={{ color: colors.foreground, opacity: 0.8, marginBottom: spacing.xs }}
         >
           {sym}
         </Text>
-        <Text
-          weight="extrabold"
-          style={{
-            fontSize: 24,
-            lineHeight: 24,
-            letterSpacing: -1,
-            color: colors.foreground,
-          }}
-        >
+        <Text variant="amount" style={{ color: colors.foreground }}>
           {displayAmount.toFixed(2)}
         </Text>
         <Text
+          variant="eyebrowSm"
           weight="bold"
           style={{
-            marginTop: 8,
-            fontSize: 10,
-            lineHeight: 12,
-            letterSpacing: 1.5,
+            marginTop: spacing.sm,
             color: colors.foreground,
             opacity: 0.5,
             textAlign: 'right',
             maxWidth: 64,
-            textTransform: 'uppercase',
           }}
         >
           {amountLabel ?? 'Your share'}

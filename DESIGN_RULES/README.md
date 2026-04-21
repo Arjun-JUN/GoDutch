@@ -4,12 +4,19 @@
 
 **Core philosophy:** "The Mindful Ledger." Treat expense splitting as a calm, transparent dialogue, not an aggressive alert-driven chore. Achieve separation through tonal shifts and generous space — never 1px borders.
 
+## Start here
+
+**[user-interface/guides/foundational-principles.md](user-interface/guides/foundational-principles.md)** — the four pillars (affordances, hierarchy, feedback, execution) and the pre-ship checklist every frontend change must pass. Read this before anything else.
+
 ## How to use this index
 
 Pull only the leaf you need. When working on a specific component or pattern, open only that file:
 
 | Task | Open |
 |------|------|
+| **Shipping any frontend change** | **[user-interface/guides/foundational-principles.md](user-interface/guides/foundational-principles.md)** |
+| Affordances, signifiers, grouping, active/disabled states | [components/affordances-and-signifiers.md](components/affordances-and-signifiers.md) |
+| Text over imagery (gradients, blur) | [user-interface/guides/readability-overlays.md](user-interface/guides/readability-overlays.md) |
 | Building or styling a button | [components/buttons/](components/buttons/README.md) |
 | Adding a bottom sheet / modal | [components/bottom-sheet/](components/bottom-sheet/README.md) |
 | Displaying text | [components/text/](components/text/README.md) |

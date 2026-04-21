@@ -7,6 +7,7 @@ export { Header } from './Header';
 export { PageHero } from './PageHero';
 export { Text } from './Text';
 export { ExpenseCard } from './ExpenseCard';
+export { Toast } from './Toast';
 export {
   IconBadge,
   MemberBadge,

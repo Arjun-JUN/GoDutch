@@ -9,7 +9,7 @@ import { AppInput, Field } from '../src/slate/AppInput';
 import { AppSurface } from '../src/slate/AppSurface';
 import { Callout } from '../src/slate/atoms';
 import { useAuth } from '../src/contexts/AuthContext';
-import { colors } from '../src/theme/tokens';
+import { colors, radii, spacing } from '../src/theme/tokens';
 
 export default function AuthScreen() {
   const [isLogin, setIsLogin] = useState(true);
@@ -56,11 +56,11 @@ export default function AuthScreen() {
         >
           <PageContent style={{ flex: 1, justifyContent: 'center' }}>
             {/* Eyebrow + hero */}
-            <View style={{ marginTop: 40, marginBottom: 40 }}>
-              <Text variant="eyebrow" tone="primary" style={{ marginBottom: 12 }}>
+            <View style={{ marginTop: spacing.s40, marginBottom: spacing.s40 }}>
+              <Text variant="eyebrow" tone="primary" style={{ marginBottom: spacing.s12 }}>
                 {isLogin ? 'WELCOME BACK' : 'JOIN THE COLLECTIVE'}
               </Text>
-              <Text variant="display" weight="extrabold" style={{ marginBottom: 10 }}>
+              <Text variant="display" weight="extrabold" style={{ marginBottom: spacing.s12 }}>
                 Split Bills,{'\n'}
                 <Text variant="display" weight="extrabold" style={{ color: colors.primary }}>
                   Not Friendships
@@ -78,9 +78,9 @@ export default function AuthScreen() {
               style={{
                 flexDirection: 'row',
                 backgroundColor: colors.soft,
-                borderRadius: 999,
-                padding: 4,
-                marginBottom: 28,
+                borderRadius: radii.pill,
+                padding: spacing.xs,
+                marginBottom: spacing.lg,
               }}
             >
               {(['Login', 'Sign Up'] as const).map((label) => {
@@ -109,14 +109,14 @@ export default function AuthScreen() {
             </View>
 
             {/* Form */}
-            <AppSurface variant="solid" style={{ marginBottom: 24 }}>
+            <AppSurface variant="solid" style={{ marginBottom: spacing.lg }}>
               {error && (
-                <Callout tone="danger" style={{ marginBottom: 20 }}>
+                <Callout tone="danger" style={{ marginBottom: spacing.s20 }}>
                   {error}
                 </Callout>
               )}
 
-              <View style={{ gap: 16 }}>
+              <View style={{ gap: spacing.md }}>
                 {!isLogin && (
                   <Field label="Full Name">
                     <AppInput
@@ -156,7 +156,7 @@ export default function AuthScreen() {
                   onPress={handleSubmit}
                   loading={loading}
                   haptic
-                  style={{ marginTop: 8 }}
+                  style={{ marginTop: spacing.sm }}
                 >
                   {isLogin ? 'Log In' : 'Create Account'}
                 </AppButton>
@@ -164,7 +164,7 @@ export default function AuthScreen() {
             </AppSurface>
 
             {/* Footer toggle */}
-            <View style={{ alignItems: 'center', paddingBottom: 48 }}>
+            <View style={{ alignItems: 'center', paddingBottom: spacing['2xl'] }}>
               <AppButton
                 variant="ghost"
                 size="sm"

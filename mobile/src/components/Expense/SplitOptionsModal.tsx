@@ -19,7 +19,7 @@ import { ItemSplitSection } from './ItemSplitSection';
 import { Text } from '../../slate/Text';
 import { AppButton } from '../../slate/AppButton';
 import { Avatar } from '../../slate/atoms';
-import { colors } from '../../theme/tokens';
+import { colors, radii, spacing } from '../../theme/tokens';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -125,8 +125,8 @@ export const SplitOptionsModal: React.FC<SplitOptionsModalProps> = ({
       {/* Header */}
       <View
         style={{
-          paddingHorizontal: 24,
-          paddingVertical: 16,
+          paddingHorizontal: spacing.lg,
+          paddingVertical: spacing.md,
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -134,7 +134,7 @@ export const SplitOptionsModal: React.FC<SplitOptionsModalProps> = ({
       >
         <View>
           <Text variant="titleLg" weight="extrabold">Split options</Text>
-          <Text variant="label" tone="subtle" style={{ marginTop: 2 }}>
+          <Text variant="label" tone="subtle" style={{ marginTop: spacing.xs }}>
             {selectedCount} of {members.length} people
           </Text>
         </View>
@@ -147,12 +147,12 @@ export const SplitOptionsModal: React.FC<SplitOptionsModalProps> = ({
       <View
         style={{
           flexDirection: 'row',
-          marginHorizontal: 24,
+          marginHorizontal: spacing.lg,
           backgroundColor: colors.soft,
-          borderRadius: 14,
-          padding: 4,
-          marginBottom: 16,
-          gap: 4,
+          borderRadius: radii.md,
+          padding: spacing.xs,
+          marginBottom: spacing.md,
+          gap: spacing.xs,
         }}
       >
         {tabs.map(({ label, mode, Icon }) => {
@@ -169,10 +169,10 @@ export const SplitOptionsModal: React.FC<SplitOptionsModalProps> = ({
                 flexDirection: 'row',
                 alignItems: 'center',
                 justifyContent: 'center',
-                paddingVertical: 8,
-                borderRadius: 10,
+                paddingVertical: spacing.sm,
+                borderRadius: radii.md,
                 backgroundColor: isActive ? colors.primary : 'transparent',
-                gap: 4,
+                gap: spacing.xs,
               }}
             >
               <Icon
@@ -196,12 +196,12 @@ export const SplitOptionsModal: React.FC<SplitOptionsModalProps> = ({
 
       <BottomSheetScrollView
         contentContainerStyle={{
-          paddingHorizontal: 24,
-          paddingBottom: 48,
+          paddingHorizontal: spacing.lg,
+          paddingBottom: spacing['2xl'],
           flexGrow: 1,
         }}
       >
-        <Text variant="label" tone="subtle" style={{ marginBottom: 16, fontStyle: 'italic' }}>
+        <Text variant="label" tone="subtle" style={{ marginBottom: spacing.md, fontStyle: 'italic' }}>
           {modeDescription[localMode]}
         </Text>
 
@@ -214,7 +214,7 @@ export const SplitOptionsModal: React.FC<SplitOptionsModalProps> = ({
             totalAmount={totalAmount}
           />
         ) : (
-          <View style={{ gap: 8 }}>
+          <View style={{ gap: spacing.sm }}>
             {members.map((member) => {
               const splitEntry = localSplit.find((s) => s.user_id === member.id);
               const isSelected = !!splitEntry;
@@ -226,25 +226,23 @@ export const SplitOptionsModal: React.FC<SplitOptionsModalProps> = ({
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
-                    padding: 14,
-                    borderRadius: 16,
+                    padding: spacing.md,
+                    borderRadius: radii.md,
                     backgroundColor: isSelected ? colors.soft : colors.backgroundStart,
-                    borderWidth: isSelected ? 1.5 : 1,
-                    borderColor: isSelected ? colors.softStrong : colors.border,
-                    gap: 12,
+                    gap: spacing.s12,
                   }}
                 >
                   <Avatar name={member.name} size="sm" tone={isSelected ? 'primary' : 'default'} />
                   <View style={{ flex: 1 }}>
                     <Text variant="title" weight="semibold">{member.name}</Text>
                     {localMode === 'equally' && isSelected && (
-                      <Text variant="label" style={{ color: colors.primary, marginTop: 2 }}>
+                      <Text variant="label" style={{ color: colors.primary, marginTop: spacing.xs }}>
                         {currencySymbol}
                         {(totalRaw / Math.max(1, selectedCount)).toFixed(2)}
                       </Text>
                     )}
                     {localMode === 'byshares' && isSelected && (
-                      <Text variant="label" style={{ color: colors.primary, marginTop: 2 }}>
+                      <Text variant="label" style={{ color: colors.primary, marginTop: spacing.xs }}>
                         {currencySymbol}
                         {(
                           totalShares > 0
@@ -261,9 +259,9 @@ export const SplitOptionsModal: React.FC<SplitOptionsModalProps> = ({
                       style={{
                         backgroundColor: colors.surfaceSolid,
                         color: colors.foreground,
-                        paddingHorizontal: 10,
-                        paddingVertical: 6,
-                        borderRadius: 10,
+                        paddingHorizontal: spacing.s12,
+                        paddingVertical: spacing.sm,
+                        borderRadius: radii.md,
                         width: 80,
                         textAlign: 'right',
                         fontFamily: 'Manrope_600SemiBold',
@@ -282,9 +280,9 @@ export const SplitOptionsModal: React.FC<SplitOptionsModalProps> = ({
                       style={{
                         backgroundColor: colors.surfaceSolid,
                         color: colors.foreground,
-                        paddingHorizontal: 10,
-                        paddingVertical: 6,
-                        borderRadius: 10,
+                        paddingHorizontal: spacing.s12,
+                        paddingVertical: spacing.sm,
+                        borderRadius: radii.md,
                         width: 56,
                         textAlign: 'center',
                         fontFamily: 'Manrope_600SemiBold',
@@ -300,12 +298,10 @@ export const SplitOptionsModal: React.FC<SplitOptionsModalProps> = ({
 
                   <View
                     style={{
-                      width: 24,
-                      height: 24,
-                      borderRadius: 12,
-                      borderWidth: isSelected ? 0 : 1.5,
-                      borderColor: colors.softStrong,
-                      backgroundColor: isSelected ? colors.primary : 'transparent',
+                      width: spacing.lg,
+                      height: spacing.lg,
+                      borderRadius: radii.md,
+                      backgroundColor: isSelected ? colors.primary : colors.soft,
                       alignItems: 'center',
                       justifyContent: 'center',
                     }}
@@ -322,9 +318,9 @@ export const SplitOptionsModal: React.FC<SplitOptionsModalProps> = ({
             {(localMode === 'unequally' || localMode === 'byshares') && (
               <View
                 style={{
-                  marginTop: 8,
-                  padding: 16,
-                  borderRadius: 16,
+                  marginTop: spacing.sm,
+                  padding: spacing.md,
+                  borderRadius: radii.md,
                   backgroundColor:
                     localMode === 'unequally' && Math.abs(remaining) >= 0.01
                       ? colors.dangerSoft

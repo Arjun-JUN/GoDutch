@@ -1,21 +1,27 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import {
   View,
   ScrollView,
   RefreshControl,
   ActivityIndicator,
+  Pressable,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Plus, ArrowLeftRight, TrendingUp, Receipt } from 'lucide-react-native';
+import {
+  Plus,
+  ArrowLeftRight,
+  Camera,
+  Bell,
+  ChevronRight,
+  Users,
+} from 'lucide-react-native';
 import { AppShell, PageContent } from '../../src/slate/AppShell';
 import { Text } from '../../src/slate/Text';
-import { StatCard, EmptyState, IconBadge, Breath } from '../../src/slate/atoms';
-import { ExpenseCard } from '../../src/slate/ExpenseCard';
-import { AppButton } from '../../src/slate/AppButton';
+import { EmptyState, IconBadge, Avatar, Breath } from '../../src/slate/atoms';
 import { AppSurface, InteractiveSurface } from '../../src/slate/AppSurface';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useGroupsStore, useExpensesStore, useSettlementsStore } from '../../src/stores';
-import { colors } from '../../src/theme/tokens';
+import { colors, radii, spacing } from '../../src/theme/tokens';
 import { getCurrencySymbol } from '../../src/utils/constants';
 
 export default function DashboardScreen() {
@@ -28,32 +34,36 @@ export default function DashboardScreen() {
     fetch: fetchGroups,
   } = useGroupsStore();
 
-  const {
-    getAll: getAllExpenses,
-    fetch: fetchExpenses,
-    loadingGroupId,
-  } = useExpensesStore();
+  const { fetch: fetchExpenses, loadingGroupId } = useExpensesStore();
 
   const { fetch: fetchSettlements, byGroupId: settlementsByGroup } = useSettlementsStore();
 
   const isRefreshing =
     groupsLoading || Object.values(loadingGroupId).some(Boolean);
 
-  const { youreOwed, youOwe } = React.useMemo(() => {
+  const { youreOwed, youOwe, perGroupBalance } = useMemo(() => {
     let owed = 0;
     let owe = 0;
+    const perGroup: Record<string, number> = {};
     for (const groupId of Object.keys(settlementsByGroup)) {
+      let net = 0;
       for (const s of settlementsByGroup[groupId]) {
-        if (s.to_user_id === user?.id) owed += s.amount;
-        if (s.from_user_id === user?.id) owe += s.amount;
+        if (s.to_user_id === user?.id) {
+          owed += s.amount;
+          net += s.amount;
+        }
+        if (s.from_user_id === user?.id) {
+          owe += s.amount;
+          net -= s.amount;
+        }
       }
+      perGroup[groupId] = net;
     }
-    return { youreOwed: owed, youOwe: owe };
+    return { youreOwed: owed, youOwe: owe, perGroupBalance: perGroup };
   }, [settlementsByGroup, user?.id]);
 
-  const allExpenses = getAllExpenses();
-  const recentExpenses = allExpenses.slice(0, 8);
-
+  const netBalance = youreOwed - youOwe;
+  // Multi-currency simplification (known limitation, tracked separately)
   const currency = groups[0]?.currency ?? 'INR';
   const sym = getCurrencySymbol(currency);
 
@@ -72,222 +82,228 @@ export default function DashboardScreen() {
     loadAll();
   }, [loadAll]);
 
-  const onRefresh = () => loadAll(true);
-
   if (groupsLoading && groups.length === 0) {
     return (
       <AppShell>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <ActivityIndicator
+            size="large"
+            color={colors.primary}
+            testID="dashboard-loading"
+          />
         </View>
       </AppShell>
     );
   }
 
+  const firstName = user?.name?.split(' ')[0] ?? 'there';
+  const previewGroups = groups.slice(0, 3);
+
+  const formatSigned = (value: number) =>
+    `${value >= 0 ? '+' : '-'}${sym}${Math.abs(value).toFixed(2)}`;
+
   return (
     <AppShell>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 40 }}
+        contentContainerStyle={{ paddingBottom: spacing.s40 }}
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
-            onRefresh={onRefresh}
+            onRefresh={() => loadAll(true)}
             tintColor={colors.primary}
           />
         }
       >
         <PageContent>
-          {/* ──────────── Hero surface ──────────── */}
-          <AppSurface variant="solid" style={{ padding: 24, borderRadius: 32, marginTop: 12, marginBottom: 20 }}>
-            <Text
-              variant="eyebrow"
-              weight="extrabold"
-              style={{ color: colors.muted, opacity: 0.78, marginBottom: 12 }}
-            >
-              Total Ledger
-            </Text>
-            <Text
-              weight="extrabold"
-              style={{
-                fontSize: 36,
-                lineHeight: 38,
-                letterSpacing: -1.6,
-                color: colors.foreground,
-              }}
-            >
-              Welcome back,{'\n'}
-              {user?.name?.split(' ')[0] ?? 'there'}
-            </Text>
-            <Text
-              variant="body"
-              style={{ marginTop: 12, color: colors.muted, lineHeight: 22 }}
-            >
-              Your group money flow is calm, organized, and ready to settle.
-            </Text>
-
-            <View style={{ marginTop: 20 }}>
-              <AppButton
-                variant="primary"
-                size="md"
-                leftIcon={<Plus size={18} color={colors.primaryForeground} strokeWidth={2.6} />}
-                onPress={() => router.push('/new-expense')}
-                haptic
-              >
-                Add Expense
-              </AppButton>
-            </View>
-
-            <View style={{ marginTop: 24, gap: 14 }}>
-              <StatCard
-                label="You're owed"
-                value={`${sym}${youreOwed.toFixed(2)}`}
-                description="Total pending across all groups where you paid."
-              />
-              <StatCard
-                label="You owe"
-                value={`${sym}${youOwe.toFixed(2)}`}
-                tone="negative"
-                description="Your outstanding share of expenses others have paid."
-              />
-            </View>
-          </AppSurface>
-
-          {/* ──────────── Settlement insights card ──────────── */}
-          <InteractiveSurface
-            variant="soft"
-            onPress={() => router.push('/(tabs)/settlements')}
+          {/* Greeting row */}
+          <View
             style={{
-              padding: 24,
-              borderRadius: 32,
-              marginBottom: 20,
-              backgroundColor: colors.soft,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginTop: spacing.md,
+              marginBottom: spacing.s20,
             }}
           >
-            <IconBadge
-              icon={<TrendingUp size={22} color={colors.primaryStrong} strokeWidth={2.4} />}
-              tone="white"
-              size="lg"
-            />
             <Text
+              variant="titleXl"
               weight="extrabold"
+              style={{ color: colors.foreground }}
+              testID="dashboard-greeting"
+            >
+              Hey {firstName} 👋
+            </Text>
+            <Pressable
+              accessibilityLabel="Notifications"
+              onPress={() => {}}
               style={{
-                marginTop: 18,
-                fontSize: 24,
-                lineHeight: 26,
-                letterSpacing: -1,
-                color: colors.primaryStrong,
+                width: spacing.s40,
+                height: spacing.s40,
+                borderRadius: radii.pill,
+                backgroundColor: colors.soft,
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
             >
-              Settlement insights
+              <Bell size={18} color={colors.foreground} strokeWidth={2.2} />
+            </Pressable>
+          </View>
+
+          {/* Balance hero */}
+          <AppSurface
+            variant="solid"
+            style={{ padding: spacing.lg, borderRadius: radii['2xl'], marginBottom: spacing.s20 }}
+          >
+            <Text
+              variant="eyebrow"
+              tone="muted"
+              style={{ marginBottom: spacing.s12 }}
+            >
+              NET BALANCE
             </Text>
             <Text
-              variant="body"
-              style={{ marginTop: 10, color: colors.muted, lineHeight: 22 }}
+              variant="displayLg"
+              weight="extrabold"
+              testID="dashboard-net-balance"
+              style={{
+                color:
+                  Math.abs(netBalance) < 0.005
+                    ? colors.foreground
+                    : netBalance > 0
+                    ? colors.success
+                    : colors.danger,
+              }}
             >
-              Review what is still pending, compare group activity, and move money with less back-and-forth.
+              {Math.abs(netBalance) < 0.005
+                ? `${sym}0.00`
+                : formatSigned(netBalance)}
             </Text>
+            <Text
+              variant="label"
+              tone="muted"
+              style={{ marginTop: spacing.s12 }}
+              testID="dashboard-balance-breakdown"
+            >
+              you're owed {sym}
+              {youreOwed.toFixed(2)} · you owe {sym}
+              {youOwe.toFixed(2)}
+            </Text>
+          </AppSurface>
+
+          {/* Quick actions — related controls grouped in a soft tonal container */}
+          <View
+            style={{
+              flexDirection: 'row',
+              gap: spacing.s12,
+              padding: spacing.xs,
+              backgroundColor: colors.soft,
+              borderRadius: radii.xl,
+              marginBottom: spacing.lg,
+            }}
+          >
+            <QuickAction
+              icon={<Plus size={20} color={colors.primary} strokeWidth={2.4} />}
+              label="Add expense"
+              onPress={() => router.push('/new-expense')}
+              testID="dashboard-quick-add"
+            />
+            <QuickAction
+              icon={<ArrowLeftRight size={20} color={colors.primary} strokeWidth={2.4} />}
+              label="Settle up"
+              onPress={() => router.push('/(tabs)/settlements')}
+              testID="dashboard-quick-settle"
+            />
+            <QuickAction
+              icon={<Camera size={20} color={colors.primary} strokeWidth={2.4} />}
+              label="Scan receipt"
+              onPress={() =>
+                router.push({ pathname: '/new-expense', params: { mode: 'scan' } })
+              }
+              testID="dashboard-quick-scan"
+            />
+          </View>
+
+          {/* Groups preview */}
+          <AppSurface variant="solid" style={{ padding: spacing.lg, borderRadius: radii['2xl'] }}>
             <View
               style={{
-                marginTop: 24,
                 flexDirection: 'row',
                 alignItems: 'center',
-                gap: 8,
-              }}
-            >
-              <Text
-                weight="extrabold"
-                style={{ fontSize: 14, color: colors.primaryStrong }}
-              >
-                View settlements
-              </Text>
-              <ArrowLeftRight size={16} color={colors.primaryStrong} strokeWidth={2.6} />
-            </View>
-          </InteractiveSurface>
-
-          {/* ──────────── Recent Expenses surface ──────────── */}
-          <AppSurface variant="solid" style={{ padding: 24, borderRadius: 32 }}>
-            {/* Header row: big 2-line title + circular "N tracked" counter */}
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'flex-start',
                 justifyContent: 'space-between',
-                gap: 16,
-                marginBottom: 24,
+                marginBottom: spacing.md,
               }}
             >
-              <Text
-                weight="extrabold"
-                style={{
-                  fontSize: 32,
-                  lineHeight: 34,
-                  letterSpacing: -0.8,
-                  color: colors.foreground,
-                  flex: 1,
-                }}
-              >
-                Recent{'\n'}Expenses
+              <Text variant="titleLg" weight="extrabold">
+                Your groups
               </Text>
-              <View
-                style={{
-                  width: 72,
-                  height: 72,
-                  borderRadius: 999,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                }}
-              >
-                <Text
-                  weight="extrabold"
-                  style={{
-                    fontSize: 20,
-                    lineHeight: 22,
-                    color: colors.foreground,
-                    marginBottom: 2,
-                  }}
+              {groups.length > 0 ? (
+                <Pressable
+                  onPress={() => router.push('/(tabs)/groups')}
+                  accessibilityLabel="See all groups"
+                  testID="dashboard-see-all"
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}
                 >
-                  {allExpenses.length}
-                </Text>
-                <Text
-                  weight="extrabold"
-                  style={{
-                    fontSize: 10,
-                    lineHeight: 10,
-                    letterSpacing: 0.6,
-                    color: colors.foreground,
-                    opacity: 0.7,
-                  }}
-                >
-                  tracked
-                </Text>
-              </View>
+                  <Text variant="label" weight="semibold" tone="primary">
+                    see all
+                  </Text>
+                  <ChevronRight size={14} color={colors.primary} strokeWidth={2.4} />
+                </Pressable>
+              ) : null}
             </View>
 
-            {recentExpenses.length === 0 ? (
+            {previewGroups.length === 0 ? (
               <EmptyState
-                icon={<Receipt size={28} color={colors.mutedSubtle} strokeWidth={2} />}
-                title="No expenses yet"
-                action={{ label: 'Create Your First Expense', onPress: () => router.push('/new-expense') }}
+                icon={<Users size={28} color={colors.mutedSubtle} strokeWidth={2} />}
+                title="Start your first group"
+                description="Split expenses with friends, roommates, or trips."
+                action={{
+                  label: 'Create group',
+                  onPress: () =>
+                    router.push({ pathname: '/(tabs)/groups', params: { create: '1' } }),
+                }}
               />
             ) : (
-              <View style={{ gap: 14 }}>
-                {recentExpenses.map((expense) => {
-                  const myShare = (expense as any).split_details?.find(
-                    (s: any) => s.user_id === user?.id,
-                  );
+              <View style={{ gap: spacing.s12 }}>
+                {previewGroups.map((g) => {
+                  const net = perGroupBalance[g.id] ?? 0;
+                  const gSym = getCurrencySymbol(g.currency);
+                  const isSettled = Math.abs(net) < 0.005;
+                  // Settled state uses the success accent — a positive signal, not neutral grey.
+                  const balColor = isSettled
+                    ? colors.success
+                    : net > 0
+                    ? colors.success
+                    : colors.danger;
+                  const balText = isSettled
+                    ? 'settled'
+                    : `${net > 0 ? '+' : '-'}${gSym}${Math.abs(net).toFixed(0)}`;
                   return (
-                    <ExpenseCard
-                      key={expense.id}
-                      expense={expense}
-                      currency={currency}
-                      amount={myShare ? myShare.amount : expense.total_amount}
-                      amountLabel="Your share"
-                      onPress={() => router.push(`/expenses/${expense.id}`)}
-                    />
+                    <InteractiveSurface
+                      key={g.id}
+                      compact
+                      onPress={() => router.push(`/groups/${g.id}`)}
+                      testID={`dashboard-group-${g.id}`}
+                    >
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.s12 }}>
+                        <Avatar name={g.name} size="md" tone="primary" />
+                        <View style={{ flex: 1 }}>
+                          <Text variant="title" weight="bold" numberOfLines={1}>
+                            {g.name}
+                          </Text>
+                          <Text variant="label" tone="subtle" style={{ marginTop: spacing.xs }}>
+                            {g.members.length} members
+                          </Text>
+                        </View>
+                        <Text
+                          variant="title"
+                          weight="extrabold"
+                          style={{ color: balColor }}
+                        >
+                          {balText}
+                        </Text>
+                      </View>
+                    </InteractiveSurface>
                   );
                 })}
               </View>
@@ -298,5 +314,34 @@ export default function DashboardScreen() {
         </PageContent>
       </ScrollView>
     </AppShell>
+  );
+}
+
+/* ---------- QuickAction card ---------- */
+
+interface QuickActionProps {
+  icon: React.ReactNode;
+  label: string;
+  onPress: () => void;
+  testID?: string;
+}
+
+function QuickAction({ icon, label, onPress, testID }: QuickActionProps) {
+  return (
+    <InteractiveSurface
+      compact
+      onPress={onPress}
+      testID={testID}
+      style={{ flex: 1, paddingVertical: spacing.md, alignItems: 'center' }}
+    >
+      <IconBadge icon={icon} tone="soft" size="md" />
+      <Text
+        variant="label"
+        weight="semibold"
+        style={{ marginTop: spacing.s12, textAlign: 'center' }}
+      >
+        {label}
+      </Text>
+    </InteractiveSurface>
   );
 }

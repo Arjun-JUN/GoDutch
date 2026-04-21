@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, TextInput, TextInputProps, ViewStyle } from 'react-native';
-import { colors } from '../theme/tokens';
+import { colors, radii, spacing } from '../theme/tokens';
 import { Text } from './Text';
 import { cn } from './cn';
 
@@ -27,17 +27,30 @@ export const Field: React.FC<FieldProps> = ({
 }) => (
   <View style={style} className={cn(className)}>
     {label ? (
-      <Text variant="label" weight="semibold" tone="muted" style={{ marginBottom: 8, paddingHorizontal: 4 }}>
+      <Text
+        variant="label"
+        weight="semibold"
+        tone="muted"
+        style={{ marginBottom: spacing.sm, paddingHorizontal: spacing.xs }}
+      >
         {label}
       </Text>
     ) : null}
     {children}
     {error ? (
-      <Text variant="label" tone="danger" style={{ marginTop: 4, paddingHorizontal: 4 }}>
+      <Text
+        variant="label"
+        tone="danger"
+        style={{ marginTop: spacing.xs, paddingHorizontal: spacing.xs }}
+      >
         {error}
       </Text>
     ) : hint ? (
-      <Text variant="label" tone="subtle" style={{ marginTop: 4, paddingHorizontal: 4 }}>
+      <Text
+        variant="label"
+        tone="subtle"
+        style={{ marginTop: spacing.xs, paddingHorizontal: spacing.xs }}
+      >
         {hint}
       </Text>
     ) : null}
@@ -63,13 +76,16 @@ export const AppInput = React.forwardRef<TextInput, AppInputProps>(
     const hasLeft = !!leftIcon;
     const hasRight = !!rightIcon;
 
+    const iconInset = spacing.md; // 16 — horizontal position of icon
+    const iconPadding = spacing['2xl']; // 48 — text padding when icon present
+
     return (
       <View style={{ position: 'relative' }}>
         {hasLeft && (
           <View
             style={{
               position: 'absolute',
-              left: 14,
+              left: iconInset,
               top: 0,
               bottom: 0,
               zIndex: 10,
@@ -85,14 +101,14 @@ export const AppInput = React.forwardRef<TextInput, AppInputProps>(
           style={[
             {
               height: 52,
-              borderRadius: 14,
+              borderRadius: radii.md,
               backgroundColor: invalid
                 ? colors.dangerSoft
                 : focused
                 ? colors.softStrong
                 : colors.soft,
-              paddingLeft: hasLeft ? 46 : 16,
-              paddingRight: hasRight ? 46 : 16,
+              paddingLeft: hasLeft ? iconPadding : spacing.md,
+              paddingRight: hasRight ? iconPadding : spacing.md,
               color: colors.foreground,
               fontFamily: 'Manrope_500Medium',
               fontSize: 15,
@@ -114,7 +130,7 @@ export const AppInput = React.forwardRef<TextInput, AppInputProps>(
           <View
             style={{
               position: 'absolute',
-              right: 14,
+              right: iconInset,
               top: 0,
               bottom: 0,
               zIndex: 10,
@@ -146,15 +162,15 @@ export const AppTextarea = React.forwardRef<TextInput, AppTextareaProps>(
         textAlignVertical="top"
         style={[
           {
-            minHeight: rows * 22 + 24,
-            borderRadius: 14,
+            minHeight: rows * 22 + spacing.lg,
+            borderRadius: radii.md,
             backgroundColor: invalid
               ? colors.dangerSoft
               : focused
               ? colors.softStrong
               : colors.soft,
-            paddingHorizontal: 16,
-            paddingVertical: 14,
+            paddingHorizontal: spacing.md,
+            paddingVertical: spacing.md,
             color: colors.foreground,
             fontFamily: 'Manrope_500Medium',
             fontSize: 15,

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
-import * as SecureStore from 'expo-secure-store';
+import * as SecureStore from '../utils/secureStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api, setUnauthorizedHandler } from '../api/client';
 import {

@@ -8,7 +8,7 @@ import { PageHero } from '../../src/slate/PageHero';
 import { EmptyState, Breath } from '../../src/slate/atoms';
 import { ExpenseCard } from '../../src/slate/ExpenseCard';
 import { useGroupsStore, useExpensesStore } from '../../src/stores';
-import { colors } from '../../src/theme/tokens';
+import { colors, spacing } from '../../src/theme/tokens';
 import type { Expense } from '../../src/stores/types';
 
 /** Group a flat list of expenses into date-based sections (e.g. "Apr 2026"). */
@@ -98,9 +98,9 @@ export default function ExpensesScreen() {
         renderSectionHeader={({ section }) => (
           <View
             style={{
-              paddingHorizontal: 24,
-              paddingTop: 24,
-              paddingBottom: 10,
+              paddingHorizontal: spacing.lg,
+              paddingTop: spacing.lg,
+              paddingBottom: spacing.s12,
               backgroundColor: colors.backgroundStart,
             }}
           >
@@ -110,7 +110,7 @@ export default function ExpensesScreen() {
           </View>
         )}
         renderItem={({ item }) => (
-          <View style={{ paddingHorizontal: 24, marginBottom: 10 }}>
+          <View style={{ paddingHorizontal: spacing.lg, marginBottom: spacing.s12 }}>
             <ExpenseCard
               expense={item}
               currency={groupCurrencyMap[item.group_id] ?? 'INR'}

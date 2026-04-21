@@ -12,16 +12,17 @@ All visual output in the app should flow through these components. Route files s
 
 | File | What it renders |
 |------|----------------|
-| `AppButton.tsx` | Pill button variants |
+| `AppButton.tsx` | Pill button variants (all 5 interaction states, disabled uses tonal mute + opacity) |
 | `AppInput.tsx` | Labeled text inputs |
 | `AppShell.tsx` | Screen layout wrapper |
 | `AppSurface.tsx` | Content card with ambient elevation |
 | `AppBottomSheet.tsx` | Bottom sheet overlay |
 | `Header.tsx` | Screen header |
-| `ExpenseCard.tsx` | Expense list row |
+| `ExpenseCard.tsx` | Expense list row (Text variants: `titleSm` merchant, `amount` total, `eyebrowSm` eyebrow) |
 | `PageHero.tsx` | Large hero section |
-| `Text.tsx` | Typography component |
-| `atoms.tsx` | Small utility components |
+| `Text.tsx` | Typography component (11 variants: display, titleXl/Lg/default/Sm, body, label, eyebrow/Sm, amount/Lg) |
+| `Toast.tsx` | Confirmation chip — slides up, auto-dismisses, use for every state mutation |
+| `atoms.tsx` | Small utility components (MemberBadge active state uses check-mark + weight shift, not color alone) |
 | `cn.ts` | `clsx` + NativeWind merge helper |
 | `index.ts` | Barrel export |
 
@@ -38,6 +39,8 @@ All visual output in the app should flow through these components. Route files s
 
 - `AppBottomSheet.tsx` uses Reanimated for sheet motion and may behave differently in browser-based Expo previews.
 - `ExpenseCard.tsx` is stateless and expects parent routes to own interaction state.
+- `Toast` must be mounted at the screen root (sibling of your content), not inside a scrollable area — it's absolutely positioned above the safe area.
+- Raw `fontSize`, `fontWeight`, and spacing numbers are not permitted in component code. Use `Text` variants and `spacing.*` tokens — see [foundational-principles.md](../../../../DESIGN_RULES/user-interface/guides/foundational-principles.md).
 
 ## Further reading
 

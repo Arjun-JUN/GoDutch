@@ -46,6 +46,20 @@ cd mobile && pnpm test --coverage
 - Mobile tests use Jest + jest-expo + @testing-library/react-native.
 - If a layer has no existing test harness, set one up as part of the change — do not skip.
 
+### Visual QA — automated
+
+For any frontend change, run **`mobile/scripts/qa/run.sh`** to capture screenshots of every key screen and get a pass/fail verdict. The script starts backend + Expo web, seeds test data, drives the gstack `browse` tool, and writes artifacts to `mobile/.qa-output/latest/`.
+
+```bash
+mobile/scripts/qa/run.sh
+# Then read mobile/.qa-output/latest/summary.txt for the verdict.
+# Only Read individual PNGs if something failed or the user asks.
+```
+
+Do NOT drive `browse` manually screen-by-screen — the script is faster, more reliable, and cheaper on context. See `mobile/scripts/qa/README.md` for details, flags, and how to add screens.
+
+**Every new page, modal, or popup must ship with a matching capture line in `mobile/scripts/qa/run.sh` in the same change.** Routes get a `capture` call; modals / bottom sheets / popups get a `capture_modal` call. The script runs a coverage-gap check at the end of every run — it walks `mobile/app/**` and warns about any route not exercised. Set `QA_STRICT=1` to make uncovered routes fail the run. This sits alongside the testing mandate and the folder-README mandate as a non-negotiable Definition-of-Done gate for frontend work.
+
 ## Folder Documentation — Non-Negotiable
 
 **Every folder must contain a `README.md`** (or `_README.md` where the folder is a package that must stay import-clean). The file describes the folder to a new reader in three parts:
@@ -137,6 +151,16 @@ A change is only "done" when ALL of the following are true:
 ## Design
 
 Follow [`DESIGN_RULES/`](./DESIGN_RULES/README.md) strictly. The canonical platform is React Native (`mobile/src/slate/`). Key rules: tonal topography (no 1px borders), 4-point grid, ambient luminosity, generous breath, Manrope typeface. See [`DESIGN_RULES/user-interface/guides/`](./DESIGN_RULES/user-interface/guides/README.md) for the full rule set and [`DESIGN_RULES/components/`](./DESIGN_RULES/components/README.md) for component reference with sample code.
+
+### Foundational principles — mandatory pre-ship checklist
+
+**Every frontend change must pass the checklist in [`DESIGN_RULES/user-interface/guides/foundational-principles.md`](./DESIGN_RULES/user-interface/guides/foundational-principles.md) before it is considered done.** The doc defines the four pillars — Affordances & Signifiers, Visual Hierarchy, Interaction & Feedback, Technical Execution — and ends with a line-by-line checklist. Walk it on every change that touches `mobile/app/**`, `mobile/src/slate/**`, or `mobile/src/components/**`. The checklist sits alongside the testing mandate and the folder-README mandate as a non-negotiable Definition-of-Done gate.
+
+Highlights (see the doc for the full rules):
+- **Affordances:** group related controls in a shared container; active/disabled state uses a non-color signifier (weight, fill, desaturation), not color alone.
+- **Hierarchy:** primary info dominates via size/weight/accent; secondary uses `Text variant="label" tone="subtle"`. No raw `fontSize` / `fontWeight`.
+- **Feedback:** every interactive has all five states (default, pressed, disabled, loading, a11y-focus). Every mutation shows a confirmation (toast, chip, or check). Silent success is a bug.
+- **Execution:** every spacing is a `spacing.*` token (4pt grid); every color is a `colors.*` token; text over imagery uses `LinearGradient` or progressive blur.
 
 ## Status
 

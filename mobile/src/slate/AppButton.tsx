@@ -13,7 +13,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { colors, gradients, shadows } from '../theme/tokens';
+import { colors, gradients, radii, shadows, spacing } from '../theme/tokens';
 import { Text } from './Text';
 import { cn } from './cn';
 
@@ -36,16 +36,20 @@ interface AppButtonProps extends Omit<PressableProps, 'children' | 'style'> {
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-const sizeStyles: Record<Size, { height: number; paddingX: number; textSize: number }> = {
-  sm: { height: 40, paddingX: 18, textSize: 14 },
-  md: { height: 52, paddingX: 24, textSize: 15 },
-  lg: { height: 60, paddingX: 32, textSize: 17 },
-  icon: { height: 48, paddingX: 0, textSize: 14 },
+// Heights are 4pt multiples; paddingX uses spacing tokens.
+const sizeStyles: Record<Size, { height: number; paddingX: number; variant: 'label' | 'body' | 'titleSm' }> = {
+  sm: { height: 40, paddingX: spacing.md, variant: 'label' },
+  md: { height: 52, paddingX: spacing.lg, variant: 'body' },
+  lg: { height: 60, paddingX: spacing.xl, variant: 'titleSm' },
+  icon: { height: 48, paddingX: 0, variant: 'label' },
 };
 
 /**
  * Slate primary button — gradient pill, Reanimated press scale, reduced-motion aware.
  * The gradient primary is the visual signature of the design system.
+ *
+ * Disabled state uses opacity AND tonal mute (bg swap + shadow drop) per foundational
+ * principles — opacity alone reads as loading.
  */
 export const AppButton: React.FC<AppButtonProps> = ({
   variant = 'primary',
@@ -76,7 +80,7 @@ export const AppButton: React.FC<AppButtonProps> = ({
 
   const isDisabled = disabled || loading;
   const enableHaptic = haptic ?? variant === 'primary';
-  const { height, paddingX, textSize } = sizeStyles[size];
+  const { height, paddingX, variant: textVariant } = sizeStyles[size];
 
   const handlePressIn = () => {
     if (!reducedMotion && !isDisabled) {
@@ -93,8 +97,20 @@ export const AppButton: React.FC<AppButtonProps> = ({
     onPress?.(e);
   };
 
+  // Text color resolves per variant, with disabled tonal mute.
+  const textColor = isDisabled && variant !== 'primary' && variant !== 'danger'
+    ? colors.mutedSubtle
+    : variant === 'primary' || variant === 'danger'
+    ? colors.primaryForeground
+    : colors.primary;
+
+  const a11y = {
+    accessibilityRole: 'button' as const,
+    accessibilityState: { disabled: isDisabled, busy: loading },
+  };
+
   const content = (
-    <View className="flex-row items-center justify-center" style={{ gap: 8 }}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm }}>
       {loading ? (
         <ActivityIndicator
           size="small"
@@ -104,20 +120,7 @@ export const AppButton: React.FC<AppButtonProps> = ({
         <>
           {leftIcon}
           {children ? (
-            <Text
-              weight="bold"
-              style={{
-                fontSize: textSize,
-                color:
-                  variant === 'primary' || variant === 'danger'
-                    ? colors.primaryForeground
-                    : variant === 'secondary'
-                    ? colors.primary
-                    : variant === 'ghost'
-                    ? colors.primary
-                    : colors.primary,
-              }}
-            >
+            <Text variant={textVariant} weight="bold" style={{ color: textColor }}>
               {children}
             </Text>
           ) : null}
@@ -127,19 +130,25 @@ export const AppButton: React.FC<AppButtonProps> = ({
     </View>
   );
 
+  // Primary — gradient pill. When disabled, swap to flat soft background (tonal mute).
   if (variant === 'primary') {
+    const gradientColors = isDisabled
+      ? ([colors.soft, colors.soft] as [string, string])
+      : gradients.primary;
     return (
       <AnimatedPressable
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         onPress={handlePress}
         disabled={isDisabled}
+        {...a11y}
         style={[
           animatedStyle,
           {
-            borderRadius: 999,
+            borderRadius: radii.pill,
             overflow: 'hidden',
             ...shadows.button,
+            shadowOpacity: isDisabled ? 0 : shadows.button.shadowOpacity,
             opacity: isDisabled ? 0.6 : 1,
           },
           style,
@@ -148,7 +157,7 @@ export const AppButton: React.FC<AppButtonProps> = ({
         {...rest}
       >
         <LinearGradient
-          colors={gradients.primary}
+          colors={gradientColors}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={{
@@ -158,7 +167,26 @@ export const AppButton: React.FC<AppButtonProps> = ({
             justifyContent: 'center',
           }}
         >
-          {content}
+          {isDisabled ? (
+            // Render muted text over flat soft bg when disabled.
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm }}>
+              {loading ? (
+                <ActivityIndicator size="small" color={colors.mutedSubtle} />
+              ) : (
+                <>
+                  {leftIcon}
+                  {children ? (
+                    <Text variant={textVariant} weight="bold" style={{ color: colors.mutedSubtle }}>
+                      {children}
+                    </Text>
+                  ) : null}
+                  {rightIcon}
+                </>
+              )}
+            </View>
+          ) : (
+            content
+          )}
         </LinearGradient>
       </AnimatedPressable>
     );
@@ -171,13 +199,14 @@ export const AppButton: React.FC<AppButtonProps> = ({
         onPressOut={handlePressOut}
         onPress={handlePress}
         disabled={isDisabled}
+        {...a11y}
         style={[
           animatedStyle,
           {
             height,
             paddingHorizontal: paddingX,
-            borderRadius: 999,
-            backgroundColor: colors.danger,
+            borderRadius: radii.pill,
+            backgroundColor: isDisabled ? colors.soft : colors.danger,
             alignItems: 'center',
             justifyContent: 'center',
             opacity: isDisabled ? 0.6 : 1,
@@ -187,7 +216,25 @@ export const AppButton: React.FC<AppButtonProps> = ({
         className={cn(className)}
         {...rest}
       >
-        {content}
+        {isDisabled ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm }}>
+            {loading ? (
+              <ActivityIndicator size="small" color={colors.mutedSubtle} />
+            ) : (
+              <>
+                {leftIcon}
+                {children ? (
+                  <Text variant={textVariant} weight="bold" style={{ color: colors.mutedSubtle }}>
+                    {children}
+                  </Text>
+                ) : null}
+                {rightIcon}
+              </>
+            )}
+          </View>
+        ) : (
+          content
+        )}
       </AnimatedPressable>
     );
   }
@@ -199,13 +246,14 @@ export const AppButton: React.FC<AppButtonProps> = ({
         onPressOut={handlePressOut}
         onPress={handlePress}
         disabled={isDisabled}
+        {...a11y}
         style={[
           animatedStyle,
           {
             height,
             paddingHorizontal: paddingX,
-            borderRadius: 999,
-            backgroundColor: colors.primaryContainer,
+            borderRadius: radii.pill,
+            backgroundColor: isDisabled ? colors.soft : colors.primaryContainer,
             alignItems: 'center',
             justifyContent: 'center',
             opacity: isDisabled ? 0.6 : 1,
@@ -227,12 +275,13 @@ export const AppButton: React.FC<AppButtonProps> = ({
         onPressOut={handlePressOut}
         onPress={handlePress}
         disabled={isDisabled}
+        {...a11y}
         style={[
           animatedStyle,
           {
             width: height,
             height,
-            borderRadius: 999,
+            borderRadius: radii.pill,
             backgroundColor: colors.soft,
             alignItems: 'center',
             justifyContent: 'center',
@@ -255,6 +304,7 @@ export const AppButton: React.FC<AppButtonProps> = ({
       onPressOut={handlePressOut}
       onPress={handlePress}
       disabled={isDisabled}
+      {...a11y}
       style={[
         animatedStyle,
         {

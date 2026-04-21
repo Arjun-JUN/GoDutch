@@ -30,7 +30,7 @@ import { Avatar, Callout, Breath, IconBadge, MemberBadge } from '../../src/slate
 import { useExpensesStore, useGroupsStore } from '../../src/stores';
 import { api } from '../../src/api/client';
 import { getCurrencySymbol, EXPENSE_CATEGORIES } from '../../src/utils/constants';
-import { colors } from '../../src/theme/tokens';
+import { colors, spacing } from '../../src/theme/tokens';
 import type { Expense } from '../../src/stores/types';
 
 export default function ExpenseDetailScreen() {
@@ -255,14 +255,14 @@ export default function ExpenseDetailScreen() {
         <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <PageContent>
             {error && (
-              <Callout tone="danger" style={{ marginBottom: 20 }}>
+              <Callout tone="danger" style={{ marginBottom: spacing.s20 }}>
                 {error}
               </Callout>
             )}
 
             {editing ? (
               /* ── Edit form ──────────────────────────────────────────────── */
-              <View style={{ gap: 16, marginBottom: 32 }}>
+              <View style={{ gap: spacing.md, marginBottom: spacing.xl }}>
                 <Field label="Merchant / Description">
                   <AppInput
                     value={editMerchant}
@@ -294,7 +294,7 @@ export default function ExpenseDetailScreen() {
                   <InteractiveSurface
                     compact
                     onPress={() => setShowEditCategories(!showEditCategories)}
-                    style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}
+                    style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.s12 }}
                   >
                     <Tag size={16} color={colors.primary} strokeWidth={2.2} />
                     <Text variant="title" weight="semibold" style={{ flex: 1 }}>
@@ -306,11 +306,11 @@ export default function ExpenseDetailScreen() {
                     <AppSurface
                       variant="solid"
                       style={{
-                        marginTop: 8,
+                        marginTop: spacing.sm,
                         flexDirection: 'row',
                         flexWrap: 'wrap',
-                        gap: 8,
-                        padding: 16,
+                        gap: spacing.sm,
+                        padding: spacing.md,
                       }}
                     >
                       {EXPENSE_CATEGORIES.map((cat) => (
@@ -352,29 +352,29 @@ export default function ExpenseDetailScreen() {
               /* ── View mode ──────────────────────────────────────────────── */
               <>
                 {/* Hero amount */}
-                <AppSurface variant="soft" style={{ marginBottom: 24, alignItems: 'center', paddingVertical: 28 }}>
+                <AppSurface variant="soft" style={{ marginBottom: spacing.lg, alignItems: 'center', paddingVertical: spacing.lg }}>
                   <IconBadge
                     icon={<Receipt size={24} color={colors.primary} strokeWidth={2.2} />}
                     tone="soft"
                     size="lg"
                   />
-                  <Text variant="titleLg" weight="extrabold" style={{ marginTop: 16, textAlign: 'center' }}>
+                  <Text variant="titleLg" weight="extrabold" style={{ marginTop: spacing.md, textAlign: 'center' }}>
                     {title}
                   </Text>
-                  <Text variant="display" weight="extrabold" style={{ marginTop: 8, color: colors.primary }}>
+                  <Text variant="display" weight="extrabold" style={{ marginTop: spacing.sm, color: colors.primary }}>
                     {sym}{expense.total_amount.toFixed(2)}
                   </Text>
                 </AppSurface>
 
                 {/* Meta rows */}
-                <View style={{ gap: 10, marginBottom: 28 }}>
+                <View style={{ gap: spacing.s12, marginBottom: spacing.lg }}>
                   {displayDate ? (
                     <AppSurface variant="solid" compact>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
                         <Calendar size={18} color={colors.mutedSubtle} strokeWidth={2} />
                         <View>
                           <Text variant="label" tone="subtle">Date</Text>
-                          <Text variant="title" weight="semibold" style={{ marginTop: 2 }}>{displayDate}</Text>
+                          <Text variant="title" weight="semibold" style={{ marginTop: spacing.xs }}>{displayDate}</Text>
                         </View>
                       </View>
                     </AppSurface>
@@ -382,11 +382,11 @@ export default function ExpenseDetailScreen() {
 
                   {expense.category ? (
                     <AppSurface variant="solid" compact>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
                         <Tag size={18} color={colors.mutedSubtle} strokeWidth={2} />
                         <View>
                           <Text variant="label" tone="subtle">Category</Text>
-                          <Text variant="title" weight="semibold" style={{ marginTop: 2 }}>{expense.category}</Text>
+                          <Text variant="title" weight="semibold" style={{ marginTop: spacing.xs }}>{expense.category}</Text>
                         </View>
                       </View>
                     </AppSurface>
@@ -394,7 +394,7 @@ export default function ExpenseDetailScreen() {
 
                   {expense.notes ? (
                     <AppSurface variant="solid" compact>
-                      <Text variant="label" tone="subtle" style={{ marginBottom: 4 }}>Notes</Text>
+                      <Text variant="label" tone="subtle" style={{ marginBottom: spacing.xs }}>Notes</Text>
                       <Text variant="body">{expense.notes}</Text>
                     </AppSurface>
                   ) : null}
@@ -403,8 +403,8 @@ export default function ExpenseDetailScreen() {
                 {/* Items */}
                 {expense.items && expense.items.length > 0 && (
                   <>
-                    <Text variant="eyebrow" tone="muted" style={{ marginBottom: 12 }}>ITEMS</Text>
-                    <View style={{ gap: 8, marginBottom: 28 }}>
+                    <Text variant="eyebrow" tone="muted" style={{ marginBottom: spacing.s12 }}>ITEMS</Text>
+                    <View style={{ gap: spacing.sm, marginBottom: spacing.lg }}>
                       {expense.items.map((item, i) => (
                         <AppSurface key={i} variant="solid" compact>
                           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -425,16 +425,16 @@ export default function ExpenseDetailScreen() {
                 {/* Split details */}
                 {expense.split_details && expense.split_details.length > 0 && (
                   <>
-                    <Text variant="eyebrow" tone="muted" style={{ marginBottom: 12 }}>
+                    <Text variant="eyebrow" tone="muted" style={{ marginBottom: spacing.s12 }}>
                       SPLIT ({expense.split_type ?? 'equally'})
                     </Text>
-                    <View style={{ gap: 8, marginBottom: 28 }}>
+                    <View style={{ gap: spacing.sm, marginBottom: spacing.lg }}>
                       {expense.split_details.map((split, i) => {
                         const member = group?.members.find((m) => m.id === split.user_id);
                         const name = member?.name ?? split.user_id;
                         return (
                           <AppSurface key={i} variant="solid" compact>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.s12 }}>
                               <Avatar name={name} size="sm" />
                               <Text variant="title" weight="semibold" style={{ flex: 1 }}>{name}</Text>
                               <Text variant="title" weight="extrabold" style={{ color: colors.primary }}>

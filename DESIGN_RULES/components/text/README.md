@@ -15,7 +15,7 @@ Always use this `Text` instead of React Native's bare `<Text>` in screens and co
 
 | Prop | Type | Default | Notes |
 |------|------|---------|-------|
-| `variant` | `'display' \| 'titleXl' \| 'titleLg' \| 'title' \| 'body' \| 'label' \| 'eyebrow'` | `'body'` | Size + letter-spacing preset |
+| `variant` | `'display' \| 'titleXl' \| 'titleLg' \| 'title' \| 'titleSm' \| 'body' \| 'label' \| 'eyebrow' \| 'eyebrowSm' \| 'amount' \| 'amountLg'` | `'body'` | Size + letter-spacing preset |
 | `weight` | `'regular' \| 'medium' \| 'semibold' \| 'bold' \| 'extrabold'` | See defaults below | Overrides the variant's default weight |
 | `tone` | `'default' \| 'muted' \| 'subtle' \| 'primary' \| 'danger' \| 'inverse' \| 'success'` | `'default'` | Color |
 | `className` | `string` | — | NativeWind className |
@@ -30,9 +30,13 @@ All `TextProps` are spread onto the underlying RNText.
 | `titleXl` | `extrabold` |
 | `titleLg` | `extrabold` |
 | `title` | `bold` |
+| `titleSm` | `bold` |
 | `body` | `regular` |
 | `label` | `semibold` |
 | `eyebrow` | `bold` |
+| `eyebrowSm` | `bold` |
+| `amount` | `extrabold` |
+| `amountLg` | `extrabold` |
 
 ## Sample code
 
@@ -73,15 +77,19 @@ import { Text } from '@/slate';
 
 ## Typescale reference
 
-| Variant | Size | Line height | Letter spacing |
-|---------|------|-------------|---------------|
-| `display` | 36px | 40px | −1px |
-| `titleXl` | 28px | 34px | −0.5px |
-| `titleLg` | 22px | 28px | −0.3px |
-| `title` | 18px | 24px | −0.2px |
-| `body` | 15px | 22px | −0.1px |
-| `label` | 13px | 18px | 0 |
-| `eyebrow` | 11px | 14px | +2.4px, UPPERCASE |
+| Variant | Size | Line height | Letter spacing | Intended use |
+|---------|------|-------------|---------------|--------------|
+| `display` | 36px | 40px | −1px | Hero numbers, balance displays |
+| `titleXl` | 28px | 34px | −0.5px | Section totals, large headings |
+| `titleLg` | 22px | 28px | −0.3px | Screen titles, sheet headings |
+| `title` | 18px | 24px | −0.2px | Sub-section headers |
+| `titleSm` | 17px | 22px | −0.2px | Row-level merchant / list titles (`ExpenseCard`) |
+| `body` | 15px | 22px | −0.1px | Default reading text |
+| `label` | 13px | 18px | 0 | Form labels, metadata |
+| `eyebrow` | 11px | 14px | +2.4px, UPPERCASE | Category labels above titles |
+| `eyebrowSm` | 10px | 14px | +1.5px, UPPERCASE | Micro-eyebrow ("YOUR SHARE") |
+| `amount` | 24px | 28px | −0.8px | Inline amounts in expense / settlement rows |
+| `amountLg` | 30px | 34px | −1px | Stat-card amounts (dashboard balance, totals) |
 
 ## Tone → color
 

@@ -14,9 +14,12 @@ import { spacing } from '@/theme/tokens';
 |-------|-------|-------|
 | `spacing.xs` | 4px | Tight gaps between inline elements |
 | `spacing.sm` | 8px | Small gaps within a component |
+| `spacing.s12` | 12px | Row-level gaps (`gap-3` equivalent) — expense lists, quick actions |
 | `spacing.md` | 16px | Default padding inside cards |
+| `spacing.s20` | 20px | Stat-card padding; hero-action top margin |
 | `spacing.lg` | 24px | Page-level horizontal padding (`px-6` in NativeWind) |
 | `spacing.xl` | 32px | Between major sections on a screen |
+| `spacing.s40` | 40px | Page bottom padding under scrollable content |
 | `spacing['2xl']` | 48px | Large section gaps |
 | `spacing['3xl']` | 64px | Hero sections |
 | `spacing.breath` | 88px | Between functionally distinct groups ("generous breath") |

@@ -14,7 +14,7 @@ import { AppButton } from '../../../src/slate/AppButton';
 import { AppInput, Field } from '../../../src/slate/AppInput';
 import { Callout, Breath } from '../../../src/slate/atoms';
 import { api } from '../../../src/api/client';
-import { colors } from '../../../src/theme/tokens';
+import { colors, spacing } from '../../../src/theme/tokens';
 
 export default function AddAccountScreen() {
   const router = useRouter();
@@ -64,15 +64,15 @@ export default function AddAccountScreen() {
         <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <PageContent>
             {error && (
-              <Callout tone="danger" style={{ marginBottom: 20 }}>{error}</Callout>
+              <Callout tone="danger" style={{ marginBottom: spacing.s20 }}>{error}</Callout>
             )}
             {success && (
-              <Callout tone="success" style={{ marginBottom: 20 }}>
+              <Callout tone="success" style={{ marginBottom: spacing.s20 }}>
                 Account added successfully!
               </Callout>
             )}
 
-            <View style={{ gap: 16, marginBottom: 32 }}>
+            <View style={{ gap: spacing.md, marginBottom: spacing.xl }}>
               <Field label="UPI ID">
                 <AppInput
                   value={upiId}

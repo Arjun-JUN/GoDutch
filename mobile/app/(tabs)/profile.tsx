@@ -19,7 +19,8 @@ import { Avatar, Breath } from '../../src/slate/atoms';
 import { AppSurface, InteractiveSurface } from '../../src/slate/AppSurface';
 import { AppButton } from '../../src/slate/AppButton';
 import { useAuth } from '../../src/contexts/AuthContext';
-import { colors } from '../../src/theme/tokens';
+import * as Haptics from 'expo-haptics';
+import { colors, radii, spacing } from '../../src/theme/tokens';
 
 interface MenuRowProps {
   icon: React.ReactNode;
@@ -30,14 +31,18 @@ interface MenuRowProps {
 }
 
 function MenuRow({ icon, label, sublabel, onPress, destructive }: MenuRowProps) {
+  const handlePress = () => {
+    Haptics.selectionAsync();
+    onPress?.();
+  };
   return (
-    <InteractiveSurface compact onPress={onPress} style={{ marginBottom: 8 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+    <InteractiveSurface compact onPress={handlePress} style={{ marginBottom: spacing.sm }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
         <View
           style={{
             width: 36,
             height: 36,
-            borderRadius: 10,
+            borderRadius: radii.md,
             backgroundColor: destructive ? colors.dangerSoft : colors.soft,
             alignItems: 'center',
             justifyContent: 'center',
@@ -54,7 +59,7 @@ function MenuRow({ icon, label, sublabel, onPress, destructive }: MenuRowProps) 
             {label}
           </Text>
           {sublabel ? (
-            <Text variant="label" tone="subtle" style={{ marginTop: 2 }}>
+            <Text variant="label" tone="subtle" style={{ marginTop: spacing.xs }}>
               {sublabel}
             </Text>
           ) : null}
@@ -94,8 +99,8 @@ export default function ProfileScreen() {
           <PageHero eyebrow="Account" title="Profile" compact />
 
           {/* Identity card */}
-          <AppSurface variant="solid" style={{ marginBottom: 32 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+          <AppSurface variant="solid" style={{ marginBottom: spacing.xl }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
               <Avatar name={user?.name ?? 'U'} size="lg" tone="primary" />
               <View style={{ flex: 1 }}>
                 <Text variant="titleLg" weight="extrabold" numberOfLines={1}>
@@ -105,8 +110,8 @@ export default function ProfileScreen() {
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
-                    gap: 6,
-                    marginTop: 4,
+                    gap: spacing.sm,
+                    marginTop: spacing.xs,
                   }}
                 >
                   <Mail size={13} color={colors.mutedSubtle} strokeWidth={2} />
@@ -122,7 +127,7 @@ export default function ProfileScreen() {
           <Text
             variant="eyebrow"
             tone="muted"
-            style={{ marginBottom: 12 }}
+            style={{ marginBottom: spacing.s12 }}
           >
             ACCOUNT
           </Text>
@@ -151,7 +156,7 @@ export default function ProfileScreen() {
           <Text
             variant="eyebrow"
             tone="muted"
-            style={{ marginBottom: 12 }}
+            style={{ marginBottom: spacing.s12 }}
           >
             ACTIVITY
           </Text>
@@ -173,7 +178,7 @@ export default function ProfileScreen() {
           <Text
             variant="eyebrow"
             tone="muted"
-            style={{ marginBottom: 12 }}
+            style={{ marginBottom: spacing.s12 }}
           >
             SUPPORT
           </Text>

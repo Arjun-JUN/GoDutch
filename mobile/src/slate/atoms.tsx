@@ -1,10 +1,15 @@
-import React from 'react';
-import { View, ViewProps, Pressable } from 'react-native';
-import { colors } from '../theme/tokens';
+import React, { useEffect, useState } from 'react';
+import { View, ViewProps, Pressable, AccessibilityInfo } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
+import { Check } from 'lucide-react-native';
+import { colors, radii, spacing } from '../theme/tokens';
 import { Text } from './Text';
 import { AppSurface } from './AppSurface';
 import { AppButton } from './AppButton';
 import { cn } from './cn';
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 /* ---------- IconBadge ---------- */
 
@@ -48,27 +53,85 @@ interface MemberBadgeProps {
   onPress?: () => void;
 }
 
+/**
+ * Pill chip for group members / filter selection. Active state uses a weight shift
+ * (semibold → extrabold) + a check-mark in addition to color fill — never color alone.
+ * Press animation is a scale spring + light haptic.
+ */
 export const MemberBadge: React.FC<MemberBadgeProps> = ({ children, active, onPress }) => {
-  const Wrapper: any = onPress ? Pressable : View;
-  return (
-    <Wrapper
-      onPress={onPress}
-      style={{
-        paddingHorizontal: 14,
-        paddingVertical: 8,
-        borderRadius: 999,
-        backgroundColor: active ? colors.primary : colors.soft,
-        alignSelf: 'flex-start',
-      }}
-    >
+  const scale = useSharedValue(1);
+  const [reducedMotion, setReducedMotion] = useState(false);
+
+  useEffect(() => {
+    AccessibilityInfo.isReduceMotionEnabled().then(setReducedMotion);
+    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', setReducedMotion);
+    return () => sub.remove();
+  }, []);
+
+  const animatedStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+
+  const pressable = !!onPress;
+  const handlePressIn = () => {
+    if (pressable && !reducedMotion) {
+      scale.value = withSpring(0.96, { damping: 18, stiffness: 320 });
+    }
+  };
+  const handlePressOut = () => {
+    scale.value = withSpring(1, { damping: 18, stiffness: 320 });
+  };
+  const handlePress = () => {
+    if (pressable) {
+      Haptics.selectionAsync();
+      onPress?.();
+    }
+  };
+
+  const inner = (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+      {active ? (
+        <Check size={14} color={colors.primaryForeground} strokeWidth={3} />
+      ) : null}
       <Text
         variant="label"
-        weight="semibold"
+        weight={active ? 'extrabold' : 'semibold'}
         style={{ color: active ? colors.primaryForeground : colors.foreground }}
       >
         {children}
       </Text>
-    </Wrapper>
+    </View>
+  );
+
+  const boxStyle = {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.pill,
+    backgroundColor: active ? colors.primary : colors.soft,
+    alignSelf: 'flex-start' as const,
+  };
+
+  if (!pressable) {
+    return (
+      <View
+        style={boxStyle}
+        accessibilityRole="text"
+        accessibilityState={{ selected: active }}
+      >
+        {inner}
+      </View>
+    );
+  }
+
+  return (
+    <AnimatedPressable
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      onPress={handlePress}
+      accessibilityRole="button"
+      accessibilityState={{ selected: active }}
+      style={[animatedStyle, boxStyle]}
+    >
+      {inner}
+    </AnimatedPressable>
   );
 };
 
@@ -100,14 +163,14 @@ export const StatCard: React.FC<StatCardProps> = ({
   const dot = indicatorColor ?? (tone === 'negative' ? colors.danger : colors.primary);
   const vColor = valueColor ?? (tone === 'negative' ? colors.danger : colors.primaryStrong);
   return (
-    <AppSurface variant="solid" style={{ flex: 1, padding: 20, borderRadius: 28 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+    <AppSurface variant="solid" style={{ flex: 1, padding: spacing.s20, borderRadius: radii.xl }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.s12 }}>
         {icon ?? (
           <View
             style={{
-              width: 10,
-              height: 10,
-              borderRadius: 999,
+              width: spacing.s12,
+              height: spacing.s12,
+              borderRadius: radii.pill,
               backgroundColor: dot,
             }}
           />
@@ -116,14 +179,11 @@ export const StatCard: React.FC<StatCardProps> = ({
           {label}
         </Text>
       </View>
-      <Text
-        weight="extrabold"
-        style={{ fontSize: 30, lineHeight: 34, letterSpacing: -1.2, color: vColor }}
-      >
+      <Text variant="amountLg" style={{ color: vColor }}>
         {value}
       </Text>
       {description ? (
-        <Text variant="label" tone="muted" style={{ marginTop: 8 }}>
+        <Text variant="label" tone="muted" style={{ marginTop: spacing.sm }}>
           {description}
         </Text>
       ) : null}
@@ -145,25 +205,25 @@ export const EmptyState: React.FC<EmptyStateProps> = ({ icon, title, description
     style={{
       alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: 40,
-      paddingHorizontal: 24,
+      paddingVertical: spacing.s40,
+      paddingHorizontal: spacing.lg,
     }}
   >
     {icon ? <IconBadge icon={icon} size="lg" tone="soft" /> : null}
-    <Text variant="titleLg" style={{ marginTop: 16, textAlign: 'center' }}>
+    <Text variant="titleLg" style={{ marginTop: spacing.md, textAlign: 'center' }}>
       {title}
     </Text>
     {description ? (
       <Text
         variant="body"
         tone="muted"
-        style={{ marginTop: 8, textAlign: 'center', maxWidth: 280 }}
+        style={{ marginTop: spacing.sm, textAlign: 'center', maxWidth: 280 }}
       >
         {description}
       </Text>
     ) : null}
     {action ? (
-      <View style={{ marginTop: 20 }}>
+      <View style={{ marginTop: spacing.s20 }}>
         <AppButton variant="primary" size="md" onPress={action.onPress}>
           {action.label}
         </AppButton>
@@ -194,8 +254,8 @@ export const Callout: React.FC<CalloutProps> = ({
       style={[
         {
           backgroundColor: bg,
-          padding: 16,
-          borderRadius: 16,
+          padding: spacing.md,
+          borderRadius: radii.lg,
         },
         style,
       ]}
@@ -257,5 +317,5 @@ export const Avatar: React.FC<AvatarProps> = ({ name, size = 'md', tone = 'defau
 /* ---------- Divider (invisible spacing marker for list groups) ---------- */
 
 export const Breath: React.FC<{ size?: 'sm' | 'md' | 'lg' }> = ({ size = 'md' }) => (
-  <View style={{ height: size === 'sm' ? 16 : size === 'lg' ? 56 : 32 }} />
+  <View style={{ height: size === 'sm' ? spacing.md : size === 'lg' ? 56 : spacing.xl }} />
 );

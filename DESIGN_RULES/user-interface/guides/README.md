@@ -10,6 +10,7 @@ Read the guide for the area you're working in:
 
 | Guide | What it covers |
 |-------|---------------|
+| **[foundational-principles.md](foundational-principles.md)** | **The four pillars every change must honor; pre-ship checklist** |
 | [color.md](color.md) | Alpine Ledger palette, token names, usage rules |
 | [tonal-topography.md](tonal-topography.md) | The no-line rule, surface hierarchy |
 | [typography.md](typography.md) | Manrope scale, Text variants, weight rules |
@@ -17,6 +18,7 @@ Read the guide for the area you're working in:
 | [elevation-and-luminosity.md](elevation-and-luminosity.md) | Ambient shadows, layering principle |
 | [accessibility.md](accessibility.md) | WCAG 2.0, RN a11y props, reduced motion |
 | [adaptability.md](adaptability.md) | Safe areas, responsive layout, dark mode stance |
+| [readability-overlays.md](readability-overlays.md) | LinearGradient + progressive blur for text over imagery |
 
 ## Further reading
 

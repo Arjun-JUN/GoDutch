@@ -1,6 +1,42 @@
-import { Tabs } from 'expo-router';
-import { Home, Receipt, ArrowUpDown, User } from 'lucide-react-native';
-import { colors } from '../../src/theme/tokens';
+import React from 'react';
+import { Pressable, View } from 'react-native';
+import { Tabs, useRouter } from 'expo-router';
+import { Home, Users, Plus, Activity, User } from 'lucide-react-native';
+import { colors, shadows, spacing } from '../../src/theme/tokens';
+
+function FabTabButton() {
+  const router = useRouter();
+  return (
+    <View
+      pointerEvents="box-none"
+      style={{
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <Pressable
+        accessibilityLabel="Add expense"
+        accessibilityRole="button"
+        testID="fab-add-button"
+        onPress={() => router.push('/new-expense')}
+        style={({ pressed }) => ({
+          width: 56,
+          height: 56,
+          borderRadius: 999,
+          backgroundColor: colors.primary,
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginTop: -spacing.lg,
+          transform: [{ scale: pressed ? 0.94 : 1 }],
+          ...shadows.button,
+        })}
+      >
+        <Plus size={26} color={colors.primaryForeground} strokeWidth={2.8} />
+      </Pressable>
+    </View>
+  );
+}
 
 export default function TabLayout() {
   return (
@@ -11,14 +47,14 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: colors.surfaceSolid,
           borderTopWidth: 0, // no-line rule
-          height: 64,
-          paddingBottom: 10,
-          paddingTop: 10,
-          shadowColor: '#2a3434',
+          height: 72,
+          paddingBottom: spacing.s12,
+          paddingTop: spacing.sm,
+          shadowColor: colors.foreground,
           shadowOffset: { width: 0, height: -8 },
-          shadowOpacity: 0.04,
-          shadowRadius: 16,
-          elevation: 8,
+          shadowOpacity: 0.06,
+          shadowRadius: 18,
+          elevation: 12,
         },
         tabBarLabelStyle: {
           fontFamily: 'Manrope_600SemiBold',
@@ -36,26 +72,38 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="expenses"
+        name="groups"
         options={{
-          title: 'Expenses',
-          tabBarIcon: ({ color }) => <Receipt size={22} color={color} strokeWidth={2.2} />,
+          title: 'Groups',
+          tabBarIcon: ({ color }) => <Users size={22} color={color} strokeWidth={2.2} />,
         }}
       />
       <Tabs.Screen
-        name="settlements"
+        name="add"
         options={{
-          title: 'Settle',
-          tabBarIcon: ({ color }) => <ArrowUpDown size={22} color={color} strokeWidth={2.2} />,
+          title: '',
+          tabBarButton: () => <FabTabButton />,
         }}
       />
       <Tabs.Screen
-        name="profile"
+        name="activity"
         options={{
-          title: 'Profile',
+          title: 'Activity',
+          tabBarIcon: ({ color }) => <Activity size={22} color={color} strokeWidth={2.2} />,
+        }}
+      />
+      <Tabs.Screen
+        name="you"
+        options={{
+          title: 'You',
           tabBarIcon: ({ color }) => <User size={22} color={color} strokeWidth={2.2} />,
         }}
       />
+
+      {/* Hidden from tab bar — still accessible via deep-link / quick action */}
+      <Tabs.Screen name="expenses" options={{ href: null }} />
+      <Tabs.Screen name="settlements" options={{ href: null }} />
+      <Tabs.Screen name="profile" options={{ href: null }} />
     </Tabs>
   );
 }

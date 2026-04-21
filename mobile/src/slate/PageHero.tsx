@@ -1,6 +1,7 @@
 import React from 'react';
 import { View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { spacing } from '../theme/tokens';
 import { Text } from './Text';
 
 interface PageHeroProps {
@@ -23,10 +24,10 @@ export const PageHero: React.FC<PageHeroProps> = ({
   actions,
   compact = false,
 }) => (
-  <View style={{ marginTop: compact ? 16 : 24, marginBottom: compact ? 24 : 32 }}>
+  <View style={{ marginTop: compact ? spacing.md : spacing.lg, marginBottom: compact ? spacing.lg : spacing.xl }}>
     {eyebrow ? (
       <Animated.View entering={FadeInDown.delay(0).duration(300)}>
-        <Text variant="eyebrow" tone="primary" style={{ marginBottom: 8 }}>
+        <Text variant="eyebrow" tone="primary" style={{ marginBottom: spacing.sm }}>
           {eyebrow}
         </Text>
       </Animated.View>
@@ -42,7 +43,7 @@ export const PageHero: React.FC<PageHeroProps> = ({
     </Animated.View>
     {description ? (
       <Animated.View entering={FadeInDown.delay(120).duration(400)}>
-        <Text variant="body" tone="muted" style={{ marginTop: 8 }}>
+        <Text variant="body" tone="muted" style={{ marginTop: spacing.sm }}>
           {description}
         </Text>
       </Animated.View>
@@ -50,7 +51,7 @@ export const PageHero: React.FC<PageHeroProps> = ({
     {actions ? (
       <Animated.View
         entering={FadeInDown.delay(180).duration(400)}
-        style={{ marginTop: 20, flexDirection: 'row', gap: 12 }}
+        style={{ marginTop: spacing.s20, flexDirection: 'row', gap: spacing.s12 }}
       >
         {actions}
       </Animated.View>

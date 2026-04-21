@@ -11,7 +11,7 @@ import { AppSurface } from '../../src/slate/AppSurface';
 import { useGroupsStore } from '../../src/stores';
 import { api } from '../../src/api/client';
 import { getCurrencySymbol } from '../../src/utils/constants';
-import { colors } from '../../src/theme/tokens';
+import { colors, radii, spacing } from '../../src/theme/tokens';
 
 interface ReportData {
   total_expenses: number;
@@ -74,13 +74,13 @@ export default function ReportsScreen() {
           <PageHero eyebrow="Analytics" title="Spending Report" compact />
 
           {error && (
-            <Callout tone="danger" style={{ marginBottom: 20 }}>{error}</Callout>
+            <Callout tone="danger" style={{ marginBottom: spacing.s20 }}>{error}</Callout>
           )}
 
           {report && (
             <>
               {/* Summary stats */}
-              <View style={{ flexDirection: 'row', gap: 12, marginBottom: 12 }}>
+              <View style={{ flexDirection: 'row', gap: spacing.s12, marginBottom: spacing.s12 }}>
                 <StatCard
                   label="Total spent"
                   value={`${sym}${report.total_amount.toFixed(2)}`}
@@ -91,7 +91,7 @@ export default function ReportsScreen() {
                   value={String(report.total_expenses)}
                 />
               </View>
-              <View style={{ marginBottom: 32 }}>
+              <View style={{ marginBottom: spacing.xl }}>
                 <StatCard
                   label="Avg per expense"
                   value={`${sym}${report.average_expense.toFixed(2)}`}
@@ -101,7 +101,7 @@ export default function ReportsScreen() {
               {/* Category breakdown */}
               {Object.keys(report.category_breakdown).length > 0 && (
                 <>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.s12, marginBottom: spacing.md }}>
                     <IconBadge
                       icon={<PieChart size={16} color={colors.primary} strokeWidth={2.2} />}
                       tone="soft"
@@ -109,7 +109,7 @@ export default function ReportsScreen() {
                     />
                     <Text variant="titleLg" weight="extrabold">By Category</Text>
                   </View>
-                  <View style={{ gap: 8, marginBottom: 32 }}>
+                  <View style={{ gap: spacing.sm, marginBottom: spacing.xl }}>
                     {Object.entries(report.category_breakdown)
                       .sort(([, a], [, b]) => b - a)
                       .map(([cat, amount]) => {
@@ -118,7 +118,7 @@ export default function ReportsScreen() {
                           : 0;
                         return (
                           <AppSurface key={cat} variant="solid" compact>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
                               <Text variant="title" weight="semibold">{cat}</Text>
                               <Text variant="title" weight="extrabold" style={{ color: colors.primary }}>
                                 {sym}{amount.toFixed(2)}
@@ -127,22 +127,22 @@ export default function ReportsScreen() {
                             {/* Simple progress bar */}
                             <View
                               style={{
-                                height: 4,
-                                borderRadius: 2,
+                                height: spacing.xs,
+                                borderRadius: radii.sm,
                                 backgroundColor: colors.soft,
                                 overflow: 'hidden',
                               }}
                             >
                               <View
                                 style={{
-                                  height: 4,
-                                  borderRadius: 2,
+                                  height: spacing.xs,
+                                  borderRadius: radii.sm,
                                   backgroundColor: colors.primary,
                                   width: `${pct}%`,
                                 }}
                               />
                             </View>
-                            <Text variant="label" tone="subtle" style={{ marginTop: 4 }}>
+                            <Text variant="label" tone="subtle" style={{ marginTop: spacing.xs }}>
                               {pct.toFixed(0)}% of total
                             </Text>
                           </AppSurface>
@@ -155,7 +155,7 @@ export default function ReportsScreen() {
               {/* Member spending */}
               {report.user_spending.length > 0 && (
                 <>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.s12, marginBottom: spacing.md }}>
                     <IconBadge
                       icon={<BarChart2 size={16} color={colors.primary} strokeWidth={2.2} />}
                       tone="soft"
@@ -163,7 +163,7 @@ export default function ReportsScreen() {
                     />
                     <Text variant="titleLg" weight="extrabold">By Member</Text>
                   </View>
-                  <View style={{ gap: 8, marginBottom: 32 }}>
+                  <View style={{ gap: spacing.sm, marginBottom: spacing.xl }}>
                     {report.user_spending
                       .sort((a, b) => b.amount - a.amount)
                       .map((user) => (
@@ -183,10 +183,10 @@ export default function ReportsScreen() {
               {/* Monthly trend */}
               {Object.keys(report.monthly_trend).length > 0 && (
                 <>
-                  <Text variant="titleLg" weight="extrabold" style={{ marginBottom: 14 }}>
+                  <Text variant="titleLg" weight="extrabold" style={{ marginBottom: spacing.md }}>
                     Monthly Trend
                   </Text>
-                  <View style={{ gap: 8, marginBottom: 32 }}>
+                  <View style={{ gap: spacing.sm, marginBottom: spacing.xl }}>
                     {Object.entries(report.monthly_trend)
                       .sort(([a], [b]) => b.localeCompare(a))
                       .map(([month, amount]) => (
@@ -203,7 +203,7 @@ export default function ReportsScreen() {
                 </>
               )}
 
-              <Callout tone="info" style={{ marginBottom: 16 }}>
+              <Callout tone="info" style={{ marginBottom: spacing.md }}>
                 Interactive charts coming soon — data tables above are fully accurate.
               </Callout>
             </>

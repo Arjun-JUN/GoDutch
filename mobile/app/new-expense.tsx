@@ -39,7 +39,7 @@ import {
   type LineItem,
 } from '../src/utils/splitting';
 import { getCurrencySymbol, EXPENSE_CATEGORIES } from '../src/utils/constants';
-import { colors } from '../src/theme/tokens';
+import { colors, radii, spacing } from '../src/theme/tokens';
 
 export default function NewExpenseScreen() {
   const { groupId: paramGroupId } = useLocalSearchParams<{ groupId?: string }>();
@@ -288,21 +288,21 @@ export default function NewExpenseScreen() {
         >
           <PageContent>
             {error && (
-              <Callout tone="danger" style={{ marginBottom: 20 }}>
+              <Callout tone="danger" style={{ marginBottom: spacing.s20 }}>
                 {error}
               </Callout>
             )}
 
             {/* Group selector */}
             {!paramGroupId && groups.length > 1 && (
-              <View style={{ marginBottom: 24 }}>
-                <Text variant="eyebrow" tone="muted" style={{ marginBottom: 10 }}>
+              <View style={{ marginBottom: spacing.lg }}>
+                <Text variant="eyebrow" tone="muted" style={{ marginBottom: spacing.s12 }}>
                   GROUP
                 </Text>
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{ gap: 8 }}
+                  contentContainerStyle={{ gap: spacing.sm }}
                 >
                   {groups.map((g) => (
                     <MemberBadge
@@ -326,13 +326,13 @@ export default function NewExpenseScreen() {
               compact
               onPress={handlePickReceipt}
               testID="scan-receipt-surface"
-              style={{ marginBottom: 24, flexDirection: 'row', alignItems: 'center', gap: 14 }}
+              style={{ marginBottom: spacing.lg, flexDirection: 'row', alignItems: 'center', gap: spacing.md }}
             >
               <View
                 style={{
                   width: 44,
                   height: 44,
-                  borderRadius: 12,
+                  borderRadius: radii.md,
                   backgroundColor: colors.soft,
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -348,17 +348,17 @@ export default function NewExpenseScreen() {
                 <Text variant="title" weight="semibold">
                   {scanningReceipt ? 'Scanning receipt…' : 'Scan Receipt'}
                 </Text>
-                <Text variant="label" tone="subtle" style={{ marginTop: 2 }}>
+                <Text variant="label" tone="subtle" style={{ marginTop: spacing.xs }}>
                   AI reads merchant, amount and items
                 </Text>
               </View>
               {receiptImage ? (
                 <View
-                  style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden' }}
+                  style={{ width: spacing.s40, height: spacing.s40, borderRadius: radii.sm + spacing.xs, overflow: 'hidden' }}
                 >
                   <Image
                     source={{ uri: receiptImage }}
-                    style={{ width: 40, height: 40 }}
+                    style={{ width: spacing.s40, height: spacing.s40 }}
                     resizeMode="cover"
                   />
                 </View>
@@ -366,7 +366,7 @@ export default function NewExpenseScreen() {
             </InteractiveSurface>
 
             {/* Core fields */}
-            <View style={{ gap: 16, marginBottom: 28 }}>
+            <View style={{ gap: spacing.md, marginBottom: spacing.lg }}>
               <Field label="Merchant / Description">
                 <AppInput
                   value={merchant}
@@ -402,14 +402,14 @@ export default function NewExpenseScreen() {
             </View>
 
             {/* Category */}
-            <View style={{ marginBottom: 28 }}>
-              <Text variant="eyebrow" tone="muted" style={{ marginBottom: 12 }}>
+            <View style={{ marginBottom: spacing.lg }}>
+              <Text variant="eyebrow" tone="muted" style={{ marginBottom: spacing.s12 }}>
                 CATEGORY
               </Text>
               <InteractiveSurface
                 compact
                 onPress={() => setShowCategories(!showCategories)}
-                style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.s12 }}
               >
                 <Tag size={18} color={colors.primary} strokeWidth={2.2} />
                 <Text variant="title" weight="semibold" style={{ flex: 1 }}>
@@ -422,11 +422,11 @@ export default function NewExpenseScreen() {
                 <AppSurface
                   variant="solid"
                   style={{
-                    marginTop: 8,
+                    marginTop: spacing.sm,
                     flexDirection: 'row',
                     flexWrap: 'wrap',
-                    gap: 8,
-                    padding: 16,
+                    gap: spacing.sm,
+                    padding: spacing.md,
                   }}
                 >
                   {EXPENSE_CATEGORIES.map((cat) => (
@@ -446,20 +446,20 @@ export default function NewExpenseScreen() {
             </View>
 
             {/* Paid by + split options */}
-            <View style={{ gap: 10, marginBottom: 32 }}>
-              <Text variant="eyebrow" tone="muted" style={{ marginBottom: 4 }}>
+            <View style={{ gap: spacing.s12, marginBottom: spacing.xl }}>
+              <Text variant="eyebrow" tone="muted" style={{ marginBottom: spacing.xs }}>
                 SPLIT DETAILS
               </Text>
 
               <InteractiveSurface
                 compact
                 onPress={() => setShowPaidBy(true)}
-                style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.s12 }}
               >
                 <Users size={18} color={colors.primary} strokeWidth={2.2} />
                 <View style={{ flex: 1 }}>
                   <Text variant="label" tone="subtle">Paid by</Text>
-                  <Text variant="title" weight="semibold" style={{ marginTop: 2 }}>
+                  <Text variant="title" weight="semibold" style={{ marginTop: spacing.xs }}>
                     {paidByNames || 'Select payer'}
                   </Text>
                 </View>
@@ -469,12 +469,12 @@ export default function NewExpenseScreen() {
               <InteractiveSurface
                 compact
                 onPress={() => setShowSplitOptions(true)}
-                style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.s12 }}
               >
                 <Zap size={18} color={colors.primary} strokeWidth={2.2} />
                 <View style={{ flex: 1 }}>
                   <Text variant="label" tone="subtle">Split method</Text>
-                  <Text variant="title" weight="semibold" style={{ marginTop: 2 }}>
+                  <Text variant="title" weight="semibold" style={{ marginTop: spacing.xs }}>
                     {splitModeLabel[splitMode]} · {splitBetween.length} people
                   </Text>
                 </View>
@@ -486,12 +486,12 @@ export default function NewExpenseScreen() {
                 compact
                 onPress={() => setShowSmartSplit(!showSmartSplit)}
                 testID="ai-split-surface"
-                style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.s12 }}
               >
                 <Sparkles size={18} color={colors.primary} strokeWidth={2.2} />
                 <View style={{ flex: 1 }}>
                   <Text variant="label" tone="subtle">AI Smart Split</Text>
-                  <Text variant="title" weight="semibold" style={{ marginTop: 2 }}>
+                  <Text variant="title" weight="semibold" style={{ marginTop: spacing.xs }}>
                     Describe how to split in plain words
                   </Text>
                 </View>
@@ -499,7 +499,7 @@ export default function NewExpenseScreen() {
               </InteractiveSurface>
 
               {showSmartSplit && (
-                <AppSurface variant="solid" style={{ gap: 12, padding: 16 }}>
+                <AppSurface variant="solid" style={{ gap: spacing.s12, padding: spacing.md }}>
                   <AppInput
                     value={smartSplitInstruction}
                     onChangeText={setSmartSplitInstruction}
@@ -527,7 +527,7 @@ export default function NewExpenseScreen() {
               onPress={handleSave}
               loading={savingExpense}
               haptic
-              style={{ marginBottom: 16 }}
+              style={{ marginBottom: spacing.md }}
             >
               Save Expense
             </AppButton>

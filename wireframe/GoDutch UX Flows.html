@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GoDutch — UX Flow Wireframes</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" src="components/primitives.jsx"></script>
+  <script type="text/babel" src="components/flow-home.jsx"></script>
+  <script type="text/babel" src="components/flow-screenshot.jsx"></script>
+  <script type="text/babel" src="components/flow-voice.jsx"></script>
+  <script type="text/babel" src="components/flow-upi-group.jsx"></script>
+  <script type="text/babel" src="components/flow-settle-insights.jsx"></script>
+  <script type="text/babel" src="components/flow-shared.jsx"></script>
+  <script type="text/babel" src="components/flow-edge-cases.jsx"></script>
+
+  <script type="text/babel">
+    const TWEAKS = /*EDITMODE-BEGIN*/{
+      "screenshotVariant": "tap-assign",
+      "voiceVariant": "voice-note",
+      "homeVariant": "narrative",
+      "insightsVariant": "charts"
+    }/*EDITMODE-END*/;
+
+    const FLOWS = [
+      {
+        id: 'onboard',
+        label: 'Onboard + Home',
+        title: '1. Getting in',
+        desc: "First run, contact/group setup, and the home dashboard. The dashboard is where UPI catches and smart splits surface — it's the control tower.",
+        steps: () => [
+          { name: 'Welcome', note: '3 hero capabilities up front', render: <OnboardWelcome /> },
+          { name: 'Sign up', note: 'Google · Apple · email', render: <SignUp /> },
+          { name: 'Group setup', note: 'contacts + manual add', render: <OnboardGroupSetup /> },
+          { name: 'UPI permission', note: 'on-device · opt-out any time', render: <UPIPermission /> },
+          {
+            name: 'Home dashboard',
+            note: (TWEAKS.homeVariant === 'narrative' ? 'storyline feed' : 'balance-first'),
+            render: TWEAKS.homeVariant === 'narrative' ? <HomeDashboardB /> : <HomeDashboardA />,
+          },
+        ],
+      },
+      {
+        id: 'screenshot',
+        label: '📸 Screenshot split',
+        hero: true,
+        title: '2. Screenshot → smart split',
+        desc: 'HERO flow. Two entry points (share sheet from any app, or in-app camera), OCR parse, then assign. Three variants for the assign step.',
+        steps: () => {
+          const assign = TWEAKS.screenshotVariant === 'drag'
+            ? { name: 'Drag to assign', note: 'items onto people', render: <ScreenshotDragAssign /> }
+            : { name: 'Tap to assign', note: 'per-item avatar chips', render: <ScreenshotAssignA /> };
+          return [
+            { name: 'Share sheet', note: 'from Photos / any app', render: <ScreenshotEntry />, branch: 'A' },
+            { name: 'In-app camera', note: 'live edge detect', render: <ScreenshotCamera />, branch: 'B' },
+            { name: 'Parsing', note: 'OCR + highlighting', render: <ScreenshotParsing /> },
+            { name: '⚠ Edge: OCR fuzzy', note: 'fallback options', render: <ScreenshotOCRFail />, edge: true },
+            assign,
+            { name: 'Split preview', note: 'unified review card', render: <UnifiedSplitPreview source="screenshot" /> },
+            { name: 'Confirmation', note: 'who-owes-what summary', render: <ScreenshotSent /> },
+          ];
+        },
+      },
+      {
+        id: 'voice',
+        label: '🎙 Voice split',
+        hero: true,
+        title: '3. Voice-driven split',
+        desc: 'HERO flow. Hold-to-talk with live entity highlighting, or fire-and-forget voice note that comes back as a parsed card. Corrections work by voice too.',
+        steps: () => {
+          if (TWEAKS.voiceVariant === 'voice-note') {
+            return [
+              { name: 'Voice note', note: '7-second clip', render: <VoiceQuickNote /> },
+              { name: 'Split preview', note: 'unified review card', render: <UnifiedSplitPreview source="voice" /> },
+            ];
+          }
+          return [
+            { name: 'Hold to talk', note: 'live entity highlighting', render: <VoiceListening /> },
+            { name: '⚠ Edge: mis-parse', note: 'recovery options', render: <VoiceMisparse />, edge: true },
+            { name: 'Split preview', note: 'unified review card', render: <UnifiedSplitPreview source="voice" /> },
+          ];
+        },
+      },
+      {
+        id: 'upi',
+        label: '⚡ UPI auto-detect',
+        title: '4. UPI auto-detect',
+        desc: "Silent background. When your UPI app pings a payment, we read the notification and offer a split — confidence-scored against your usual groups. User never opens the app unless they want to.",
+        steps: () => [
+          { name: 'Lock screen ping', note: 'actionable notification', render: <UPILockNotif /> },
+          { name: 'Suggested split', note: 'group match + reasoning', render: <UPISuggestion /> },
+          { name: 'Split preview', note: 'unified review card', render: <UnifiedSplitPreview source="upi" /> },
+        ],
+      },
+      {
+        id: 'group',
+        label: 'Group & expense',
+        title: '5. Group + expense detail',
+        desc: 'Where the history lives. Warm header, timeline of expenses, auto-split badges, and an expense detail with per-person status.',
+        steps: () => [
+          { name: 'Group detail', note: 'balance-first header', render: <GroupDetail /> },
+          { name: 'Multi-currency', note: 'trip default + per-expense', render: <MultiCurrency /> },
+          { name: 'Expense detail', note: 'per-person status', render: <ExpenseDetail /> },
+          { name: '⚠ Edge: dispute', note: 'comment → re-split', render: <ExpenseDispute />, edge: true },
+        ],
+      },
+      {
+        id: 'settle',
+        label: '💸 Settle up',
+        title: '6. Settle up',
+        desc: 'Debts simplified across groups. One-tap UPI is the default path; cash, request, and link are one tap deeper. UPI confirmation auto-closes the loop.',
+        steps: () => [
+          { name: 'Simplified balances', note: '8 payments → 3', render: <SettleUpMain /> },
+          { name: 'Pick method', note: 'UPI · cash · request · link', render: <SettleMethod /> },
+          { name: 'Auto-confirmed', note: 'detected the UPI ping', render: <SettleConfirmed /> },
+        ],
+      },
+      {
+        id: 'insights',
+        label: '📊 Insights',
+        title: '7. Spending insights',
+        desc: 'Mix of analytical (bars + trends) and narrative ("whoa, food month"). Variant toggles between charts-first and story-first.',
+        steps: () => [
+          TWEAKS.insightsVariant === 'narrative'
+            ? { name: 'Story cards', note: 'narrative recap', render: <InsightsNarrative /> }
+            : { name: 'Charts & bars', note: 'analytical view', render: <InsightsCharts /> },
+        ],
+      },
+      {
+        id: 'activity',
+        label: '🔔 Activity',
+        title: '8. Activity feed',
+        desc: 'All the things the app did for you while you were away — caught UPI payments, comments, settlements, nudges.',
+        steps: () => [
+          { name: 'Notifications', note: 'grouped by time', render: <ActivityFeed /> },
+        ],
+      },
+      {
+        id: 'account',
+        label: '⚙ Account',
+        title: '9. Account & settings',
+        desc: 'Profile, linked UPI apps, preferences, notifications, help & legal, and sign out.',
+        steps: () => [
+          { name: 'Account', note: 'profile · payment · prefs · sign out', render: <AccountSettings /> },
+        ],
+      },
+    ];
+
+    function App() {
+      const [activeFlow, setActiveFlow] = React.useState(() => localStorage.getItem('gd-flow') || 'onboard');
+      const [tweaks, setTweaks] = React.useState(TWEAKS);
+      const [tweaksOpen, setTweaksOpen] = React.useState(false);
+      const [editMode, setEditMode] = React.useState(false);
+
+      React.useEffect(() => {
+        const handler = (e) => {
+          if (e.data?.type === '__activate_edit_mode') setEditMode(true);
+          if (e.data?.type === '__deactivate_edit_mode') setEditMode(false);
+        };
+        window.addEventListener('message', handler);
+        window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+        return () => window.removeEventListener('message', handler);
+      }, []);
+
+      React.useEffect(() => { localStorage.setItem('gd-flow', activeFlow); }, [activeFlow]);
+
+      // Apply tweaks live by reassigning TWEAKS proxy and re-rendering
+      Object.assign(TWEAKS, tweaks);
+
+      const setTweak = (key, value) => {
+        const next = { ...tweaks, [key]: value };
+        setTweaks(next);
+        window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { [key]: value } }, '*');
+      };
+
+      const flow = FLOWS.find(f => f.id === activeFlow) || FLOWS[0];
+      const steps = flow.steps();
+
+      return (
+        <div className="page paper-bg">
+          <header className="header">
+            <div className="header-left">
+              <h1>GoDutch — UX flows</h1>
+              <div className="sub">8 flows · ~19 wireframes · toggle Tweaks for variants</div>
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <div className="sk-chip accent"><Icons.Sparkle /> lo-fi sketchy</div>
+              <div className="sk-chip">mobile · agnostic</div>
+            </div>
+          </header>
+
+          {/* Flow tabs */}
+          <nav className="flow-tabs">
+            {FLOWS.map((f, i) => (
+              <div
+                key={f.id}
+                className={`flow-tab ${activeFlow === f.id ? 'active' : ''}`}
+                onClick={() => setActiveFlow(f.id)}
+              >
+                <span className="num">{i + 1}</span>
+                <span>{f.label}</span>
+                {f.hero && <span style={{ fontSize: 10, color: 'var(--accent)', marginLeft: 2 }}>★</span>}
+              </div>
+            ))}
+          </nav>
+
+          {/* Flow stage */}
+          <main className="flow-stage" data-screen-label={flow.title}>
+            <div className="flow-intro">
+              <h2>{flow.title}</h2>
+              {flow.hero && <div className="meta">★ hero flow — most variation here</div>}
+              <p>{flow.desc}</p>
+            </div>
+
+            <div className="variant-row">
+              {(() => {
+                // Collapse consecutive branch steps into a single slot
+                const slots = [];
+                let i = 0;
+                while (i < steps.length) {
+                  const s = steps[i];
+                  if (s.branch && steps[i + 1]?.branch) {
+                    const branches = [];
+                    while (steps[i] && steps[i].branch) branches.push(steps[i++]);
+                    slots.push({ kind: 'branch', items: branches });
+                  } else {
+                    slots.push({ kind: 'step', item: s });
+                    i++;
+                  }
+                }
+                let stepNum = 0;
+                return slots.map((slot, si) => {
+                  stepNum += 1;
+                  const arrow = si < slots.length - 1 && <FlowArrow />;
+                  if (slot.kind === 'branch') {
+                    return (
+                      <React.Fragment key={si}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18 }}>
+                          <div className="step-caption">
+                            <div className="step-num">{stepNum}</div>
+                            <div className="step-title">Entry point</div>
+                            <div style={{ fontFamily: 'Caveat', fontSize: 15, color: 'var(--ink-mute)' }}>either works ↓</div>
+                          </div>
+                          <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
+                            {slot.items.map((b, bi) => (
+                              <React.Fragment key={bi}>
+                                {bi > 0 && (
+                                  <div style={{ display: 'flex', alignItems: 'center', height: 680, fontFamily: 'Caveat', fontSize: 26, color: 'var(--ink-mute)', fontWeight: 700 }}>or</div>
+                                )}
+                                <div className="variant">
+                                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, marginBottom: 10 }}>
+                                    <div className="step-title">{b.name}</div>
+                                    {b.note && <div style={{ fontFamily: 'Caveat', fontSize: 15, color: 'var(--ink-mute)' }}>{b.note}</div>}
+                                  </div>
+                                  {b.render}
+                                </div>
+                              </React.Fragment>
+                            ))}
+                          </div>
+                        </div>
+                        {arrow}
+                      </React.Fragment>
+                    );
+                  }
+                  const step = slot.item;
+                  return (
+                    <React.Fragment key={si}>
+                      <div className="variant">
+                        <div className="step-caption">
+                          <div className="step-num" style={step.edge ? { background: '#ffd4d4', color: 'var(--accent)', borderColor: 'var(--accent)', borderStyle: 'dashed' } : undefined}>{stepNum}</div>
+                          <div className="step-title">{step.name}</div>
+                          {step.note && <div style={{ fontFamily: 'Caveat', fontSize: 15, color: 'var(--ink-mute)' }}>{step.note}</div>}
+                          {step.edge && <div style={{ marginTop: 4, display: 'inline-block', fontSize: 9, letterSpacing: 0.8, fontWeight: 800, padding: '2px 6px', border: '1.5px dashed var(--accent)', borderRadius: 6, color: 'var(--accent)', background: '#fff' }}>EDGE CASE</div>}
+                        </div>
+                        {step.render}
+                      </div>
+                      {arrow}
+                    </React.Fragment>
+                  );
+                });
+              })()}
+            </div>
+          </main>
+
+          {/* Tweaks panel */}
+          <div className={`tweaks-panel ${editMode ? 'visible' : ''}`}>
+            <h3>Tweaks <Icons.Sparkle /></h3>
+
+            <div className="tweak-row">
+              <div className="tweak-label">Home dashboard</div>
+              <div className="tweak-options">
+                {[{ k: 'balance', l: 'Balance hero' }, { k: 'narrative', l: 'Storyline' }].map(o => (
+                  <div
+                    key={o.k}
+                    className={`tweak-pill ${tweaks.homeVariant === o.k ? 'active' : ''}`}
+                    onClick={() => setTweak('homeVariant', o.k)}
+                  >{o.l}</div>
+                ))}
+              </div>
+            </div>
+
+            <div className="tweak-row">
+              <div className="tweak-label">Screenshot — entry + assign</div>
+              <div className="tweak-options">
+                {[{ k: 'tap-assign', l: 'Share + tap' }, { k: 'drag', l: 'Camera + drag' }].map(o => (
+                  <div
+                    key={o.k}
+                    className={`tweak-pill ${tweaks.screenshotVariant === o.k ? 'active' : ''}`}
+                    onClick={() => setTweak('screenshotVariant', o.k)}
+                  >{o.l}</div>
+                ))}
+              </div>
+            </div>
+
+            <div className="tweak-row">
+              <div className="tweak-label">Voice interaction</div>
+              <div className="tweak-options">
+                {[{ k: 'hold-to-talk', l: 'Hold to talk' }, { k: 'voice-note', l: 'Voice note' }].map(o => (
+                  <div
+                    key={o.k}
+                    className={`tweak-pill ${tweaks.voiceVariant === o.k ? 'active' : ''}`}
+                    onClick={() => setTweak('voiceVariant', o.k)}
+                  >{o.l}</div>
+                ))}
+              </div>
+            </div>
+
+            <div className="tweak-row">
+              <div className="tweak-label">Insights vibe</div>
+              <div className="tweak-options">
+                {[{ k: 'charts', l: 'Charts' }, { k: 'narrative', l: 'Narrative' }].map(o => (
+                  <div
+                    key={o.k}
+                    className={`tweak-pill ${tweaks.insightsVariant === o.k ? 'active' : ''}`}
+                    onClick={() => setTweak('insightsVariant', o.k)}
+                  >{o.l}</div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Legend */}
+          <div className="legend">
+            <div><span className="legend-swatch" style={{ background: 'var(--accent)' }}></span>accent / action</div>
+            <div><span className="legend-swatch" style={{ background: 'var(--accent-2)' }}></span>info / link</div>
+            <div><span className="legend-swatch" style={{ background: 'var(--success)' }}></span>money in / success</div>
+            <div style={{ fontFamily: 'Caveat', fontSize: 15 }}>toggle Tweaks ↗ for variants</div>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

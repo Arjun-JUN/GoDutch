@@ -18,9 +18,13 @@ Use the `<Text>` component from `@/slate`. Never use React Native's bare `<RNTex
 | `titleXl` | 28px | 34px | −0.5px | ExtraBold | Section totals, large headings |
 | `titleLg` | 22px | 28px | −0.3px | ExtraBold | Screen titles, sheet headings |
 | `title` | 18px | 24px | −0.2px | Bold | Sub-section headers |
+| `titleSm` | 17px | 22px | −0.2px | Bold | Merchant / list-row title (`ExpenseCard`) |
 | `body` | 15px | 22px | −0.1px | Regular | Default reading text |
 | `label` | 13px | 18px | 0 | SemiBold | Form labels, metadata |
 | `eyebrow` | 11px | 14px | +2.4px, UPPERCASE | Bold | Category labels above titles |
+| `eyebrowSm` | 10px | 14px | +1.5px, UPPERCASE | Bold | Micro-eyebrow ("YOUR SHARE" in rows) |
+| `amount` | 24px | 28px | −0.8px | ExtraBold | Inline amounts in expense / settlement rows |
+| `amountLg` | 30px | 34px | −1px | ExtraBold | Stat-card amounts (dashboard, totals) |
 
 ```tsx
 import { Text } from '@/slate';
