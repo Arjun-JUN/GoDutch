@@ -2,7 +2,7 @@ import React from 'react';
 import { View, ViewProps } from 'react-native';
 import { SafeAreaView, Edge } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { colors, gradients } from '../theme/tokens';
+import { colors, gradients, spacing } from '../theme/tokens';
 import { cn } from './cn';
 
 interface AppShellProps extends ViewProps {
@@ -60,10 +60,12 @@ export const PageContent: React.FC<PageContentProps> = ({
   children,
   className,
   padded = true,
+  style,
   ...rest
 }) => (
   <View
-    className={cn('flex-1', padded && 'px-6', className)}
+    className={cn('flex-1', className)}
+    style={[padded && { paddingHorizontal: spacing.lg }, style]}
     {...rest}
   >
     {children}
